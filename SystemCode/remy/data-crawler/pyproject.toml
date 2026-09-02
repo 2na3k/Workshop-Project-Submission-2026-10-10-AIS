@@ -1,7 +1,7 @@
 [project]
-name = "foodie-data-crawler"
+name = "remy-data-crawler"
 version = "0.1.0"
-description = "Data crawler for Foodie"
+description = "Data crawler for Remy"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "beautifulsoup4>=4.12,<5",

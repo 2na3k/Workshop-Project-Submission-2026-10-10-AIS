@@ -2,9 +2,9 @@ SHELL := /bin/sh
 
 UV ?= uv
 COMPOSE ?= docker compose
-API_PACKAGE := foodie-api
-CRAWLER_PACKAGE := foodie-data-crawler
-DBT_PACKAGE := foodie-data-preparation
+API_PACKAGE := remy-api
+CRAWLER_PACKAGE := remy-data-crawler
+DBT_PACKAGE := remy-data-preparation
 
 .PHONY: help install sync lock check build build-all up up-all down logs \
         api crawler dbt frontend-install clean
@@ -42,7 +42,7 @@ crawler:
 	$(UV) run --package $(CRAWLER_PACKAGE) python -m data_crawler
 
 dbt:
-	$(UV) run --package $(DBT_PACKAGE) dbt build --project-dir SystemCode/data-preparation
+	$(UV) run --package $(DBT_PACKAGE) dbt build --project-dir remy/data-preparation
 
 build:
 	$(COMPOSE) build api
@@ -63,8 +63,8 @@ logs:
 	$(COMPOSE) logs -f
 
 frontend-install:
-	@test -f SystemCode/app/package.json || { echo 'SystemCode/app/package.json is not initialized yet'; exit 1; }
-	npm --prefix SystemCode/app install
+	@test -f remy/app/package.json || { echo 'remy/app/package.json is not initialized yet'; exit 1; }
+	npm --prefix remy/app install
 
 clean:
 	rm -rf .venv

@@ -1,7 +1,7 @@
 [project]
-name = "foodie-workflows"
+name = "remy-workflows"
 version = "0.1.0"
-description = "LangGraph workflows for Foodie"
+description = "LangGraph workflows for Remy"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "langgraph>=0.2,<1",

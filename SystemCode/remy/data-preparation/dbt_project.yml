@@ -1,8 +1,8 @@
-name: foodie
+name: remy
 version: "1.0.0"
 config-version: 2
 
-profile: foodie
+profile: remy
 
 model-paths: ["models"]
 seed-paths: ["seeds"]
