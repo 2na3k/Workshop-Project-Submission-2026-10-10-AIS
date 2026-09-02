@@ -1,0 +1,1 @@
+"""Foodie data crawler."""
