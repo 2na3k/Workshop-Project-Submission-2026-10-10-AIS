@@ -74,7 +74,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 167634,"Mutton, cooked, roasted (Navajo)",['mutton'],{'mutton': 14.3},[],1,1,1.0,[],"['cooked', 'roasted']",14.3,33.43,11.09,0.08,234.0,,135.0,109.0,5.142,
 167638,"Fish, halibut, raw, with skin (Alaska Native)","['fish', 'halibut']",{'fish': 5.94},['halibut'],1,2,0.5,['raw'],[],0.0,20.53,2.92,1.81,116.0,0.0,79.0,72.0,0.726,0.0
 167639,"Fish, salmon, coho (silver), raw (Alaska Native)","['fish', 'salmon', 'coho']","{'fish': 5.94, 'salmon': 14.29}",['coho'],2,3,0.6666666666666666,['raw'],[],0.0,22.56,5.57,0.0,140.0,0.0,58.0,58.0,0.904,0.0
-167640,"Blueberries, wild, raw (Alaska Native)",['blueberries'],{'blueberries': 10.95},[],1,1,1.0,"['wild', 'raw']",[],10.95,1.22,0.76,12.31,61.0,2.6,6.0,,,6.46
+167640,"Blueberries, wild, raw (Alaska Native)",['blueberries'],{'blueberries': 3.95},[],1,1,1.0,"['wild', 'raw']",[],3.95,1.22,0.76,12.31,61.0,2.6,6.0,,,6.46
 167641,"Oil, spotted seal (Alaska Native)",['oil'],{'oil': 8.85},[],1,1,1.0,[],['spotted'],8.85,0.0,99.32,0.0,894.0,0.0,0.0,,14.74,0.0
 167642,"Fish, salmon, red, canned, bones removed (Alaska Native)","['fish', 'salmon']","{'fish': 5.94, 'salmon': 14.29}",[],2,2,1.0,"['red', 'canned']",['removed'],20.23,27.31,5.76,0.0,161.0,0.0,390.0,69.0,0.92,0.0
 167643,"Fish, whitefish, eggs (Alaska Native)","['fish', 'whitefish', 'eggs']","{'fish': 5.94, 'eggs': 4.18}",['whitefish'],2,3,0.6666666666666666,[],[],0.0,14.66,2.88,4.89,104.0,0.0,160.0,439.0,0.496,0.0
@@ -95,9 +95,9 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 167666,"Restaurant, Mexican, refried beans",['refried beans'],{'refried beans': 2.72},[],1,1,1.0,['Mexican'],[],2.72,6.91,6.77,16.79,156.0,8.0,376.0,5.0,1.84,0.78
 167667,"Restaurant, Chinese, egg rolls, assorted",['egg rolls'],{'egg rolls': 7.45},[],1,1,1.0,['Chinese'],['assorted'],7.45,8.28,11.94,27.29,250.0,2.6,468.0,16.0,2.116,
 167668,"Restaurant, Chinese, fried rice, without meat",['rice'],{'rice': 11.0},[],1,1,1.0,['Chinese'],['fried'],11.0,4.05,2.96,32.79,174.0,1.1,387.0,18.0,0.54,0.56
-167669,"CRACKER BARREL, steak fries",['steak fries'],{'steak fries': 4.75},[],1,1,1.0,[],[],4.75,3.26,13.18,30.87,255.0,3.5,43.0,0.0,2.369,0.86
+167669,"CRACKER BARREL, steak fries",['steak fries'],{'steak fries': 5.97},[],1,1,1.0,[],[],5.97,3.26,13.18,30.87,255.0,3.5,43.0,0.0,2.369,0.86
 167670,"CRACKER BARREL, grilled sirloin steak",['sirloin steak'],{'sirloin steak': 26.1},[],1,1,1.0,[],['grilled'],26.1,31.52,8.52,0.0,203.0,,180.0,87.0,3.045,
-167672,"DENNY'S, french fries",['fries'],{'fries': 4.75},[],1,1,1.0,['french'],[],4.75,3.41,14.13,35.2,282.0,3.5,44.0,0.0,2.534,0.85
+167672,"DENNY'S, french fries",['fries'],{'fries': 5.97},[],1,1,1.0,['french'],[],5.97,3.41,14.13,35.2,282.0,3.5,44.0,0.0,2.534,0.85
 167673,"DENNY'S, top sirloin steak",['sirloin steak'],{'sirloin steak': 26.1},[],1,1,1.0,['top'],[],26.1,28.9,7.34,0.14,182.0,,349.0,82.0,2.595,
 167674,"Restaurant, Chinese, lemon chicken",['restaurant lemon chicken'],{'restaurant lemon chicken': 1.94},[],1,1,1.0,['Chinese'],[],1.94,11.87,13.55,20.61,252.0,1.0,252.0,32.0,2.033,8.18
 167675,"Restaurant, Chinese, general tso's chicken",['chicken'],{'chicken': 8.0},[],1,1,1.0,"['Chinese', 'general']",[],8.0,12.9,16.36,23.99,295.0,0.9,435.0,53.0,2.76,11.6
@@ -161,17 +161,11 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 167751,"Plums, dried (prunes), stewed, without added sugar","['plums', 'prunes']",{'plums': 7.95},['prunes'],1,2,0.5,[],"['dried', 'stewed', 'added']",0.0,0.96,0.16,28.08,107.0,3.1,1.0,0.0,0.01,24.98
 167752,"Plums, dried (prunes), stewed, with added sugar","['plums', 'prunes']",{'plums': 7.95},['prunes'],1,2,0.5,[],"['dried', 'stewed', 'added']",0.0,1.09,0.22,32.88,124.0,3.8,2.0,0.0,0.017,
 167753,"Prune juice, canned",['juice'],{'juice': 9.78},[],1,1,1.0,[],"['Prune', 'canned']",9.78,0.61,0.03,17.45,71.0,1.0,4.0,0.0,0.003,16.45
-167755,"Raspberries, raw",['raspberries'],{'raspberries': 12.44},[],1,1,1.0,['raw'],[],12.44,1.2,0.65,11.94,52.0,6.5,1.0,0.0,0.019,4.42
-167756,"Raspberries, canned, red, heavy syrup pack, solids and liquids",['raspberries'],{'raspberries': 12.44},[],1,1,1.0,"['canned', 'red', 'heavy']",[],12.44,0.83,0.12,23.36,91.0,3.3,3.0,0.0,0.005,20.06
-167757,"Raspberries, frozen, red, sweetened",['raspberries'],{'raspberries': 12.44},[],1,1,1.0,['red'],"['frozen', 'sweetened']",12.44,0.7,0.16,26.16,103.0,4.4,1.0,0.0,0.005,21.76
-167762,"Strawberries, raw",['strawberries'],{'strawberries': 19.75},[],1,1,1.0,['raw'],[],19.75,0.67,0.3,7.68,32.0,2.0,1.0,0.0,0.015,4.89
 167764,"Fruit salad, (pineapple and papaya and banana and guava), tropical, canned, heavy syrup, solids and liquids","['fruit salad', 'pineapple papaya banana guava']","{'fruit salad': 11.49, 'pineapple papaya banana guava': 5.08}",[],2,2,1.0,"['tropical', 'canned', 'heavy']",[],16.57,0.41,0.1,22.36,86.0,1.3,2.0,0.0,0.019,
 167765,"Watermelon, raw",['watermelon'],{'watermelon': 5.85},[],1,1,1.0,['raw'],[],5.85,0.61,0.15,7.55,30.0,0.4,1.0,0.0,0.016,6.2
-167766,"Maraschino cherries, canned, drained",['maraschino cherries'],{'maraschino cherries': 9.45},[],1,1,1.0,[],"['canned', 'drained']",9.45,0.22,0.21,41.97,165.0,3.2,4.0,0.0,0.039,38.77
 167767,"Pineapple, canned, juice pack, drained",['pineapple juice pack'],{'pineapple juice pack': 13.2},[],1,1,1.0,['canned'],['drained'],13.2,0.51,0.11,15.56,60.0,1.3,1.0,0.0,0.008,14.26
 167768,"Apricots, canned, heavy syrup, drained",['apricots'],{'apricots': 6.95},[],1,1,1.0,"['canned', 'heavy']",['drained'],6.95,0.64,0.11,21.31,83.0,2.7,4.0,0.0,0.007,18.65
-167769,"Cherries, sour, canned, water pack, drained","['cherries', 'water pack']","{'cherries': 9.45, 'water pack': 13.2}",[],2,2,1.0,"['sour', 'canned']",['drained'],22.65,0.69,0.21,10.45,42.0,1.2,4.0,,,6.99
-167770,"Cherries, sweet, canned, pitted, heavy syrup, drained",['cherries'],{'cherries': 9.45},[],1,1,1.0,"['sweet', 'canned', 'heavy']","['pitted', 'drained']",9.45,0.73,0.21,21.07,83.0,2.3,3.0,0.0,0.041,16.18
+167769,"Cherries, sour, canned, water pack, drained","['cherries', 'water pack']",{'water pack': 13.2},['cherries'],1,2,0.5,"['sour', 'canned']",['drained'],0.0,0.69,0.21,10.45,42.0,1.2,4.0,,,6.99
 167771,"Apple juice, canned or bottled, unsweetened, with added ascorbic acid",['apple juice'],{'apple juice': 9.78},[],1,1,1.0,"['canned', 'unsweetened']","['bottled', 'added']",9.78,0.1,0.13,11.3,46.0,0.2,4.0,0.0,0.022,9.62
 167774,"Grapefruit juice, pink, raw",['grapefruit juice'],{'grapefruit juice': 9.78},[],1,1,1.0,"['pink', 'raw']",[],9.78,0.5,0.1,9.2,39.0,,1.0,0.0,0.014,
 167775,"Apple juice, frozen concentrate, unsweetened, diluted with 3 volume water, with added ascorbic acid","['apple juice', 'concentrate']","{'apple juice': 9.78, 'concentrate': 21.9}",[],2,2,1.0,['unsweetened'],"['frozen', 'diluted', 'added']",31.68,0.14,0.1,11.54,47.0,0.1,7.0,0.0,0.018,
@@ -196,8 +190,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 167805,"Ruby Red grapefruit juice blend (grapefruit, grape, apple), OCEAN SPRAY, bottled, with added vitamin C",['ruby grapefruit juice blend'],{'ruby grapefruit juice blend': 7.95},[],1,1,1.0,['Red'],"['bottled', 'added']",7.95,0.5,0.1,10.53,44.0,0.2,8.0,0.0,0.008,10.3
 167806,Baobab powder,['baobab powder'],{'baobab powder': 3.96},[],1,1,1.0,[],[],3.96,3.69,0.47,79.65,250.0,44.5,10.0,,0.244,
 167807,"Cherry juice, tart",['cherry juice'],{'cherry juice': 9.78},[],1,1,1.0,[],[],9.78,0.31,0.54,13.7,59.0,,4.0,0.0,,12.21
-167808,"Raspberries, puree, seedless","['raspberries', 'puree']","{'raspberries': 12.44, 'puree': 2.42}",[],2,2,1.0,[],[],14.86,1.02,0.87,7.99,41.0,0.9,4.0,,0.064,6.04
-167809,"Raspberries, puree, with seeds",['raspberries'],{'raspberries': 12.44},[],1,1,1.0,[],[],12.44,1.1,0.97,11.51,55.0,4.3,4.0,,0.062,6.56
+167808,"Raspberries, puree, seedless","['raspberries', 'puree']",{'puree': 2.42},['raspberries'],1,2,0.5,[],[],0.0,1.02,0.87,7.99,41.0,0.9,4.0,,0.064,6.04
 167810,"Pork, fresh, composite of trimmed leg, loin, shoulder, and spareribs, (includes cuts to be cured), separable lean and fat, raw",['pork'],{'pork': 6.15},[],1,1,1.0,"['fresh', 'separable', 'lean', 'fat', 'raw']","['trimmed', 'includes', 'cured']",6.15,18.22,14.79,0.0,211.0,0.0,57.0,69.0,4.918,0.0
 167811,"Pork, fresh, backfat, raw",['pork'],{'pork': 6.15},[],1,1,1.0,"['fresh', 'raw']",[],6.15,2.92,88.69,0.0,812.0,0.0,11.0,57.0,32.21,0.0
 167812,"Pork, fresh, belly, raw",['pork'],{'pork': 6.15},[],1,1,1.0,"['fresh', 'raw']",[],6.15,9.34,53.01,0.0,518.0,0.0,32.0,72.0,19.33,0.0
@@ -247,7 +240,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 167856,"Pork, fresh, variety meats and by-products, chitterlings, cooked, simmered","['pork', 'variety meats products', 'chitterlings']",{'pork': 6.15},"['variety meats products', 'chitterlings']",1,3,0.3333333333333333,['fresh'],"['cooked', 'simmered']",0.0,12.49,20.32,0.0,233.0,0.0,18.0,277.0,9.52,0.0
 167857,"Pork, fresh, variety meats and by-products, ears, frozen, raw","['pork', 'variety meats products', 'ears']","{'pork': 6.15, 'ears': 7.2}",['variety meats products'],2,3,0.6666666666666666,"['fresh', 'raw']",['frozen'],0.0,22.45,15.1,0.6,234.0,0.0,191.0,82.0,5.39,
 167858,"Pork, fresh, variety meats and by-products, ears, frozen, cooked, simmered","['pork', 'variety meats products', 'ears']","{'pork': 6.15, 'ears': 7.2}",['variety meats products'],2,3,0.6666666666666666,['fresh'],"['frozen', 'cooked', 'simmered']",0.0,15.95,10.8,0.2,166.0,0.0,167.0,90.0,3.86,
-167859,"Pork, fresh, variety meats and by-products, feet, raw","['pork', 'variety meats products', 'feet']","{'pork': 6.15, 'feet': 5.94}",['variety meats products'],2,3,0.6666666666666666,"['fresh', 'raw']",[],0.0,23.16,12.59,0.0,212.0,0.0,132.0,88.0,3.57,0.0
+167859,"Pork, fresh, variety meats and by-products, feet, raw","['pork', 'variety meats products', 'feet']","{'pork': 6.15, 'feet': 6.0}",['variety meats products'],2,3,0.6666666666666666,"['fresh', 'raw']",[],0.0,23.16,12.59,0.0,212.0,0.0,132.0,88.0,3.57,0.0
 167860,"Pork, fresh, variety meats and by-products, kidneys, cooked, braised","['pork', 'variety meats products', 'kidneys']","{'pork': 6.15, 'kidneys': 8.0}",['variety meats products'],2,3,0.6666666666666666,['fresh'],"['cooked', 'braised']",0.0,25.4,4.7,0.0,151.0,0.0,80.0,480.0,1.51,
 167861,"Pork, fresh, variety meats and by-products, leaf fat, raw","['pork', 'variety meats products', 'leaf fat']","{'pork': 6.15, 'leaf fat': 6.62}",['variety meats products'],2,3,0.6666666666666666,"['fresh', 'raw']",[],0.0,1.76,94.16,0.0,857.0,0.0,5.0,110.0,45.23,
 167862,"Pork, fresh, variety meats and by-products, liver, raw","['pork', 'variety meats products', 'liver']","{'pork': 6.15, 'liver': 5.11}",['variety meats products'],2,3,0.6666666666666666,"['fresh', 'raw']",[],0.0,21.39,3.65,2.47,134.0,0.0,87.0,301.0,1.17,
@@ -258,10 +251,10 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 167867,"Pork, fresh, variety meats and by-products, stomach, raw","['pork', 'variety meats products', 'stomach']","{'pork': 6.15, 'stomach': 8.0}",['variety meats products'],2,3,0.6666666666666666,"['fresh', 'raw']",[],0.0,16.85,10.14,0.0,159.0,0.0,75.0,223.0,4.025,0.0
 167868,"Pork, fresh, loin, blade (chops), bone-in, separable lean only, cooked, pan-fried","['pork', 'loin']","{'pork': 6.15, 'loin': 10.25}",[],2,2,1.0,"['fresh', 'separable', 'pan-fried']",['cooked'],16.4,26.38,12.14,0.0,222.0,0.0,88.0,82.0,2.557,0.0
 167869,"Canadian bacon, unprepared",['bacon'],{'bacon': 9.88},[],1,1,1.0,"['Canadian', 'unprepared']",[],9.88,20.31,2.62,1.34,110.0,0.0,751.0,48.0,0.9,0.9
-167870,"Pork, cured, feet, pickled","['pork', 'feet']","{'pork': 6.15, 'feet': 5.94}",[],2,2,1.0,[],"['cured', 'pickled']",12.09,11.63,10.02,0.01,140.0,0.0,946.0,83.0,2.945,0.0
+167870,"Pork, cured, feet, pickled","['pork', 'feet']","{'pork': 6.15, 'feet': 6.0}",[],2,2,1.0,[],"['cured', 'pickled']",12.15,11.63,10.02,0.01,140.0,0.0,946.0,83.0,2.945,0.0
 167871,"Pork, cured, ham, boneless, extra lean (approximately 5% fat), roasted","['pork', 'ham']","{'pork': 6.15, 'ham': 8.0}",[],2,2,1.0,"['boneless', 'extra', 'fat']","['cured', 'roasted']",14.15,20.93,5.53,1.5,145.0,0.0,1203.0,53.0,1.81,0.0
 167872,"Pork, cured, ham, boneless, regular (approximately 11% fat), roasted","['pork', 'ham']","{'pork': 6.15, 'ham': 8.0}",[],2,2,1.0,"['boneless', 'regular', 'fat']","['cured', 'roasted']",14.15,22.62,9.02,0.0,178.0,0.0,1500.0,59.0,3.12,0.0
-167873,"Pork, cured, ham, patties, unheated","['pork', 'ham', 'patties']","{'pork': 6.15, 'ham': 8.0, 'patties': 5.7}",[],3,3,1.0,['unheated'],['cured'],19.85,12.78,28.19,1.69,315.0,0.0,1088.0,70.0,10.13,
+167873,"Pork, cured, ham, patties, unheated","['pork', 'ham', 'patties']","{'pork': 6.15, 'ham': 8.0}",['patties'],2,3,0.6666666666666666,['unheated'],['cured'],0.0,12.78,28.19,1.69,315.0,0.0,1088.0,70.0,10.13,
 167874,"Pork, cured, ham, steak, boneless, extra lean, unheated","['pork', 'ham', 'steak']","{'pork': 6.15, 'ham': 8.0, 'steak': 14.25}",[],3,3,1.0,"['boneless', 'extra', 'unheated']",['cured'],28.4,19.56,4.25,0.0,122.0,0.0,1269.0,45.0,1.44,
 167875,"Pork, cured, ham, whole, separable lean and fat, unheated","['pork', 'ham']","{'pork': 6.15, 'ham': 8.0}",[],2,2,1.0,"['whole', 'separable', 'lean', 'fat', 'unheated']",['cured'],14.15,18.49,18.52,0.06,246.0,0.0,1284.0,56.0,6.62,0.0
 167876,"Pork, cured, ham, whole, separable lean only, unheated",['pork'],{'pork': 6.15},[],1,1,1.0,"['ham', 'whole', 'separable', 'unheated']",['cured'],6.15,22.32,5.71,0.05,147.0,0.0,1516.0,52.0,1.92,0.0
@@ -445,17 +438,14 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 168155,"Limes, raw",['limes'],{'limes': 1.95},[],1,1,1.0,['raw'],[],1.95,0.7,0.2,10.54,30.0,2.8,2.0,0.0,0.022,1.69
 168156,"Lime juice, raw",['lime juice'],{'lime juice': 9.78},[],1,1,1.0,['raw'],[],9.78,0.42,0.07,8.42,25.0,0.4,2.0,0.0,0.008,1.69
 168157,"Lime juice, canned or bottled, unsweetened",['lime juice'],{'lime juice': 9.78},[],1,1,1.0,"['canned', 'unsweetened']",['bottled'],9.78,0.25,0.23,6.69,21.0,0.4,16.0,0.0,0.026,1.37
-168158,"Blueberries, dried, sweetened",['blueberries'],{'blueberries': 10.95},[],1,1,1.0,[],"['dried', 'sweetened']",10.95,2.5,2.5,80.0,317.0,7.5,3.0,0.0,0.2,67.5
+168158,"Blueberries, dried, sweetened",['blueberries'],{'blueberries': 3.95},[],1,1,1.0,[],"['dried', 'sweetened']",3.95,2.5,2.5,80.0,317.0,7.5,3.0,0.0,0.2,67.5
 168162,"Plums, dried (prunes), uncooked","['plums', 'prunes']",{'plums': 7.95},['prunes'],1,2,0.5,['uncooked'],['dried'],0.0,2.18,0.38,63.88,240.0,7.1,2.0,0.0,0.088,38.13
 168167,"Rambutan, canned, syrup pack",['rambutan'],{'rambutan': 3.8},[],1,1,1.0,['canned'],[],3.8,0.65,0.21,20.87,82.0,0.9,11.0,0.0,,
-168172,"Strawberries, canned, heavy syrup pack, solids and liquids",['strawberries'],{'strawberries': 19.75},[],1,1,1.0,"['canned', 'heavy']",[],19.75,0.56,0.26,23.53,92.0,1.7,4.0,0.0,0.014,21.83
-168173,"Strawberries, frozen, unsweetened (Includes foods for USDA's Food Distribution Program)",['strawberries'],{'strawberries': 19.75},[],1,1,1.0,['unsweetened'],"['frozen', 'Includes']",19.75,0.43,0.11,9.13,35.0,2.1,2.0,0.0,0.006,4.56
-168174,"Strawberries, frozen, sweetened, sliced",['strawberries'],{'strawberries': 19.75},[],1,1,1.0,[],"['frozen', 'sweetened', 'sliced']",19.75,0.53,0.13,25.92,96.0,1.9,3.0,0.0,0.007,24.01
 168175,"Sugar-apples, (sweetsop), raw",['sugar apples'],{'sugar apples': 5.9},[],1,1,1.0,['raw'],[],5.9,2.06,0.29,23.64,94.0,4.4,9.0,0.0,0.048,
 168177,"Pears, asian, raw",['pears'],{'pears': 4.95},[],1,1,1.0,"['asian', 'raw']",[],4.95,0.5,0.23,10.65,42.0,3.6,0.0,0.0,0.012,7.05
 168178,"Fruit cocktail, canned, heavy syrup, drained",['fruit cocktail'],{'fruit cocktail': 11.7},[],1,1,1.0,"['canned', 'heavy']",['drained'],11.7,0.47,0.1,18.8,70.0,1.7,6.0,0.0,0.014,17.14
-168179,"Blueberries, canned, light syrup, drained",['blueberries'],{'blueberries': 10.95},[],1,1,1.0,['canned'],['drained'],10.95,1.04,0.4,22.66,88.0,2.6,3.0,0.0,0.028,17.45
-168180,"Blueberries, wild, canned, heavy syrup, drained",['blueberries'],{'blueberries': 10.95},[],1,1,1.0,"['wild', 'canned', 'heavy']",['drained'],10.95,0.56,0.34,28.32,107.0,4.9,1.0,,,19.28
+168179,"Blueberries, canned, light syrup, drained",['blueberries'],{'blueberries': 3.95},[],1,1,1.0,['canned'],['drained'],3.95,1.04,0.4,22.66,88.0,2.6,3.0,0.0,0.028,17.45
+168180,"Blueberries, wild, canned, heavy syrup, drained",['blueberries'],{'blueberries': 3.95},[],1,1,1.0,"['wild', 'canned', 'heavy']",['drained'],3.95,0.56,0.34,28.32,107.0,4.9,1.0,,,19.28
 168181,"Peaches, canned, heavy syrup, drained",['peaches'],{'peaches': 8.95},[],1,1,1.0,"['canned', 'heavy']",['drained'],8.95,0.52,0.18,18.43,72.0,1.2,6.0,0.0,0.013,14.66
 168182,"Pears, canned, heavy syrup, drained",['pears'],{'pears': 4.95},[],1,1,1.0,"['canned', 'heavy']",['drained'],4.95,0.24,0.18,19.08,74.0,2.7,5.0,0.0,0.01,16.42
 168183,"Plums, canned, heavy syrup, drained",['plums'],{'plums': 7.95},[],1,1,1.0,"['canned', 'heavy']",['drained'],7.95,0.44,0.14,23.12,89.0,1.5,19.0,0.0,0.011,21.58
@@ -476,7 +466,6 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 168206,"Fruit juice smoothie, NAKED JUICE, BLUE MACHINE","['fruit juice smoothie', 'juice']","{'fruit juice smoothie': 4.5, 'juice': 9.78}",[],2,2,1.0,"['NAKED', 'BLUE']",[],14.28,0.42,0.0,16.67,71.0,2.9,4.0,0.0,0.0,12.08
 168207,"Grape juice, canned or bottled, unsweetened, with added ascorbic acid and calcium",['grape juice'],{'grape juice': 9.78},[],1,1,1.0,['unsweetened'],"['canned', 'bottled', 'added']",9.78,0.37,0.13,14.77,62.0,0.2,5.0,0.0,0.025,14.2
 168208,"Fruit juice smoothie, ODWALLA, ORIGINAL SUPERFOOD",['fruit juice smoothie'],{'fruit juice smoothie': 4.5},[],1,1,1.0,['ORIGINAL'],[],4.5,0.63,0.36,11.51,50.0,0.6,3.0,0.0,0.105,10.16
-168209,"Raspberries, frozen, red, unsweetened",['raspberries'],{'raspberries': 12.44},[],1,1,1.0,"['red', 'unsweetened']",['frozen'],12.44,1.15,0.81,12.55,56.0,4.3,4.0,0.0,0.064,6.54
 168211,"Kiwifruit, ZESPRI SunGold, raw","['kiwifruit', 'sungold']",{'kiwifruit': 6.65},['sungold'],1,2,0.5,['raw'],[],0.0,1.02,0.28,15.79,63.0,1.4,3.0,0.0,0.065,12.3
 168212,"Cranberry juice blend, 100% juice, bottled, with added vitamin C and calcium",['cranberry juice blend'],{'cranberry juice blend': 7.95},[],1,1,1.0,[],"['bottled', 'added']",7.95,0.27,0.12,10.91,45.0,0.1,6.0,0.0,0.002,9.8
 168213,"Fruit juice smoothie, ODWALLA, strawberry banana",['fruit juice smoothie'],{'fruit juice smoothie': 4.5},[],1,1,1.0,[],[],4.5,0.5,0.32,11.05,48.0,0.6,2.0,0.0,0.059,9.9
@@ -554,7 +543,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 168287,"Pork, cured, salt pork, raw",['pork'],{'pork': 6.15},[],1,1,1.0,['raw'],['cured'],6.15,5.05,80.5,0.0,748.0,0.0,2684.0,86.0,29.38,0.0
 168288,"Pork, cured, shoulder, blade roll, separable lean and fat, unheated","['pork', 'shoulder', 'blade roll']","{'pork': 6.15, 'shoulder': 10.9, 'blade roll': 7.45}",[],3,3,1.0,"['separable', 'lean', 'fat', 'unheated']",['cured'],24.5,16.47,21.98,0.0,269.0,0.0,1250.0,53.0,7.939,
 168289,"Pork, cured, shoulder, blade roll, separable lean and fat, roasted","['pork', 'shoulder', 'blade roll']","{'pork': 6.15, 'shoulder': 10.9, 'blade roll': 7.45}",[],3,3,1.0,"['separable', 'fat']","['cured', 'roasted']",24.5,17.28,23.48,0.37,287.0,0.0,973.0,67.0,8.38,
-168290,"Pork, fresh, variety meats and by-products, feet, cooked, simmered","['pork', 'variety meats products', 'feet']","{'pork': 6.15, 'feet': 5.94}",['variety meats products'],2,3,0.6666666666666666,['fresh'],"['cooked', 'simmered']",0.0,21.94,16.05,0.0,238.0,0.0,73.0,107.0,4.343,0.0
+168290,"Pork, fresh, variety meats and by-products, feet, cooked, simmered","['pork', 'variety meats products', 'feet']","{'pork': 6.15, 'feet': 6.0}",['variety meats products'],2,3,0.6666666666666666,['fresh'],"['cooked', 'simmered']",0.0,21.94,16.05,0.0,238.0,0.0,73.0,107.0,4.343,0.0
 168291,"Pork, fresh, variety meats and by-products, tail, raw","['pork', 'variety meats products']",{'pork': 6.15},['variety meats products'],1,2,0.5,"['fresh', 'raw']",[],0.0,17.75,33.5,0.0,378.0,0.0,63.0,97.0,11.64,
 168292,"Pork, fresh, loin, center loin (chops), bone-in, separable lean and fat, cooked, pan-fried","['pork', 'loin']","{'pork': 6.15, 'loin': 10.25}",[],2,2,1.0,"['fresh', 'separable', 'lean', 'fat', 'pan-fried']",['cooked'],16.4,27.63,13.32,0.0,238.0,0.0,94.0,79.0,4.867,0.0
 168293,"Pork, fresh, loin, center rib (chops), bone-in, separable lean and fat, cooked, pan-fried","['pork', 'loin']","{'pork': 6.15, 'loin': 10.25}",[],2,2,1.0,"['fresh', 'separable', 'lean', 'fat', 'pan-fried']",['cooked'],16.4,26.81,15.71,0.0,256.0,0.0,84.0,78.0,5.056,0.0
@@ -695,7 +684,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 168441,"New Zealand spinach, cooked, boiled, drained, without salt",['zealand spinach'],{'zealand spinach': 4.3},[],1,1,1.0,['New'],"['cooked', 'boiled', 'drained']",4.3,1.3,0.17,2.13,12.0,1.4,107.0,0.0,0.027,0.25
 168442,"Potatoes, french fried, all types, salt added in processing, frozen, unprepared",['potatoes'],{'potatoes': 4.17},[],1,1,1.0,"['french', 'unprepared']","['added', 'frozen']",4.17,2.24,4.66,24.81,147.0,1.9,332.0,0.0,1.005,0.2
 168443,"Potato wedges, frozen (Includes foods for USDA's Food Distribution Program)",['potato wedges'],{'potato wedges': 5.0},[],1,1,1.0,[],"['frozen', 'Includes']",5.0,2.7,2.2,25.46,129.0,2.0,49.0,0.0,0.55,0.3
-168444,"Potatoes, french fried, steak fries, salt added in processing, frozen, as purchased","['potatoes', 'steak fries']","{'potatoes': 4.17, 'steak fries': 4.75}",[],2,2,1.0,['french'],"['added', 'frozen', 'purchased']",8.92,2.19,3.39,23.51,130.0,1.9,317.0,0.0,0.688,0.2
+168444,"Potatoes, french fried, steak fries, salt added in processing, frozen, as purchased","['potatoes', 'steak fries']","{'potatoes': 4.17, 'steak fries': 5.97}",[],2,2,1.0,['french'],"['added', 'frozen', 'purchased']",10.14,2.19,3.39,23.51,130.0,1.9,317.0,0.0,0.688,0.2
 168445,"Potatoes, french fried, steak fries, salt added in processing, frozen, oven-heated",['potatoes'],{'potatoes': 4.17},[],1,1,1.0,['french'],"['added', 'frozen', 'heated']",4.17,2.57,3.76,26.98,148.0,2.6,373.0,0.0,0.737,0.25
 168446,Potato flour,['potato flour'],{'potato flour': 2.85},[],1,1,1.0,[],[],2.85,6.9,0.34,83.1,357.0,5.9,55.0,0.0,0.09,3.52
 168447,"Pumpkin leaves, cooked, boiled, drained, without salt",['pumpkin'],{'pumpkin': 5.47},[],1,1,1.0,[],"['leaves', 'cooked', 'boiled', 'drained']",5.47,2.72,0.22,3.39,21.0,2.7,8.0,0.0,0.114,0.69
@@ -778,7 +767,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 168574,"Beans, fava, in pod, raw","['beans', 'fava']",{'beans': 2.72},['fava'],1,2,0.5,['raw'],[],0.0,7.92,0.73,17.63,88.0,7.5,25.0,0.0,0.118,9.21
 168575,"Grape leaves, raw",['grape'],{'grape': 7.71},[],1,1,1.0,['raw'],['leaves'],7.71,5.6,2.12,17.31,93.0,11.0,9.0,0.0,0.336,6.3
 168576,"Peppers, jalapeno, raw","['peppers', 'jalapeno']","{'peppers': 4.23, 'jalapeno': 10.98}",[],2,2,1.0,['raw'],[],15.21,0.91,0.37,6.5,29.0,2.8,3.0,0.0,0.092,4.12
-168577,"Peppers, chili, green, canned","['peppers', 'chili']","{'peppers': 4.23, 'chili': 1.5}",[],2,2,1.0,"['green', 'canned']",[],5.73,0.72,0.27,4.6,21.0,1.7,397.0,0.0,0.028,
+168577,"Peppers, chili, green, canned","['peppers', 'chili']","{'peppers': 4.23, 'chili': 1.95}",[],2,2,1.0,"['green', 'canned']",[],6.18,0.72,0.27,4.6,21.0,1.7,397.0,0.0,0.028,
 168578,"Peppers, hungarian, raw",['peppers'],{'peppers': 4.23},[],1,1,1.0,"['hungarian', 'raw']",[],4.23,0.8,0.41,6.7,29.0,1.0,1.0,0.0,0.046,3.53
 168579,"Peppers, pasilla, dried","['peppers', 'pasilla']",{'peppers': 4.23},['pasilla'],1,2,0.5,[],['dried'],0.0,12.35,15.85,51.13,345.0,26.8,89.0,0.0,,
 168580,"Mushrooms, oyster, raw","['mushrooms', 'oyster']","{'mushrooms': 3.3, 'oyster': 4.19}",[],2,2,1.0,['raw'],[],7.49,3.31,0.41,6.09,33.0,2.3,18.0,0.0,0.062,1.11
@@ -846,7 +835,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 168648,"Beef, rib, eye, small end (ribs 10- 12) separable lean only, trimmed to 0"" fat, select, cooked, broiled",['beef'],{'beef': 10.25},[],1,1,1.0,"['small', 'separable', 'fat']","['trimmed', 'select', 'cooked', 'broiled']",10.25,29.93,6.05,0.0,182.0,0.0,63.0,95.0,2.305,0.0
 168649,"Beef, round, top round steak, boneless, separable lean only, trimmed to 0"" fat, all grades, cooked, grilled","['beef', 'steak']","{'beef': 10.25, 'steak': 14.25}",[],2,2,1.0,"['round', 'top', 'round', 'boneless', 'separable', 'fat']","['trimmed', 'cooked', 'grilled']",24.5,30.09,3.77,0.0,162.0,0.0,75.0,86.0,1.556,0.0
 168650,"Beef, ground, 70% lean meat / 30% fat, patty cooked, pan-broiled","['beef', 'ground']","{'beef': 10.25, 'ground': 4.94}",[],2,2,1.0,"['lean', 'fat', 'pan-broiled']",['cooked'],15.19,22.86,15.54,0.0,238.0,0.0,92.0,84.0,6.075,0.0
-168651,"Beef, ground, 70% lean meat / 30% fat, patty, cooked, broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94, 'patty': 5.7}",[],3,3,1.0,"['lean', 'fat']","['cooked', 'broiled']",20.89,25.38,18.66,0.0,277.0,0.0,81.0,88.0,7.344,0.0
+168651,"Beef, ground, 70% lean meat / 30% fat, patty, cooked, broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94}",['patty'],2,3,0.6666666666666666,"['lean', 'fat']","['cooked', 'broiled']",0.0,25.38,18.66,0.0,277.0,0.0,81.0,88.0,7.344,0.0
 168652,"Beef, ground, 70% lean meat / 30% fat, raw","['beef', 'ground']","{'beef': 10.25, 'ground': 4.94}",[],2,2,1.0,"['lean', 'fat', 'raw']",[],15.19,14.35,30.0,0.0,332.0,0.0,66.0,78.0,11.754,0.0
 168653,"Beef, chuck, under blade center steak, boneless, Denver Cut, separable lean only, trimmed to 0"" fat, select, raw","['beef', 'chuck', 'blade center steak', 'denver cut']","{'beef': 10.25, 'chuck': 28.0, 'blade center steak': 14.25, 'denver cut': 6.88}",[],4,4,1.0,"['boneless', 'separable', 'fat', 'raw']","['trimmed', 'select']",59.38,19.71,8.54,0.21,157.0,0.0,77.0,68.0,3.449,0.0
 168654,"Beef, shoulder top blade steak, boneless, separable lean only, trimmed to 0"" fat, all grades, cooked, grilled","['beef', 'shoulder blade steak']","{'beef': 10.25, 'shoulder blade steak': 14.25}",[],2,2,1.0,"['top', 'boneless', 'separable', 'fat']","['trimmed', 'cooked', 'grilled']",24.5,28.15,9.23,0.0,196.0,0.0,87.0,95.0,3.771,0.0
@@ -1086,14 +1075,12 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 168976,"Agutuk, fish/berry with seal oil (Alaskan ice cream) (Alaska Native)","['agutuk', 'ice cream']",{'ice cream': 7.65},['agutuk'],1,2,0.5,['Alaskan'],[],0.0,3.4,31.8,13.4,353.0,0.5,21.0,10.0,7.7,
 168977,"Agutuk, meat-caribou (Alaskan ice cream) (Alaska Native)",['ice cream'],{'ice cream': 7.65},[],1,1,1.0,['Alaskan'],[],7.65,21.7,18.6,0.9,258.0,,95.0,89.0,5.1,
 168981,"Oil, beluga, whale (Alaska Native)","['oil', 'beluga']",{'oil': 8.85},['beluga'],1,2,0.5,[],[],0.0,0.0,100.0,0.0,900.0,0.0,0.0,,14.49,0.0
-168982,"Blackberries, wild, raw (Alaska Native)",['blackberries'],{'blackberries': 6.95},[],1,1,1.0,"['wild', 'raw']",[],6.95,0.84,1.07,9.84,52.0,3.2,6.0,,,3.65
 168994,"Cattail, Narrow Leaf Shoots (Northern Plains Indians)",['cattail leaf shoots'],{'cattail leaf shoots': 3.2},[],1,1,1.0,"['Narrow', 'Northern']",[],3.2,1.18,0.0,5.14,25.0,4.5,109.0,,,0.22
-168997,"Raspberries, wild (Northern Plains Indians)",['raspberries'],{'raspberries': 12.44},[],1,1,1.0,"['wild', 'Northern']",[],12.44,1.12,0.28,13.85,62.0,7.5,4.0,,,5.54
 169000,"Sea lion, Steller, liver (Alaska Native)",['liver'],{'liver': 5.11},[],1,1,1.0,[],[],5.11,22.9,5.0,0.0,137.0,,88.0,359.0,1.3,
 169001,"Sea lion, Steller, kidney (Alaska Native)",['kidney'],{'kidney': 8.0},[],1,1,1.0,[],[],8.0,18.1,1.7,1.4,93.0,,231.0,390.0,0.3,
 169004,"Piki bread, made from blue cornmeal (Hopi)",['piki bread'],{'piki bread': 3.15},[],1,1,1.0,['blue'],['made'],3.15,9.06,7.16,72.22,390.0,9.2,60.0,,0.819,1.6
 169008,"APPLEBEE'S, Double Crunch Shrimp",['shrimp'],{'shrimp': 11.47},[],1,1,1.0,['Double'],[],11.47,12.31,18.9,25.96,323.0,2.6,838.0,86.0,3.366,1.07
-169009,"APPLEBEE'S, french fries",['fries'],{'fries': 4.75},[],1,1,1.0,['french'],[],4.75,3.31,13.17,39.5,290.0,3.9,618.0,1.0,2.333,0.0
+169009,"APPLEBEE'S, french fries",['fries'],{'fries': 5.97},[],1,1,1.0,['french'],[],5.97,3.31,13.17,39.5,290.0,3.9,618.0,1.0,2.333,0.0
 169010,"APPLEBEE'S, KRAFT, Macaroni & Cheese, from kid's menu",['macaroni cheese'],{'macaroni cheese': 8.5},[],1,1,1.0,[],[],8.5,5.01,4.34,21.08,143.0,1.3,288.0,7.0,1.312,3.7
 169011,"APPLEBEE'S, mozzarella sticks",['mozzarella'],{'mozzarella': 8.63},[],1,1,1.0,[],['sticks'],8.63,14.87,18.37,22.87,316.0,2.1,838.0,33.0,6.73,2.8
 169012,"APPLEBEE'S, chicken tenders, from kids' menu",['chicken tenders'],{'chicken tenders': 11.9},[],1,1,1.0,[],[],11.9,19.25,16.15,18.36,296.0,1.2,763.0,51.0,2.852,0.39
@@ -1102,7 +1089,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 169015,"Restaurant, family style, fried mozzarella sticks",['mozzarella sticks'],{'mozzarella sticks': 6.98},[],1,1,1.0,[],['fried'],6.98,14.75,18.33,25.14,325.0,2.0,861.0,36.0,6.848,2.36
 169016,"Restaurant, family style, sirloin steak",['sirloin steak'],{'sirloin steak': 26.1},[],1,1,1.0,[],[],26.1,29.8,8.48,0.0,195.0,,339.0,87.0,3.143,0.55
 169017,"APPLEBEE'S, fish, hand battered",['fish'],{'fish': 5.94},[],1,1,1.0,[],['battered'],5.94,13.23,9.14,16.65,202.0,0.9,607.0,34.0,1.613,0.51
-169018,"APPLEBEE'S, chili",['applebee s chili'],{'applebee s chili': 1.5},[],1,1,1.0,[],[],1.5,12.56,9.79,4.57,157.0,1.4,381.0,45.0,4.15,2.27
+169018,"APPLEBEE'S, chili",['applebee s chili'],{'applebee s chili': 1.95},[],1,1,1.0,[],[],1.95,12.56,9.79,4.57,157.0,1.4,381.0,45.0,4.15,2.27
 169019,"T.G.I. FRIDAY'S, chicken fingers",['chicken fingers'],{'chicken fingers': 11.6},[],1,1,1.0,[],[],11.6,18.68,20.31,16.84,325.0,0.8,787.0,46.0,3.905,0.23
 169021,"CRACKER BARREL, onion rings, thick-cut","['cracker barrel', 'onion rings']",{'onion rings': 9.22},['cracker barrel'],1,2,0.5,['thick'],[],0.0,4.78,16.0,40.95,327.0,2.2,463.0,,2.941,4.82
 169022,"DENNY'S, chicken strips",['chicken strips'],{'chicken strips': 6.8},[],1,1,1.0,[],[],6.8,19.17,14.5,22.03,295.0,1.1,798.0,44.0,2.585,0.29
@@ -1129,7 +1116,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 169056,"Salad dressing, coleslaw",['salad dressing'],{'salad dressing': 4.95},[],1,1,1.0,[],[],4.95,0.85,34.53,22.4,404.0,0.0,850.0,41.0,5.343,21.23
 169057,"Salad dressing, green goddess, regular",['salad dressing'],{'salad dressing': 4.95},[],1,1,1.0,"['green', 'regular']",[],4.95,1.9,43.33,7.36,427.0,0.1,867.0,40.0,5.978,6.67
 169063,"Breakfast bars, oats, sugar, raisins, coconut (include granola bar)",['breakfast bars'],{'breakfast bars': 7.56},[],1,1,1.0,[],['include'],7.56,9.8,17.6,66.7,464.0,3.1,251.0,0.0,12.69,27.52
-169065,"Beans, chili, barbecue, ranch style, cooked","['beans', 'chili']","{'beans': 2.72, 'chili': 1.5}",[],2,2,1.0,[],['cooked'],4.22,5.0,1.0,16.9,97.0,4.2,725.0,0.0,0.145,5.25
+169065,"Beans, chili, barbecue, ranch style, cooked","['beans', 'chili']","{'beans': 2.72, 'chili': 1.95}",[],2,2,1.0,[],['cooked'],4.67,5.0,1.0,16.9,97.0,4.2,725.0,0.0,0.145,5.25
 169066,"Luncheon slices, meatless",['luncheon slices'],{'luncheon slices': 8.55},[],1,1,1.0,[],[],8.55,17.78,11.11,4.44,189.0,1.1,711.0,0.0,1.338,2.22
 169067,"Meatballs, meatless",['meatballs'],{'meatballs': 9.88},[],1,1,1.0,[],[],9.88,21.0,9.0,8.0,197.0,4.6,550.0,0.0,1.425,1.25
 169068,Vegetarian fillets,['fillets'],{'fillets': 8.61},[],1,1,1.0,['Vegetarian'],[],8.61,23.0,18.0,9.0,290.0,6.1,490.0,0.0,2.849,0.8
@@ -1281,7 +1268,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 169246,"Leeks, (bulb and lower leaf-portion), raw",['leeks'],{'leeks': 6.45},[],1,1,1.0,"['lower', 'raw']",[],6.45,1.5,0.3,14.15,61.0,1.8,20.0,0.0,0.04,3.9
 169247,"Lettuce, cos or romaine, raw",['lettuce'],{'lettuce': 3.4},[],1,1,1.0,['raw'],[],3.4,1.23,0.3,3.29,17.0,2.1,8.0,0.0,0.039,1.19
 169248,"Lettuce, iceberg (includes crisphead types), raw","['lettuce', 'iceberg']",{'lettuce': 3.4},['iceberg'],1,2,0.5,['raw'],['includes'],0.0,0.9,0.14,2.97,14.0,1.2,10.0,0.0,0.018,1.97
-169249,"Lettuce, green leaf, raw","['lettuce', 'leaf']","{'lettuce': 3.4, 'leaf': 2.5}",[],2,2,1.0,"['green', 'raw']",[],5.9,1.36,0.15,2.87,15.0,1.3,28.0,0.0,0.02,0.78
+169249,"Lettuce, green leaf, raw","['lettuce', 'leaf']","{'lettuce': 3.4, 'leaf': 2.7}",[],2,2,1.0,"['green', 'raw']",[],6.1,1.36,0.15,2.87,15.0,1.3,28.0,0.0,0.02,0.78
 169250,"Lotus root, raw",['lotus root'],{'lotus root': 3.25},[],1,1,1.0,['raw'],[],3.25,2.6,0.1,17.23,74.0,4.9,40.0,0.0,0.03,
 169251,"Mushrooms, white, raw",['mushrooms'],{'mushrooms': 3.3},[],1,1,1.0,"['white', 'raw']",[],3.3,3.09,0.34,3.26,22.0,1.0,5.0,0.0,0.05,1.98
 169252,"Mushrooms, white, cooked, boiled, drained, without salt",['mushrooms'],{'mushrooms': 3.3},[],1,1,1.0,['white'],"['cooked', 'boiled', 'drained']",3.3,2.17,0.47,5.29,28.0,2.2,2.0,0.0,0.061,2.34
@@ -1322,8 +1309,8 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 169292,"Squash, summer, zucchini, includes skin, cooked, boiled, drained, without salt","['squash', 'zucchini']",{'zucchini': 4.5},['squash'],1,2,0.5,[],"['includes', 'cooked', 'boiled', 'drained']",0.0,1.14,0.36,2.69,15.0,1.0,3.0,0.0,0.072,1.71
 169298,"Squash, winter, spaghetti, raw","['squash', 'spaghetti']",{'spaghetti': 2.25},['squash'],1,2,0.5,['raw'],[],0.0,0.64,0.57,6.91,31.0,1.5,17.0,0.0,0.117,2.76
 169299,"Squash, winter, spaghetti, cooked, boiled, drained, or baked, without salt","['squash', 'winter', 'spaghetti']",{'spaghetti': 2.25},"['squash', 'winter']",1,3,0.3333333333333333,[],"['cooked', 'boiled', 'drained', 'baked']",0.0,0.66,0.26,6.46,27.0,1.4,18.0,0.0,0.062,2.53
-169303,"Sweet potato leaves, raw",['potato leaves'],{'potato leaves': 1.6},[],1,1,1.0,"['Sweet', 'raw']",[],1.6,2.49,0.51,8.82,42.0,5.3,6.0,0.0,0.111,
-169304,"Sweet potato leaves, cooked, steamed, without salt",['potato leaves'],{'potato leaves': 1.6},[],1,1,1.0,['Sweet'],"['cooked', 'steamed']",1.6,2.18,0.34,7.38,35.0,1.9,7.0,0.0,0.065,5.48
+169303,"Sweet potato leaves, raw",['potato leaves'],{'potato leaves': 0.47},[],1,1,1.0,"['Sweet', 'raw']",[],0.47,2.49,0.51,8.82,42.0,5.3,6.0,0.0,0.111,
+169304,"Sweet potato leaves, cooked, steamed, without salt",['potato leaves'],{'potato leaves': 0.47},[],1,1,1.0,['Sweet'],"['cooked', 'steamed']",0.47,2.18,0.34,7.38,35.0,1.9,7.0,0.0,0.065,5.48
 169305,"Sweet potato, canned, mashed",['potato'],{'potato': 4.17},[],1,1,1.0,"['Sweet', 'canned']",['mashed'],4.17,1.98,0.2,23.19,101.0,1.7,75.0,0.0,0.041,5.45
 169306,"Sweet potato, frozen, unprepared (Includes foods for USDA's Food Distribution Program)",['potato'],{'potato': 4.17},[],1,1,1.0,"['Sweet', 'unprepared']","['frozen', 'Includes']",4.17,1.71,0.18,22.22,96.0,1.7,6.0,0.0,0.039,
 169307,"Sweet potato, frozen, cooked, baked, without salt",['potato'],{'potato': 4.17},[],1,1,1.0,['Sweet'],"['frozen', 'cooked', 'baked']",4.17,1.71,0.12,23.4,100.0,1.8,8.0,0.0,0.025,9.17
@@ -1393,7 +1380,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 169390,"Cauliflower, green, cooked, no salt added",['cauliflower'],{'cauliflower': 5.13},[],1,1,1.0,['green'],"['cooked', 'added']",5.13,3.04,0.31,6.28,32.0,3.3,23.0,0.0,0.043,3.12
 169391,"Cauliflower, green, cooked, with salt",['cauliflower'],{'cauliflower': 5.13},[],1,1,1.0,['green'],['cooked'],5.13,3.04,0.31,6.28,32.0,3.3,259.0,0.0,0.049,
 169392,"Broccoli, chinese, cooked",['broccoli'],{'broccoli': 4.05},[],1,1,1.0,['chinese'],['cooked'],4.05,1.14,0.72,3.81,22.0,2.5,7.0,0.0,0.11,0.84
-169393,"Grape leaves, canned",['grape leaves'],{'grape leaves': 2.54},[],1,1,1.0,['canned'],[],2.54,4.27,1.97,11.71,69.0,9.9,2853.0,0.0,0.312,
+169393,"Grape leaves, canned",['grape leaves'],{'grape leaves': 0.47},[],1,1,1.0,['canned'],[],0.47,4.27,1.97,11.71,69.0,9.9,2853.0,0.0,0.312,
 169394,"Pepper, banana, raw","['pepper', 'banana']","{'pepper': 4.23, 'banana': 4.5}",[],2,2,1.0,['raw'],[],8.73,1.66,0.45,5.35,27.0,3.4,13.0,0.0,0.048,1.95
 169395,"Peppers, serrano, raw","['peppers', 'serrano']",{'peppers': 4.23},['serrano'],1,2,0.5,['raw'],[],0.0,1.74,0.44,6.7,32.0,3.7,10.0,0.0,0.059,3.83
 169396,"Peppers, ancho, dried","['peppers', 'ancho']",{'peppers': 4.23},['ancho'],1,2,0.5,[],['dried'],0.0,11.86,8.2,51.42,281.0,21.6,43.0,0.0,0.82,
@@ -1432,7 +1419,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 169444,"Beef, chuck, under blade pot roast, boneless, separable lean only, trimmed to 0"" fat, all grades, cooked, braised","['beef', 'chuck', 'blade', 'pot roast']","{'beef': 10.25, 'chuck': 28.0, 'pot roast': 19.7}",['blade'],3,4,0.75,"['boneless', 'separable', 'fat']","['trimmed', 'cooked', 'braised']",0.0,30.54,10.46,0.0,216.0,0.0,65.0,104.0,4.002,0.0
 169445,"Beef, chuck, under blade pot roast or steak, boneless, separable lean only, trimmed to 0"" fat, all grades, raw","['beef', 'chuck', 'blade', 'pot roast steak']","{'beef': 10.25, 'chuck': 28.0, 'pot roast steak': 14.25}",['blade'],3,4,0.75,"['boneless', 'separable', 'raw']",['trimmed'],0.0,21.13,6.07,0.31,140.0,0.0,81.0,66.0,2.58,0.0
 169446,"Beef, chuck, under blade pot roast or steak, boneless, separable lean only, trimmed to 0"" fat, choice, raw","['beef', 'chuck', 'blade', 'pot roast steak']","{'beef': 10.25, 'chuck': 28.0, 'pot roast steak': 14.25}",['blade'],3,4,0.75,"['boneless', 'separable', 'fat', 'raw']",['trimmed'],0.0,21.19,6.51,0.39,145.0,0.0,80.0,65.0,2.76,0.0
-169447,"Beef, ground, patties, frozen, cooked, broiled","['beef', 'ground', 'patties']","{'beef': 10.25, 'ground': 4.94, 'patties': 5.7}",[],3,3,1.0,[],"['frozen', 'cooked', 'broiled']",20.89,23.05,21.83,0.0,295.0,0.0,77.0,84.0,8.805,0.0
+169447,"Beef, ground, patties, frozen, cooked, broiled","['beef', 'ground', 'patties']","{'beef': 10.25, 'ground': 4.94}",['patties'],2,3,0.6666666666666666,[],"['frozen', 'cooked', 'broiled']",0.0,23.05,21.83,0.0,295.0,0.0,77.0,84.0,8.805,0.0
 169448,"Beef, variety meats and by-products, heart, cooked, simmered","['beef', 'variety meats products', 'heart']","{'beef': 10.25, 'heart': 6.12}",['variety meats products'],2,3,0.6666666666666666,[],"['cooked', 'simmered']",0.0,28.48,4.73,0.15,165.0,0.0,59.0,212.0,1.404,0.0
 169449,"Beef, variety meats and by-products, kidneys, raw","['beef', 'variety meats products', 'kidneys']","{'beef': 10.25, 'kidneys': 8.0}",['variety meats products'],2,3,0.6666666666666666,['raw'],[],0.0,17.4,3.09,0.29,99.0,0.0,182.0,411.0,0.868,0.0
 169450,"Beef, variety meats and by-products, kidneys, cooked, simmered","['beef', 'variety meats products', 'kidneys']","{'beef': 10.25, 'kidneys': 8.0}",['variety meats products'],2,3,0.6666666666666666,[],"['cooked', 'simmered']",0.0,27.27,4.65,0.0,158.0,0.0,94.0,716.0,1.439,0.0
@@ -1703,9 +1690,9 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 169830,"Bread, blue corn, somiviki (Hopi)","['bread', 'corn']","{'bread': 3.15, 'corn': 3.08}",[],2,2,1.0,['blue'],[],6.23,3.1,1.53,39.84,186.0,3.6,9.0,,0.289,12.94
 169831,"APPLEBEE'S, 9 oz house sirloin steak",['house sirloin steak'],{'house sirloin steak': 26.1},[],1,1,1.0,[],[],26.1,26.85,9.08,0.0,189.0,,604.0,79.0,3.477,0.0
 169832,"T.G.I. FRIDAY'S, FRIDAY'S Shrimp, breaded",['shrimp'],{'shrimp': 11.47},[],1,1,1.0,[],['breaded'],11.47,11.87,19.02,20.87,302.0,,1210.0,89.0,3.501,
-169833,"T.G.I. FRIDAY'S, french fries",['fries'],{'fries': 4.75},[],1,1,1.0,['french'],[],4.75,3.74,14.82,36.9,296.0,4.1,409.0,1.0,2.6,0.0
+169833,"T.G.I. FRIDAY'S, french fries",['fries'],{'fries': 5.97},[],1,1,1.0,['french'],[],5.97,3.74,14.82,36.9,296.0,4.1,409.0,1.0,2.6,0.0
 169834,"T.G.I. FRIDAY'S, fried mozzarella",['t g i friday s mozzarella'],{'t g i friday s mozzarella': 8.63},[],1,1,1.0,[],['fried'],8.63,15.82,18.76,25.33,333.0,2.2,738.0,43.0,7.172,1.45
-169836,"Restaurant, family style, french fries",['fries'],{'fries': 4.75},[],1,1,1.0,['french'],[],4.75,3.49,14.04,37.2,289.0,3.9,357.0,1.0,2.489,0.28
+169836,"Restaurant, family style, french fries",['fries'],{'fries': 5.97},[],1,1,1.0,['french'],[],5.97,3.49,14.04,37.2,289.0,3.9,357.0,1.0,2.489,0.28
 169837,"Restaurant, family style, chicken fingers, from kid's menu",['chicken fingers'],{'chicken fingers': 11.6},[],1,1,1.0,[],[],11.6,18.68,17.45,18.77,307.0,1.1,809.0,46.0,3.199,0.33
 169838,"Restaurant, family style, shrimp, breaded and fried",['shrimp'],{'shrimp': 11.47},[],1,1,1.0,[],"['breaded', 'fried']",11.47,12.67,18.67,22.29,308.0,1.5,1125.0,87.0,3.361,0.91
 169840,"APPLEBEE'S, crunchy onion rings",['applebee s onion rings'],{'applebee s onion rings': 9.22},[],1,1,1.0,['crunchy'],[],9.22,4.58,19.61,40.17,356.0,3.1,833.0,,3.574,4.48
@@ -1911,8 +1898,8 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 170103,"Peas, green, canned, no salt added, solids and liquids",['peas'],{'peas': 3.6},[],1,1,1.0,['green'],"['canned', 'added']",3.6,3.19,0.3,9.75,53.0,3.3,9.0,0.0,0.054,3.2
 170104,"Peas, green, canned, no salt added, drained solids",['peas'],{'peas': 3.6},[],1,1,1.0,"['green', 'canned']","['added', 'drained']",3.6,4.42,0.35,12.58,69.0,4.1,2.0,0.0,0.062,4.16
 170105,"Peas, green, frozen, cooked, boiled, drained, with salt",['peas'],{'peas': 3.6},[],1,1,1.0,['green'],"['frozen', 'cooked', 'boiled', 'drained']",3.6,5.15,0.27,14.26,78.0,4.5,323.0,0.0,0.049,4.4
-170106,"Peppers, hot chili, red, raw","['peppers', 'chili']","{'peppers': 4.23, 'chili': 1.5}",[],2,2,1.0,"['hot', 'red', 'raw']",[],5.73,1.87,0.44,8.81,40.0,1.5,9.0,0.0,0.042,5.3
-170107,"Peppers, hot chili, red, canned, excluding seeds, solids and liquids","['peppers', 'chili']","{'peppers': 4.23, 'chili': 1.5}",[],2,2,1.0,"['hot', 'red']","['canned', 'excluding']",5.73,0.9,0.1,5.1,21.0,1.3,1173.0,0.0,0.01,3.32
+170106,"Peppers, hot chili, red, raw","['peppers', 'chili']","{'peppers': 4.23, 'chili': 1.95}",[],2,2,1.0,"['hot', 'red', 'raw']",[],6.18,1.87,0.44,8.81,40.0,1.5,9.0,0.0,0.042,5.3
+170107,"Peppers, hot chili, red, canned, excluding seeds, solids and liquids","['peppers', 'chili']","{'peppers': 4.23, 'chili': 1.95}",[],2,2,1.0,"['hot', 'red']","['canned', 'excluding']",6.18,0.9,0.1,5.1,21.0,1.3,1173.0,0.0,0.01,3.32
 170108,"Peppers, sweet, red, raw",['peppers'],{'peppers': 4.23},[],1,1,1.0,"['sweet', 'red', 'raw']",[],4.23,0.99,0.3,6.03,26.0,2.1,4.0,0.0,0.059,4.2
 170109,"Peppers, sweet, green, cooked, boiled, drained, with salt",['peppers'],{'peppers': 4.23},[],1,1,1.0,"['sweet', 'green']","['cooked', 'boiled', 'drained']",4.23,0.92,0.2,6.11,26.0,1.2,238.0,0.0,0.029,3.19
 170110,"Peppers, sweet, red, cooked, boiled, drained, without salt",['peppers'],{'peppers': 4.23},[],1,1,1.0,"['sweet', 'red']","['cooked', 'boiled', 'drained']",4.23,0.92,0.2,6.7,28.0,1.2,2.0,0.0,0.029,4.39
@@ -1930,7 +1917,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 170123,"Spinach, canned, no salt added, solids and liquids",['spinach'],{'spinach': 4.3},[],1,1,1.0,['canned'],['added'],4.3,2.11,0.37,2.92,19.0,2.2,75.0,0.0,0.06,0.33
 170124,"Spinach, frozen, chopped or leaf, cooked, boiled, drained, with salt",['spinach'],{'spinach': 4.3},[],1,1,1.0,[],"['frozen', 'chopped', 'cooked', 'boiled', 'drained']",4.3,4.01,0.87,4.8,34.0,3.7,322.0,0.0,0.036,0.51
 170131,"Succotash, (corn and limas), frozen, cooked, boiled, drained, with salt",['succotash salt'],{'succotash salt': 3.33},[],1,1,1.0,[],"['frozen', 'cooked', 'boiled', 'drained']",3.33,4.31,0.89,19.95,93.0,4.1,281.0,0.0,0.166,2.21
-170133,"Sweet potato leaves, cooked, steamed, with salt",['potato leaves'],{'potato leaves': 1.6},[],1,1,1.0,['Sweet'],"['cooked', 'steamed']",1.6,2.18,0.34,7.38,35.0,1.9,249.0,0.0,0.065,5.48
+170133,"Sweet potato leaves, cooked, steamed, with salt",['potato leaves'],{'potato leaves': 0.47},[],1,1,1.0,['Sweet'],"['cooked', 'steamed']",0.47,2.18,0.34,7.38,35.0,1.9,249.0,0.0,0.065,5.48
 170134,"Sweet potato, cooked, baked in skin, flesh, with salt",['potato'],{'potato': 4.17},[],1,1,1.0,['Sweet'],"['cooked', 'baked']",4.17,2.01,0.15,20.71,90.0,3.3,246.0,0.0,0.052,6.48
 170135,"Taro, shoots, cooked, with salt","['taro', 'shoots']",{'shoots': 3.2},['taro'],1,2,0.5,[],['cooked'],0.0,0.73,0.08,3.19,14.0,,238.0,0.0,0.016,
 170137,"Tomatoes, red, ripe, cooked, with salt",['tomatoes'],{'tomatoes': 4.6},[],1,1,1.0,"['red', 'ripe']",['cooked'],4.6,0.95,0.11,4.01,18.0,0.7,247.0,0.0,0.015,2.49
@@ -2061,7 +2048,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 170319,"McDONALD'S, FILET-O-FISH",['filet o fish'],{'filet o fish': 5.94},[],1,1,1.0,[],[],5.94,11.26,14.64,26.39,282.0,1.4,434.0,32.0,2.833,3.67
 170325,"WENDY'S, CLASSIC DOUBLE, with cheese",['wendy s double cheese'],{'wendy s double cheese': 8.5},[],1,1,1.0,['CLASSIC'],[],8.5,16.52,14.2,11.71,241.0,1.1,422.0,51.0,5.89,
 170326,"WENDY'S, Frosty Dairy Dessert","['frosty dairy', 'dessert']",{'dessert': 13.95},['frosty dairy'],1,2,0.5,[],[],0.0,3.49,2.6,23.62,132.0,3.3,98.0,16.0,1.635,
-170327,"BURGER KING, french fries",['fries'],{'fries': 4.75},[],1,1,1.0,['french'],[],4.75,3.23,12.48,38.7,280.0,2.9,279.0,,2.137,0.51
+170327,"BURGER KING, french fries",['fries'],{'fries': 5.97},[],1,1,1.0,['french'],[],5.97,3.23,12.48,38.7,280.0,2.9,279.0,,2.137,0.51
 170332,"TACO BELL, Original Taco with beef, cheese and lettuce",['taco bell taco beef cheese lettuce'],{'taco bell taco beef cheese lettuce': 3.4},[],1,1,1.0,['Original'],[],3.4,8.86,12.7,19.85,229.0,3.9,397.0,28.0,4.384,0.9
 170333,"TACO BELL, Soft Taco with beef, cheese and lettuce",['taco bell taco beef cheese lettuce'],{'taco bell taco beef cheese lettuce': 3.4},[],1,1,1.0,['Soft'],[],3.4,9.25,9.75,20.23,206.0,2.9,560.0,25.0,4.155,1.57
 170334,"TACO BELL, BURRITO SUPREME with chicken",['taco bell burrito supreme chicken'],{'taco bell burrito supreme chicken': 8.0},[],1,1,1.0,[],[],8.0,9.84,6.42,20.51,179.0,2.4,564.0,21.0,2.352,
@@ -2136,7 +2123,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 170423,"Peas, mature seeds, sprouted, cooked, boiled, drained, without salt","['peas', 'seeds']","{'peas': 3.6, 'seeds': 10.3}",[],2,2,1.0,['mature'],"['sprouted', 'cooked', 'boiled', 'drained']",13.9,7.05,0.51,17.08,98.0,,3.0,0.0,0.09,
 170424,"Peas and carrots, canned, regular pack, solids and liquids",['peas carrots'],{'peas carrots': 2.97},[],1,1,1.0,"['canned', 'regular']",[],2.97,2.17,0.27,8.48,38.0,2.0,260.0,0.0,0.049,
 170425,"Peas and carrots, frozen, unprepared",['peas carrots'],{'peas carrots': 2.97},[],1,1,1.0,['unprepared'],['frozen'],2.97,3.4,0.47,11.15,53.0,3.4,79.0,0.0,0.084,
-170426,"Peppers, hot chili, green, canned, pods, excluding seeds, solids and liquids","['peppers', 'chili']","{'peppers': 4.23, 'chili': 1.5}",[],2,2,1.0,"['hot', 'green', 'canned']",['excluding'],5.73,0.9,0.1,5.1,21.0,1.3,1173.0,0.0,0.01,3.12
+170426,"Peppers, hot chili, green, canned, pods, excluding seeds, solids and liquids","['peppers', 'chili']","{'peppers': 4.23, 'chili': 1.95}",[],2,2,1.0,"['hot', 'green', 'canned']",['excluding'],6.18,0.9,0.1,5.1,21.0,1.3,1173.0,0.0,0.01,3.12
 170427,"Peppers, sweet, green, raw",['peppers'],{'peppers': 4.23},[],1,1,1.0,"['sweet', 'green', 'raw']",[],4.23,0.86,0.17,4.64,20.0,1.7,3.0,0.0,0.058,2.4
 170428,"Peppers, sweet, green, cooked, boiled, drained, without salt",['peppers'],{'peppers': 4.23},[],1,1,1.0,"['sweet', 'green']","['cooked', 'boiled', 'drained']",4.23,0.92,0.2,6.7,28.0,1.2,2.0,0.0,0.029,3.19
 170429,"Peppers, sweet, green, canned, solids and liquids",['peppers'],{'peppers': 4.23},[],1,1,1.0,"['sweet', 'green', 'canned']",[],4.23,0.8,0.3,3.9,18.0,1.2,1369.0,0.0,0.045,
@@ -2185,7 +2172,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 170493,"Potatoes, mashed, home-prepared, whole milk added",['potatoes'],{'potatoes': 4.17},[],1,1,1.0,['whole'],"['mashed', 'prepared', 'added']",4.17,1.91,0.57,17.57,83.0,1.5,302.0,2.0,0.302,1.48
 170495,"Seaweed, spirulina, dried","['seaweed', 'spirulina']",{'seaweed': 5.84},['spirulina'],1,2,0.5,[],['dried'],0.0,57.47,7.72,23.9,290.0,3.6,1048.0,0.0,2.65,3.1
 170496,"Seaweed, wakame, raw","['seaweed', 'wakame']",{'seaweed': 5.84},['wakame'],1,2,0.5,['raw'],[],0.0,3.03,0.64,9.14,45.0,0.5,872.0,0.0,0.13,0.65
-170497,"Peppers, hot chili, green, raw","['peppers', 'chili']","{'peppers': 4.23, 'chili': 1.5}",[],2,2,1.0,"['hot', 'green', 'raw']",[],5.73,2.0,0.2,9.46,40.0,1.5,7.0,0.0,0.021,5.1
+170497,"Peppers, hot chili, green, raw","['peppers', 'chili']","{'peppers': 4.23, 'chili': 1.95}",[],2,2,1.0,"['hot', 'green', 'raw']",[],6.18,2.0,0.2,9.46,40.0,1.5,7.0,0.0,0.021,5.1
 170498,"Potatoes, o'brien, home-prepared",['potatoes'],{'potatoes': 4.17},[],1,1,1.0,[],['prepared'],4.17,2.35,1.28,15.47,81.0,,217.0,4.0,0.797,
 170499,"Shallots, raw",['shallots'],{'shallots': 3.59},[],1,1,1.0,['raw'],[],3.59,2.5,0.1,16.8,72.0,3.2,12.0,0.0,0.017,7.87
 170500,"Carrot, dehydrated",['carrot'],{'carrot': 2.97},[],1,1,1.0,['dehydrated'],[],2.97,8.1,1.49,79.57,341.0,23.6,275.0,0.0,0.256,38.82
@@ -2222,7 +2209,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 170539,"Squash, winter, spaghetti, cooked, boiled, drained, or baked, with salt","['squash', 'spaghetti']",{'spaghetti': 2.25},['squash'],1,2,0.5,[],"['cooked', 'boiled', 'drained', 'baked']",0.0,0.66,0.26,6.46,27.0,1.4,254.0,0.0,0.062,2.53
 170541,"Sweet potato, cooked, boiled, without skin, with salt",['potato'],{'potato': 4.17},[],1,1,1.0,['Sweet'],"['cooked', 'boiled']",4.17,1.37,0.14,17.72,76.0,2.5,263.0,0.0,0.04,5.74
 170542,"Sweet potato, frozen, cooked, baked, with salt",['potato'],{'potato': 4.17},[],1,1,1.0,['Sweet'],"['frozen', 'cooked', 'baked']",4.17,1.71,0.12,23.4,100.0,1.8,244.0,0.0,0.026,
-170544,"Taro, leaves, cooked, steamed, with salt","['taro', 'leaves']",{'leaves': 2.54},['taro'],1,2,0.5,[],"['cooked', 'steamed']",0.0,2.72,0.41,3.89,24.0,2.0,238.0,0.0,0.083,
+170544,"Taro, leaves, cooked, steamed, with salt","['taro', 'leaves']",{'leaves': 0.47},['taro'],1,2,0.5,[],"['cooked', 'steamed']",0.0,2.72,0.41,3.89,24.0,2.0,238.0,0.0,0.083,
 170545,"Tomato juice, canned, without salt added",['tomato juice'],{'tomato juice': 19.69},[],1,1,1.0,[],"['canned', 'added']",19.69,0.85,0.29,3.53,17.0,0.4,10.0,0.0,0.019,2.58
 170549,"Waxgourd, (chinese preserving melon), cooked, boiled, drained, with salt","['waxgourd', 'melon']",{'melon': 7.72},['waxgourd'],1,2,0.5,['chinese'],"['preserving', 'cooked', 'boiled', 'drained']",0.0,0.4,0.2,2.45,11.0,1.0,343.0,0.0,0.016,1.18
 170550,"Winged bean, immature seeds, cooked, boiled, drained, with salt",['bean'],{'bean': 2.72},[],1,1,1.0,"['Winged', 'immature']","['cooked', 'boiled', 'drained']",2.72,5.31,0.66,3.21,37.0,,240.0,0.0,0.101,
@@ -2321,7 +2308,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 170669,"Candies, REESE's Fast Break, milk chocolate, peanut butter, soft nougats, candy bar","['candies', 'break', 'milk chocolate', 'peanut butter', 'nougats', 'candy bar']","{'milk chocolate': 3.56, 'peanut butter': 8.1, 'candy bar': 7.56}","['candies', 'break', 'nougats']",3,6,0.5,"['Fast', 'soft']",[],0.0,8.93,23.21,63.9,495.0,3.6,321.0,9.0,8.036,53.57
 170670,"Candies, MARS SNACKFOOD US, COCOAVIA Chocolate Covered Almonds","['candies', 'chocolate almonds']",{'chocolate almonds': 13.64},['candies'],1,2,0.5,[],['Covered'],0.0,9.51,37.07,50.22,573.0,10.4,9.0,0.0,11.745,26.92
 170671,"Ice creams, regular, low carbohydrate, vanilla",['ice creams'],{'ice creams': 7.65},[],1,1,1.0,"['regular', 'low']",[],7.65,3.17,12.7,22.23,216.0,4.8,48.0,32.0,6.79,6.35
-170679,"Sweetener, herbal extract powder from Stevia leaf","['sweetener', 'extract powder', 'stevia leaf']","{'extract powder': 3.96, 'stevia leaf': 2.5}",['sweetener'],2,3,0.6666666666666666,['herbal'],[],0.0,0.0,0.0,100.0,0.0,0.0,0.0,0.0,0.0,0.0
+170679,"Sweetener, herbal extract powder from Stevia leaf","['sweetener', 'extract powder', 'stevia leaf']","{'extract powder': 3.96, 'stevia leaf': 2.7}",['sweetener'],2,3,0.6666666666666666,['herbal'],[],0.0,0.0,0.0,100.0,0.0,0.0,0.0,0.0,0.0,0.0
 170682,"Amaranth grain, uncooked",['amaranth grain'],{'amaranth grain': 10.13},[],1,1,1.0,['uncooked'],[],10.13,13.56,7.02,65.25,371.0,6.7,4.0,0.0,1.459,1.69
 170684,Arrowroot flour,['arrowroot flour'],{'arrowroot flour': 2.85},[],1,1,1.0,[],[],2.85,0.3,0.1,88.15,357.0,3.4,2.0,0.0,0.019,
 170687,"Buckwheat flour, whole-groat",['buckwheat flour'],{'buckwheat flour': 2.85},[],1,1,1.0,['whole'],[],2.85,12.62,3.1,70.59,335.0,10.0,11.0,0.0,0.677,2.6
@@ -2337,9 +2324,9 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 170715,"Pizza, meat and vegetable topping, regular crust, frozen, cooked",['pizza'],{'pizza': 9.64},[],1,1,1.0,['regular'],"['frozen', 'cooked']",9.64,11.28,14.43,25.14,276.0,2.2,555.0,16.0,5.083,4.85
 170716,"Pizza, meat and vegetable topping, rising crust, frozen, cooked",['pizza'],{'pizza': 9.64},[],1,1,1.0,[],"['frozen', 'cooked']",9.64,12.63,11.75,28.78,271.0,2.3,640.0,19.0,4.586,7.26
 170718,"Fast foods, chicken, breaded and fried, boneless pieces, plain",['chicken'],{'chicken': 8.0},[],1,1,1.0,"['Fast', 'boneless', 'plain']","['breaded', 'fried']",8.0,15.92,20.36,14.93,307.0,0.9,594.0,55.0,3.566,0.08
-170721,"McDONALD'S, french fries",['fries'],{'fries': 4.75},[],1,1,1.0,['french'],[],4.75,3.41,15.47,42.58,323.0,3.9,189.0,,2.271,0.21
+170721,"McDONALD'S, french fries",['fries'],{'fries': 5.97},[],1,1,1.0,['french'],[],5.97,3.41,15.47,42.58,323.0,3.9,189.0,,2.271,0.21
 170725,"WENDY'S, Chicken Nuggets",['chicken nuggets'],{'chicken nuggets': 8.7},[],1,1,1.0,[],[],8.7,16.46,22.55,14.31,326.0,,708.0,50.0,4.787,0.08
-170726,"WENDY'S, french fries",['fries'],{'fries': 4.75},[],1,1,1.0,['french'],[],4.75,3.73,14.1,39.73,301.0,4.0,219.0,,2.79,0.4
+170726,"WENDY'S, french fries",['fries'],{'fries': 5.97},[],1,1,1.0,['french'],[],5.97,3.73,14.1,39.73,301.0,4.0,219.0,,2.79,0.4
 170728,"BURGER KING, WHOPPER, with cheese",['burger king whopper cheese'],{'burger king whopper cheese': 8.5},[],1,1,1.0,[],[],8.5,11.19,15.33,16.7,250.0,1.0,453.0,36.0,5.782,4.11
 170730,"BURGER KING, DOUBLE WHOPPER, with cheese",['burger king whopper cheese'],{'burger king whopper cheese': 8.5},[],1,1,1.0,['DOUBLE'],[],8.5,14.47,17.06,13.52,266.0,1.6,387.0,47.0,6.998,3.61
 170731,"BURGER KING, Chicken Strips",['chicken strips'],{'chicken strips': 6.8},[],1,1,1.0,[],[],6.8,18.2,15.25,20.49,292.0,1.3,859.0,44.0,2.699,0.0
@@ -2390,7 +2377,6 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 170786,"Fast foods, grilled chicken in tortilla, with lettuce, cheese, and ranch sauce",['chicken'],{'chicken': 8.0},[],1,1,1.0,['Fast'],['grilled'],8.0,13.77,10.31,18.43,222.0,0.9,577.0,41.0,3.363,1.53
 170792,"School Lunch, pizza, cheese topping, thin crust, whole grain, frozen, cooked","['school lunch', 'pizza']",{'pizza': 9.64},['school lunch'],1,2,0.5,"['thin', 'whole']","['frozen', 'cooked']",0.0,12.72,7.91,31.31,247.0,4.0,421.0,12.0,4.0,7.12
 170793,"School Lunch, pizza, sausage topping, thick crust, whole grain, frozen, cooked","['school lunch', 'pizza', 'sausage topping']",{'pizza': 9.64},"['school lunch', 'sausage topping']",1,3,0.3333333333333333,"['thick', 'whole']","['frozen', 'cooked']",0.0,13.26,9.07,30.58,257.0,4.0,433.0,26.0,4.219,3.72
-170794,"School Lunch, chicken patty, whole grain breaded","['school lunch', 'chicken patty']",{'chicken patty': 5.7},['school lunch'],1,2,0.5,['whole'],['breaded'],0.0,17.64,13.93,12.5,246.0,2.3,467.0,36.0,2.642,0.55
 170795,"School Lunch, chicken nuggets, whole grain breaded","['school lunch', 'chicken nuggets']",{'chicken nuggets': 8.7},['school lunch'],1,2,0.5,['whole'],['breaded'],0.0,15.67,12.9,22.86,270.0,2.2,511.0,50.0,2.83,0.49
 170796,"Beef, chuck, short ribs, boneless, separable lean only, trimmed to 0"" fat, all grades, raw","['beef', 'chuck', 'ribs']","{'beef': 10.25, 'chuck': 28.0, 'ribs': 17.6}",[],3,3,1.0,"['short', 'boneless', 'separable', 'raw']",['trimmed'],55.85,19.68,10.02,0.05,169.0,0.0,85.0,76.0,4.312,0.0
 170797,"Beef, chuck eye Country-Style ribs, boneless, separable lean only, trimmed to 0"" fat, choice, cooked, braised","['beef', 'chuck eye', 'country style ribs']","{'beef': 10.25, 'country style ribs': 17.6}",['chuck eye'],2,3,0.6666666666666666,"['boneless', 'separable', 'fat']","['trimmed', 'cooked', 'braised']",0.0,30.95,12.22,0.0,234.0,0.0,69.0,100.0,5.38,0.0
@@ -2507,11 +2493,11 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 170914,"Yogurt, Greek, Blueberry, CHOBANI",['yogurt'],{'yogurt': 4.54},[],1,1,1.0,[],[],4.54,7.23,0.24,12.78,82.0,0.5,32.0,4.0,0.037,10.3
 170915,"Yogurt, Greek, nonfat, Fruit on Bottom, Strawberry, CHOBANI",['yogurt'],{'yogurt': 4.54},[],1,1,1.0,['Greek'],[],4.54,7.28,0.23,11.86,79.0,0.4,31.0,4.0,0.15,10.41
 170916,"Yogurt, Greek, nonfat, Fruit on Bottom, Blackberry, CHOBANI","['yogurt', 'blackberry']","{'yogurt': 4.54, 'blackberry': 6.95}",[],2,2,1.0,['Greek'],[],11.49,7.54,0.37,15.43,95.0,0.4,0.0,4.0,0.19,14.93
-170917,"Spices, bay leaf","['spices', 'bay leaf']","{'spices': 4.89, 'bay leaf': 2.5}",[],2,2,1.0,[],[],7.39,7.61,8.36,74.97,313.0,26.3,23.0,0.0,2.28,
+170917,"Spices, bay leaf","['spices', 'bay leaf']","{'spices': 4.89, 'bay leaf': 2.11}",[],2,2,1.0,[],[],7.0,7.61,8.36,74.97,313.0,26.3,23.0,0.0,2.28,
 170918,"Spices, caraway seed","['spices', 'caraway seed']","{'spices': 4.89, 'caraway seed': 10.3}",[],2,2,1.0,[],[],15.19,19.77,14.59,49.9,333.0,38.0,17.0,0.0,0.62,0.64
 170919,"Spices, cardamom","['spices', 'cardamom']",{'spices': 4.89},['cardamom'],1,2,0.5,[],[],0.0,10.76,6.7,68.47,311.0,28.0,18.0,0.0,0.68,
 170920,"Spices, celery seed","['spices', 'celery seed']","{'spices': 4.89, 'celery seed': 10.3}",[],2,2,1.0,[],[],15.19,18.07,25.27,41.35,392.0,11.8,160.0,0.0,2.19,0.67
-170921,"Spices, coriander leaf, dried","['spices', 'coriander leaf']","{'spices': 4.89, 'coriander leaf': 2.5}",[],2,2,1.0,[],['dried'],7.39,21.93,4.78,52.1,279.0,10.4,211.0,0.0,0.115,7.27
+170921,"Spices, coriander leaf, dried","['spices', 'coriander leaf']","{'spices': 4.89, 'coriander leaf': 2.4}",[],2,2,1.0,[],['dried'],7.29,21.93,4.78,52.1,279.0,10.4,211.0,0.0,0.115,7.27
 170922,"Spices, coriander seed","['spices', 'coriander seed']","{'spices': 4.89, 'coriander seed': 10.3}",[],2,2,1.0,[],[],15.19,12.37,17.77,54.99,298.0,41.9,35.0,0.0,0.99,
 170923,"Spices, cumin seed","['spices', 'cumin seed']","{'spices': 4.89, 'cumin seed': 10.3}",[],2,2,1.0,[],[],15.19,17.81,22.27,44.24,375.0,10.5,168.0,0.0,1.535,2.25
 170924,"Spices, curry powder","['spices', 'curry powder']","{'spices': 4.89, 'curry powder': 2.13}",[],2,2,1.0,[],[],7.02,14.29,14.01,55.83,325.0,53.2,52.0,0.0,1.648,2.76
@@ -2538,8 +2524,6 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 170945,"Babyfood, fruit, plums with tapioca, without ascorbic acid, junior","['babyfood', 'fruit', 'plums']",{'plums': 7.95},"['babyfood', 'fruit']",1,3,0.3333333333333333,['ascorbic'],[],0.0,0.1,0.0,20.5,74.0,1.2,0.0,0.0,0.0,13.64
 170947,"Babyfood, fruit, applesauce and apricots, strained","['babyfood', 'fruit', 'applesauce', 'apricots']",{'apricots': 6.95},"['babyfood', 'fruit', 'applesauce']",1,4,0.25,[],['strained'],0.0,0.2,0.2,11.64,44.0,1.8,0.0,0.0,0.024,9.25
 170948,"Babyfood, fruit, applesauce and apricots, junior","['babyfood', 'fruit', 'applesauce', 'apricots']",{'apricots': 6.95},"['babyfood', 'fruit', 'applesauce']",1,4,0.25,[],[],0.0,0.2,0.2,12.4,47.0,1.8,0.0,0.0,0.028,8.72
-170949,"Babyfood, fruit, applesauce and cherries, strained","['babyfood', 'fruit', 'applesauce', 'cherries']",{'cherries': 9.45},"['babyfood', 'fruit', 'applesauce']",1,4,0.25,[],['strained'],0.0,0.0,0.0,14.1,51.0,1.1,1.0,0.0,0.0,10.81
-170950,"Babyfood, fruit, applesauce and cherries, junior","['babyfood', 'fruit', 'applesauce', 'cherries']",{'cherries': 9.45},"['babyfood', 'fruit', 'applesauce']",1,4,0.25,[],[],0.0,0.0,0.0,14.1,51.0,1.1,1.0,0.0,0.0,10.61
 170952,"Babyfood, fruit and vegetable, apple and sweet potato","['fruit vegetable', 'apple potato']","{'fruit vegetable': 3.52, 'apple potato': 4.17}",[],2,2,1.0,['sweet'],[],7.69,0.3,0.22,15.3,64.0,1.4,3.0,0.0,0.041,11.6
 170953,"Babyfood, fruit, bananas and pineapple with tapioca, junior","['babyfood', 'fruit', 'bananas', 'pineapple']","{'bananas': 4.5, 'pineapple': 3.98}","['babyfood', 'fruit']",2,4,0.5,[],[],0.0,0.2,0.1,18.4,68.0,1.6,0.0,0.0,0.036,8.41
 170954,"Babyfood, fruit, bananas and pineapple with tapioca, strained","['babyfood', 'fruit', 'bananas']",{'bananas': 4.5},"['babyfood', 'fruit']",1,3,0.3333333333333333,[],['strained'],0.0,0.2,0.0,17.8,65.0,1.6,0.0,0.0,0.0,10.73
@@ -2676,7 +2660,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 171116,"Chicken, ground, raw",['chicken'],{'chicken': 8.0},[],1,1,1.0,['raw'],[],8.0,17.44,8.1,0.04,143.0,0.0,60.0,86.0,2.301,0.0
 171117,"Chicken, ground, crumbles, cooked, pan-browned",['chicken'],{'chicken': 8.0},[],1,1,1.0,['pan-browned'],['cooked'],8.0,23.28,10.92,0.0,189.0,0.0,75.0,107.0,3.11,0.0
 171118,"Chicken, broiler, rotisserie, BBQ, thigh, meat only","['chicken', 'broiler']",{'chicken': 8.0},['broiler'],1,2,0.5,[],[],0.0,24.09,10.74,0.0,193.0,0.0,335.0,128.0,2.777,0.0
-171119,"Chicken, feet, boiled","['chicken', 'feet']","{'chicken': 8.0, 'feet': 5.94}",[],2,2,1.0,[],['boiled'],13.94,19.4,14.6,0.2,215.0,0.0,67.0,84.0,3.92,0.0
+171119,"Chicken, feet, boiled","['chicken', 'feet']","{'chicken': 8.0, 'feet': 6.0}",[],2,2,1.0,[],['boiled'],14.0,19.4,14.6,0.2,215.0,0.0,67.0,84.0,3.92,0.0
 171120,"Chicken, broilers or fryers, rotisserie, original seasoning, thigh, meat only, cooked","['chicken', 'broilers fryers', 'rotisserie']","{'chicken': 8.0, 'broilers fryers': 2.1}",['rotisserie'],2,3,0.6666666666666666,['original'],['cooked'],0.0,24.06,11.09,0.0,196.0,0.0,337.0,130.0,2.866,0.0
 171121,"Chicken, broilers or fryers, rotisserie, original seasoning, wing, meat only, cooked","['chicken', 'broilers fryers', 'rotisserie']","{'chicken': 8.0, 'broilers fryers': 2.1}",['rotisserie'],2,3,0.6666666666666666,['original'],['cooked'],0.0,27.69,9.53,0.0,197.0,0.0,725.0,140.0,2.223,0.0
 171122,"Chicken, broilers or fryers, rotisserie, original seasoning, back, meat and skin, cooked","['chicken', 'broilers fryers', 'rotisserie']","{'chicken': 8.0, 'broilers fryers': 2.1}",['rotisserie'],2,3,0.6666666666666666,['original'],['cooked'],0.0,23.23,18.59,0.03,260.0,0.0,584.0,128.0,4.924,0.03
@@ -3015,8 +2999,6 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 171509,"Chicken, broilers or fryers, breast, skinless, boneless, meat only, with added solution, raw","['chicken', 'broilers fryers']","{'chicken': 8.0, 'broilers fryers': 2.1}",[],2,2,1.0,"['skinless', 'boneless', 'raw']",['added'],10.1,20.32,3.0,0.0,108.0,0.0,173.0,64.0,0.545,0.0
 171510,"Duck, young duckling, domesticated, White Pekin, breast, meat and skin, boneless, cooked, roasted","['duck', 'duckling', 'breast', 'meat skin']","{'duck': 21.07, 'breast': 8.4, 'meat skin': 5.6}",['duckling'],3,4,0.75,"['young', 'White', 'boneless']","['domesticated', 'cooked', 'roasted']",0.0,24.5,10.85,0.0,202.0,,84.0,136.0,2.922,
 171511,"Duck, young duckling, domesticated, White Pekin, breast, meat only, boneless, cooked without skin, broiled","['duck', 'duckling', 'breast']","{'duck': 21.07, 'breast': 8.4}",['duckling'],2,3,0.6666666666666666,"['young', 'White', 'boneless']","['domesticated', 'cooked', 'broiled']",0.0,27.6,2.5,0.0,140.0,,105.0,143.0,0.578,
-171512,"Chicken patty, frozen, uncooked",['chicken patty'],{'chicken patty': 5.7},[],1,1,1.0,['uncooked'],['frozen'],5.7,14.33,20.04,13.61,292.0,1.2,518.0,45.0,4.013,0.0
-171513,"Chicken patty, frozen, cooked",['chicken patty'],{'chicken patty': 5.7},[],1,1,1.0,[],"['frozen', 'cooked']",5.7,14.85,19.58,12.84,287.0,0.3,532.0,43.0,3.662,0.0
 171516,"Chicken, broiler, rotisserie, BBQ, wing, meat only","['chicken', 'broiler', 'rotisserie', 'bbq']",{'chicken': 8.0},"['broiler', 'rotisserie', 'bbq']",1,4,0.25,[],[],0.0,28.34,7.79,0.54,186.0,0.0,725.0,134.0,2.134,0.53
 171517,"Chicken, broilers or fryers, rotisserie, original seasoning, back, meat only, cooked","['chicken', 'broilers fryers', 'rotisserie']","{'chicken': 8.0, 'broilers fryers': 2.1}",['rotisserie'],2,3,0.6666666666666666,['original'],['cooked'],0.0,25.34,11.54,0.0,205.0,0.0,661.0,123.0,3.007,0.0
 171518,"Chicken, broilers or fryers, rotisserie, original seasoning, breast, meat only, cooked","['chicken', 'broilers fryers', 'rotisserie']","{'chicken': 8.0, 'broilers fryers': 2.1}",['rotisserie'],2,3,0.6666666666666666,['original'],['cooked'],0.0,28.0,2.79,0.0,137.0,0.0,313.0,86.0,0.775,0.0
@@ -3101,8 +3083,8 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 171600,"Gravy, CAMPBELL'S, chicken","['gravy', 'chicken']","{'gravy': 8.71, 'chicken': 8.0}",[],2,2,1.0,[],[],16.71,0.79,2.73,5.87,51.0,,424.0,6.0,0.603,0.94
 171602,"Soup, cream of chicken, canned, condensed, reduced sodium","['soup', 'cream chicken']","{'soup': 4.59, 'cream chicken': 8.0}",[],2,2,1.0,[],"['canned', 'condensed', 'reduced']",12.59,1.8,1.3,9.5,58.0,0.4,357.0,6.0,0.5,0.39
 171603,"Sauce, alfredo mix, dry","['sauce', 'alfredo mix']","{'sauce': 3.95, 'alfredo mix': 4.8}",[],2,2,1.0,['dry'],[],8.75,15.32,36.35,36.52,535.0,2.0,2590.0,56.0,13.18,5.4
-171604,"Sauce, peppers, hot, chili, mature red, canned","['sauce', 'peppers', 'chili']","{'sauce': 3.95, 'peppers': 4.23, 'chili': 1.5}",[],3,3,1.0,"['hot', 'mature', 'red', 'canned']",[],9.68,0.9,0.6,3.9,21.0,0.7,25.0,0.0,0.08,2.55
-171605,"Sauce, chili, peppers, hot, immature green, canned","['sauce', 'chili', 'peppers']","{'sauce': 3.95, 'chili': 1.5, 'peppers': 4.23}",[],3,3,1.0,"['hot', 'immature', 'green', 'canned']",[],9.68,0.7,0.1,5.0,20.0,1.9,25.0,0.0,0.013,2.55
+171604,"Sauce, peppers, hot, chili, mature red, canned","['sauce', 'peppers', 'chili']","{'sauce': 3.95, 'peppers': 4.23, 'chili': 1.95}",[],3,3,1.0,"['hot', 'mature', 'red', 'canned']",[],10.13,0.9,0.6,3.9,21.0,0.7,25.0,0.0,0.08,2.55
+171605,"Sauce, chili, peppers, hot, immature green, canned","['sauce', 'chili', 'peppers']","{'sauce': 3.95, 'chili': 1.95, 'peppers': 4.23}",[],3,3,1.0,"['hot', 'immature', 'green', 'canned']",[],10.13,0.7,0.1,5.0,20.0,1.9,25.0,0.0,0.013,2.55
 171606,Fish broth,['fish broth'],{'fish broth': 4.55},[],1,1,1.0,[],[],4.55,2.0,0.6,0.4,16.0,0.0,200.0,0.0,0.133,0.09
 171607,"Soup, cream of mushroom, low sodium, ready-to-serve, canned","['soup', 'cream mushroom']","{'soup': 4.59, 'cream mushroom': 3.3}",[],2,2,1.0,"['low', 'ready']","['serve', 'canned']",7.89,1.0,3.7,4.53,53.0,0.2,20.0,1.0,1.005,1.72
 171608,"Potato soup, instant, dry mix",['potato soup'],{'potato soup': 4.59},[],1,1,1.0,"['instant', 'dry']",[],4.59,9.2,3.1,76.14,343.0,7.6,2400.0,12.0,0.613,10.0
@@ -3129,8 +3111,8 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 171632,"Sausage, pork and turkey, pre-cooked",['sausage'],{'sausage': 10.8},[],1,1,1.0,[],['pre-cooked'],10.8,12.05,30.64,3.63,342.0,0.0,876.0,72.0,9.881,0.0
 171633,"Frankfurter, meat and poultry, cooked, boiled","['frankfurter', 'meat poultry']",{'frankfurter': 59.28},['meat poultry'],1,2,0.5,[],"['cooked', 'boiled']",0.0,10.31,26.28,4.96,298.0,0.0,914.0,84.0,8.216,2.7
 171634,"Frankfurter, meat and poultry, cooked, grilled","['frankfurter', 'meat poultry']",{'frankfurter': 59.28},['meat poultry'],1,2,0.5,[],"['cooked', 'grilled']",0.0,10.67,26.43,5.24,302.0,0.0,1079.0,85.0,8.218,2.85
-171635,"Pork sausage, link/patty, reduced fat, unprepared","['pork sausage', 'link patty']","{'pork sausage': 9.11, 'link patty': 5.7}",[],2,2,1.0,"['fat', 'unprepared']",['reduced'],14.81,16.75,16.55,0.2,217.0,0.0,581.0,67.0,4.368,0.0
-171636,"Pork sausage, link/patty, reduced fat, cooked, pan-fried","['pork sausage', 'link patty']","{'pork sausage': 9.11, 'link patty': 5.7}",[],2,2,1.0,['pan-fried'],"['reduced', 'cooked']",14.81,20.94,20.32,0.15,267.0,0.0,698.0,82.0,6.034,0.0
+171635,"Pork sausage, link/patty, reduced fat, unprepared","['pork sausage', 'link patty']",{'pork sausage': 9.11},['link patty'],1,2,0.5,"['fat', 'unprepared']",['reduced'],0.0,16.75,16.55,0.2,217.0,0.0,581.0,67.0,4.368,0.0
+171636,"Pork sausage, link/patty, reduced fat, cooked, pan-fried","['pork sausage', 'link patty']",{'pork sausage': 9.11},['link patty'],1,2,0.5,['pan-fried'],"['reduced', 'cooked']",0.0,20.94,20.32,0.15,267.0,0.0,698.0,82.0,6.034,0.0
 171638,"Meatballs, frozen, Italian style",['meatballs'],{'meatballs': 9.88},[],1,1,1.0,['Italian'],['frozen'],9.88,14.4,22.21,8.06,286.0,2.3,666.0,66.0,7.627,3.47
 171639,"Bacon, turkey, microwaved","['bacon', 'turkey']","{'bacon': 9.88, 'turkey': 119.57}",[],2,2,1.0,[],['microwaved'],129.45,29.5,25.87,4.24,368.0,0.0,2021.0,153.0,6.933,4.24
 171640,"Bacon, turkey, low sodium","['bacon', 'turkey']","{'bacon': 9.88, 'turkey': 119.57}",[],2,2,1.0,['low'],[],129.45,13.33,20.0,4.8,253.0,0.0,900.0,100.0,6.667,0.0
@@ -3156,17 +3138,8 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 171705,"Avocados, raw, all commercial varieties",['avocados'],{'avocados': 7.7},[],1,1,1.0,"['raw', 'commercial']",[],7.7,2.0,14.66,8.53,160.0,6.7,7.0,0.0,2.126,0.66
 171706,"Avocados, raw, California",['avocados'],{'avocados': 7.7},[],1,1,1.0,['raw'],[],7.7,1.96,15.41,8.64,167.0,6.8,8.0,0.0,2.126,0.3
 171707,"Avocados, raw, Florida",['avocados'],{'avocados': 7.7},[],1,1,1.0,['raw'],[],7.7,2.23,10.06,7.82,120.0,5.6,2.0,0.0,1.96,2.42
-171708,"Cherries, tart, dried, sweetened (Includes foods for USDA's Food Distribution Program)",['cherries'],{'cherries': 9.45},[],1,1,1.0,[],"['dried', 'sweetened', 'Includes']",9.45,1.25,0.73,80.45,333.0,2.5,13.0,0.0,0.146,67.15
-171709,"Blackberries, canned, heavy syrup, solids and liquids",['blackberries'],{'blackberries': 6.95},[],1,1,1.0,"['canned', 'heavy']",[],6.95,1.31,0.14,23.1,92.0,3.4,3.0,0.0,0.005,19.7
-171710,"Blackberries, frozen, unsweetened",['blackberries'],{'blackberries': 6.95},[],1,1,1.0,['unsweetened'],['frozen'],6.95,1.18,0.43,15.67,64.0,5.0,1.0,0.0,0.015,10.67
-171711,"Blueberries, raw",['blueberries'],{'blueberries': 10.95},[],1,1,1.0,['raw'],[],10.95,0.74,0.33,14.49,57.0,2.4,1.0,0.0,0.028,9.96
-171716,"Cherries, sour, red, canned, heavy syrup pack, solids and liquids","['cherries', 'syrup pack']","{'cherries': 9.45, 'syrup pack': 13.2}",[],2,2,1.0,"['sour', 'red', 'canned', 'heavy']",[],22.65,0.73,0.1,23.27,91.0,1.1,7.0,0.0,0.021,22.17
-171717,"Cherries, sour, red, canned, extra heavy syrup pack, solids and liquids",['cherries'],{'cherries': 9.45},[],1,1,1.0,"['sour', 'red', 'canned', 'extra', 'heavy']",[],9.45,0.71,0.09,29.23,114.0,0.8,7.0,0.0,0.021,
-171718,"Cherries, sour, red, frozen, unsweetened (Includes foods for USDA's Food Distribution Program)",['cherries'],{'cherries': 9.45},[],1,1,1.0,"['sour', 'red', 'unsweetened']","['frozen', 'Includes']",9.45,0.92,0.44,11.02,46.0,1.6,1.0,0.0,0.1,9.02
-171719,"Cherries, sweet, raw",['cherries'],{'cherries': 9.45},[],1,1,1.0,"['sweet', 'raw']",[],9.45,1.06,0.2,16.01,63.0,2.1,0.0,0.0,0.038,12.82
-171720,"Cherries, sweet, canned, extra heavy syrup pack, solids and liquids",['cherries'],{'cherries': 9.45},[],1,1,1.0,"['sweet', 'canned', 'extra', 'heavy']",[],9.45,0.59,0.15,26.23,102.0,1.5,3.0,0.0,0.033,
-171722,"Cranberries, raw",['cranberries'],{'cranberries': 17.7},[],1,1,1.0,['raw'],[],17.7,0.46,0.13,11.97,46.0,3.6,2.0,0.0,0.008,4.27
-171723,"Cranberries, dried, sweetened (Includes foods for USDA's Food Distribution Program)",['cranberries'],{'cranberries': 17.7},[],1,1,1.0,[],"['dried', 'sweetened', 'Includes']",17.7,0.17,1.09,82.8,308.0,5.3,5.0,0.0,0.088,72.56
+171711,"Blueberries, raw",['blueberries'],{'blueberries': 3.95},[],1,1,1.0,['raw'],[],3.95,0.74,0.33,14.49,57.0,2.4,1.0,0.0,0.028,9.96
+171716,"Cherries, sour, red, canned, heavy syrup pack, solids and liquids","['cherries', 'syrup pack']",{'syrup pack': 13.2},['cherries'],1,2,0.5,"['sour', 'red', 'canned', 'heavy']",[],0.0,0.73,0.1,23.27,91.0,1.1,7.0,0.0,0.021,22.17
 171725,"Custard-apple, (bullock's-heart), raw","['custard apple', 'bullock']",{'custard apple': 5.9},['bullock'],1,2,0.5,['raw'],[],0.0,1.7,0.6,25.2,101.0,2.4,4.0,0.0,0.231,
 171726,"Dates, deglet noor",['dates'],{'dates': 4.12},[],1,1,1.0,[],[],4.12,2.45,0.39,75.03,282.0,8.0,2.0,0.0,0.032,63.35
 171728,"Beef, Australian, imported, grass-fed,  external fat, raw",['beef'],{'beef': 10.25},[],1,1,1.0,"['Australian', 'fed', 'external', 'raw']",['imported'],10.25,11.32,51.36,0.39,509.0,0.0,36.0,66.0,22.65,0.0
@@ -3232,14 +3205,14 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 171788,"Beef, plate, outside skirt steak, separable lean and fat, trimmed to 0"" fat, all grades, cooked, broiled","['beef', 'skirt steak']","{'beef': 10.25, 'skirt steak': 14.25}",[],2,2,1.0,"['outside', 'separable', 'fat', 'fat']","['trimmed', 'cooked', 'broiled']",24.5,23.51,17.13,0.0,255.0,0.0,92.0,59.0,7.083,0.0
 171789,"Beef, shoulder steak, boneless, separable lean and fat, trimmed to 0"" fat, all grades, cooked, grilled","['beef', 'shoulder steak']","{'beef': 10.25, 'shoulder steak': 14.25}",[],2,2,1.0,"['boneless', 'separable', 'lean', 'fat', 'fat']","['trimmed', 'cooked', 'grilled']",24.5,28.29,6.8,0.0,182.0,0.0,67.0,81.0,2.911,0.0
 171790,"Beef, ground, 95% lean meat / 5% fat, raw","['beef', 'ground']","{'beef': 10.25, 'ground': 4.94}",[],2,2,1.0,"['lean', 'raw']",[],15.19,21.41,5.0,0.0,137.0,0.0,66.0,62.0,2.182,0.0
-171791,"Beef, ground, 95% lean meat / 5% fat, patty, cooked, broiled","['beef ground', 'patty']","{'beef ground': 4.94, 'patty': 5.7}",[],2,2,1.0,"['lean', 'fat']","['cooked', 'broiled']",10.64,26.29,6.8,0.0,174.0,0.0,65.0,88.0,2.976,0.0
-171792,"Beef, ground, 95% lean meat / 5% fat, patty, cooked, pan-broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94, 'patty': 5.7}",[],3,3,1.0,"['lean', 'fat', 'pan-broiled']",['cooked'],20.89,25.8,5.94,0.0,164.0,0.0,71.0,84.0,2.589,0.0
-171793,"Beef, ground, 90% lean meat / 10% fat, patty, cooked, pan-broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94, 'patty': 5.7}",[],3,3,1.0,"['lean', 'fat', 'pan-broiled']",['cooked'],20.89,25.21,10.68,0.0,204.0,0.0,75.0,84.0,4.189,0.0
+171791,"Beef, ground, 95% lean meat / 5% fat, patty, cooked, broiled","['beef ground', 'patty']",{'beef ground': 4.94},['patty'],1,2,0.5,"['lean', 'fat']","['cooked', 'broiled']",0.0,26.29,6.8,0.0,174.0,0.0,65.0,88.0,2.976,0.0
+171792,"Beef, ground, 95% lean meat / 5% fat, patty, cooked, pan-broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94}",['patty'],2,3,0.6666666666666666,"['lean', 'fat', 'pan-broiled']",['cooked'],0.0,25.8,5.94,0.0,164.0,0.0,71.0,84.0,2.589,0.0
+171793,"Beef, ground, 90% lean meat / 10% fat, patty, cooked, pan-broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94}",['patty'],2,3,0.6666666666666666,"['lean', 'fat', 'pan-broiled']",['cooked'],0.0,25.21,10.68,0.0,204.0,0.0,75.0,84.0,4.189,0.0
 171794,"Beef, ground, 90% lean meat / 10% fat, crumbles, cooked, pan-browned",['ground'],{'ground': 4.94},[],1,1,1.0,"['lean', 'fat', 'pan-browned']",['cooked'],4.94,28.45,12.04,0.0,230.0,0.0,87.0,89.0,4.712,0.0
 171795,"Beef, ground, 90% lean meat / 10% fat, loaf, cooked, baked","['beef', 'ground', 'loaf']","{'beef': 10.25, 'ground': 4.94}",['loaf'],2,3,0.6666666666666666,['lean'],"['cooked', 'baked']",0.0,26.62,11.1,0.0,214.0,0.0,61.0,88.0,4.375,0.0
 171796,"Beef, ground, 85% lean meat / 15% fat, raw (Includes foods for USDA's Food Distribution Program)","['beef', 'ground']","{'beef': 10.25, 'ground': 4.94}",[],2,2,1.0,"['lean', 'raw']",['Includes'],15.19,18.59,15.0,0.0,215.0,0.0,66.0,68.0,5.715,0.0
-171797,"Beef, ground, 80% lean meat / 20% fat, patty, cooked, broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94, 'patty': 5.7}",[],3,3,1.0,"['lean', 'fat']","['cooked', 'broiled']",20.89,25.75,17.78,0.0,270.0,0.0,75.0,88.0,6.764,0.0
-171798,"Beef, ground, 80% lean meat / 20% fat, patty, cooked, pan-broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94, 'patty': 5.7}",[],3,3,1.0,"['lean', 'fat', 'pan-broiled']",['cooked'],20.89,24.04,15.94,0.0,246.0,0.0,83.0,84.0,6.029,0.0
+171797,"Beef, ground, 80% lean meat / 20% fat, patty, cooked, broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94}",['patty'],2,3,0.6666666666666666,"['lean', 'fat']","['cooked', 'broiled']",0.0,25.75,17.78,0.0,270.0,0.0,75.0,88.0,6.764,0.0
+171798,"Beef, ground, 80% lean meat / 20% fat, patty, cooked, pan-broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94}",['patty'],2,3,0.6666666666666666,"['lean', 'fat', 'pan-broiled']",['cooked'],0.0,24.04,15.94,0.0,246.0,0.0,83.0,84.0,6.029,0.0
 171799,"Beef, ground, 80% lean meat / 20% fat, crumbles, cooked, pan-browned",['ground'],{'ground': 4.94},[],1,1,1.0,"['lean', 'fat', 'pan-browned']",['cooked'],4.94,27.0,17.36,0.0,272.0,0.0,91.0,89.0,6.546,0.0
 171800,"Beef, ground, 80% lean meat / 20% fat, loaf, cooked, baked","['beef', 'ground', 'loaf']","{'beef': 10.25, 'ground': 4.94}",['loaf'],2,3,0.6666666666666666,['lean'],"['cooked', 'baked']",0.0,25.25,16.17,0.0,254.0,0.0,67.0,88.0,6.159,0.0
 171801,"Beef, ground, 75% lean meat / 25% fat, loaf, cooked, baked","['beef', 'ground', 'loaf']","{'beef': 10.25, 'ground': 4.94}",['loaf'],2,3,0.6666666666666666,['lean'],"['cooked', 'baked']",0.0,24.56,16.5,0.0,254.0,0.0,70.0,88.0,6.356,0.0
@@ -3463,7 +3436,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 172095,"Pizza, meat topping, thick crust, frozen, cooked","['pizza', 'meat topping']",{'pizza': 9.64},['meat topping'],1,2,0.5,['thick'],"['frozen', 'cooked']",0.0,11.76,11.52,30.76,274.0,2.3,690.0,21.0,4.283,3.88
 172096,"Pizza, pepperoni topping, regular crust, frozen, cooked",['pizza'],{'pizza': 9.64},[],1,1,1.0,['regular'],"['frozen', 'cooked']",9.64,14.38,13.13,24.69,274.0,2.0,590.0,27.0,4.827,3.39
 172097,"Chili con carne with beans, canned entree","['chili con carne beans', 'entree']",{'chili con carne beans': 2.72},['entree'],1,2,0.5,[],['canned'],0.0,5.8,3.47,13.1,107.0,3.3,449.0,9.0,1.253,1.87
-172098,"Chili, no beans, canned entree","['chili', 'entree']",{'chili': 1.5},['entree'],1,2,0.5,[],['canned'],0.0,7.53,7.1,6.1,118.0,0.5,411.0,21.0,2.255,1.1
+172098,"Chili, no beans, canned entree","['chili', 'entree']",{'chili': 1.95},['entree'],1,2,0.5,[],['canned'],0.0,7.53,7.1,6.1,118.0,0.5,411.0,21.0,2.255,1.1
 172099,"Spaghetti, with meatballs in tomato sauce, canned",['spaghetti'],{'spaghetti': 2.25},[],1,1,1.0,[],['canned'],2.25,4.37,4.11,11.45,100.0,2.7,280.0,7.0,1.459,2.91
 172100,"Pasta with tomato sauce, no meat, canned",['pasta tomato sauce'],{'pasta tomato sauce': 2.29},[],1,1,1.0,['canned'],[],2.29,2.22,0.71,13.94,71.0,0.9,381.0,6.0,0.167,4.0
 172101,"Lasagna with meat & sauce, low-fat, frozen entree","['lasagna', 'entree']",{'lasagna': 3.87},['entree'],1,2,0.5,"['low', 'fat']",['frozen'],0.0,6.81,2.23,13.5,101.0,1.3,181.0,7.0,0.967,
@@ -4181,7 +4154,6 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 173027,"Fruit cocktail, (peach and pineapple and pear and grape and cherry), canned, light syrup, solids and liquids",['fruit cocktail'],{'fruit cocktail': 11.7},[],1,1,1.0,['canned'],[],11.7,0.4,0.07,14.93,57.0,1.0,6.0,0.0,0.01,13.93
 173028,"Fruit cocktail, (peach and pineapple and pear and grape and cherry), canned, heavy syrup, solids and liquids",['fruit cocktail'],{'fruit cocktail': 11.7},[],1,1,1.0,"['canned', 'heavy']",[],11.7,0.39,0.07,18.91,73.0,1.0,6.0,0.0,0.01,17.91
 173029,"Fruit cocktail, (peach and pineapple and pear and grape and cherry), canned, extra heavy syrup, solids and liquids","['fruit cocktail', 'peach pineapple pear grape cherry']","{'fruit cocktail': 11.7, 'peach pineapple pear grape cherry': 11.03}",[],2,2,1.0,"['canned', 'extra', 'heavy']",[],22.73,0.39,0.07,22.89,88.0,1.1,6.0,0.0,0.01,
-173032,"Goji berries, dried",['goji berries'],{'goji berries': 12.21},[],1,1,1.0,[],['dried'],12.21,14.26,0.39,77.06,349.0,13.0,298.0,0.0,0.0,45.61
 173033,"Grapefruit, raw, pink and red and white, all areas",['grapefruit'],{'grapefruit': 1.5},[],1,1,1.0,"['raw', 'pink', 'red', 'white']",[],1.5,0.63,0.1,8.08,32.0,1.1,0.0,0.0,0.014,6.98
 173034,"Grapefruit, raw, white, Florida",['grapefruit'],{'grapefruit': 1.5},[],1,1,1.0,"['raw', 'white']",[],1.5,0.63,0.1,8.19,32.0,,0.0,0.0,0.014,
 173035,"Grapefruit, sections, canned, water pack, solids and liquids",['grapefruit'],{'grapefruit': 1.5},[],1,1,1.0,[],['canned'],1.5,0.58,0.1,9.15,36.0,0.4,2.0,0.0,0.014,8.75
@@ -4259,8 +4231,8 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 173109,"Beef, New Zealand, imported, tenderloin, separable lean and fat, raw","['beef', 'tenderloin']","{'beef': 10.25, 'tenderloin': 16.75}",[],2,2,1.0,"['New', 'separable', 'lean', 'fat', 'raw']",['imported'],27.0,21.04,6.88,0.0,146.0,0.0,39.0,58.0,2.788,0.0
 173110,"Beef, ground, 93% lean meat / 7% fat, raw","['beef', 'ground']","{'beef': 10.25, 'ground': 4.94}",[],2,2,1.0,"['lean', 'raw']",[],15.19,20.85,7.0,0.0,152.0,0.0,66.0,63.0,2.878,0.0
 173111,"Beef, ground, 97% lean meat / 3% fat, raw","['beef', 'ground']","{'beef': 10.25, 'ground': 4.94}",[],2,2,1.0,"['lean', 'raw']",[],15.19,21.98,3.0,0.0,121.0,0.0,66.0,60.0,1.48,0.0
-173112,"Beef, ground, 97% lean meat / 3% fat, patty, cooked, broiled","['beef ground', 'patty']","{'beef ground': 4.94, 'patty': 5.7}",[],2,2,1.0,"['lean', 'fat']","['cooked', 'broiled']",10.64,26.36,4.46,0.0,153.0,0.0,64.0,88.0,2.207,0.0
-173113,"Beef, ground, 97% lean meat /3% fat, patty, cooked, pan-broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94, 'patty': 5.7}",[],3,3,1.0,"['lean', 'fat', 'pan-broiled']",['cooked'],20.89,26.03,3.65,0.0,144.0,0.0,69.0,84.0,1.797,0.0
+173112,"Beef, ground, 97% lean meat / 3% fat, patty, cooked, broiled","['beef ground', 'patty']",{'beef ground': 4.94},['patty'],1,2,0.5,"['lean', 'fat']","['cooked', 'broiled']",0.0,26.36,4.46,0.0,153.0,0.0,64.0,88.0,2.207,0.0
+173113,"Beef, ground, 97% lean meat /3% fat, patty, cooked, pan-broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94}",['patty'],2,3,0.6666666666666666,"['lean', 'fat', 'pan-broiled']",['cooked'],0.0,26.03,3.65,0.0,144.0,0.0,69.0,84.0,1.797,0.0
 173114,"Beef, ground, 97% lean meat / 3% fat, loaf, cooked, baked","['beef', 'ground', 'loaf']","{'beef': 10.25, 'ground': 4.94}",['loaf'],2,3,0.6666666666666666,['lean'],"['cooked', 'baked']",0.0,27.58,4.06,0.0,154.0,0.0,56.0,88.0,2.011,0.0
 173115,"Beef, round, bottom round, steak, separable lean only, trimmed to 1/8"" fat, choice, cooked, braised","['beef', 'bottom', 'steak']","{'beef': 10.25, 'steak': 14.25}",['bottom'],2,3,0.6666666666666666,"['round', 'separable', 'fat']","['trimmed', 'cooked', 'braised']",0.0,34.22,9.02,0.0,228.0,0.0,45.0,97.0,3.109,0.0
 173116,"Beef, short loin, top loin, steak, separable lean only, trimmed to 1/8"" fat, choice, raw","['beef', 'loin', 'steak']","{'beef': 10.25, 'loin': 10.25, 'steak': 14.25}",[],3,3,1.0,"['short', 'top', 'separable', 'fat', 'raw']",['trimmed'],34.75,22.78,6.43,0.0,155.0,0.0,58.0,66.0,2.378,0.0
@@ -4395,7 +4367,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 173315,"BURGER KING, CROISSAN'WICH with Sausage, Egg and Cheese",['burger king croissan wich sausage egg cheese'],{'burger king croissan wich sausage egg cheese': 8.5},[],1,1,1.0,[],[],8.5,12.09,21.78,15.9,308.0,1.8,577.0,123.0,8.342,3.12
 173316,"BURGER KING, CROISSAN'WICH with Sausage and Cheese",['burger king croissan wich sausage cheese'],{'burger king croissan wich sausage cheese': 8.5},[],1,1,1.0,[],[],8.5,13.73,25.45,23.0,376.0,0.7,782.0,43.0,8.595,3.36
 173321,"Fast foods, chicken tenders",['chicken tenders'],{'chicken tenders': 11.9},[],1,1,1.0,['Fast'],[],11.9,19.22,13.95,17.25,271.0,1.2,769.0,48.0,2.493,0.4
-173322,"Fast foods, bagel, with egg, sausage patty, cheese, and condiments","['bagel', 'sausage patty', 'cheese']","{'sausage patty': 5.7, 'cheese': 8.5}",['bagel'],2,3,0.6666666666666666,['Fast'],[],0.0,12.98,16.97,22.64,295.0,0.2,550.0,133.0,6.396,2.87
+173322,"Fast foods, bagel, with egg, sausage patty, cheese, and condiments","['bagel', 'sausage patty', 'cheese']",{'cheese': 8.5},"['bagel', 'sausage patty']",1,3,0.3333333333333333,['Fast'],[],0.0,12.98,16.97,22.64,295.0,0.2,550.0,133.0,6.396,2.87
 173323,"Fast foods, bagel, with breakfast steak, egg, cheese, and condiments","['bagel', 'breakfast steak', 'egg', 'cheese']","{'breakfast steak': 14.25, 'egg': 4.18, 'cheese': 8.5}",['bagel'],3,4,0.75,['Fast'],[],0.0,15.95,14.07,22.99,282.0,0.2,642.0,130.0,5.419,2.97
 173324,"Light Ice Cream, soft serve, blended with milk chocolate candies",['light ice cream'],{'light ice cream': 7.65},[],1,1,1.0,['soft'],['blended'],7.65,4.02,6.46,26.82,182.0,0.2,54.0,16.0,3.633,24.37
 173325,"Macaroni and Cheese, canned entree","['macaroni cheese', 'entree']",{'macaroni cheese': 8.5},['entree'],1,2,0.5,[],['canned'],0.0,3.38,2.46,11.52,82.0,0.5,302.0,6.0,0.881,0.5
@@ -4526,7 +4498,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 173468,"Salt, table",['salt'],{'salt': 3.33},[],1,1,1.0,[],[],3.33,0.0,0.0,0.0,0.0,0.0,38758.0,0.0,0.0,0.0
 173469,"Vinegar, cider",['vinegar'],{'vinegar': 3.77},[],1,1,1.0,[],[],3.77,0.0,0.0,0.93,21.0,0.0,5.0,0.0,0.0,0.4
 173475,"Spearmint, fresh",['spearmint'],{'spearmint': 5.3},[],1,1,1.0,['fresh'],[],5.3,3.29,0.73,8.41,44.0,6.8,30.0,0.0,0.191,
-173476,"Seasoning mix, dry, chili, original","['seasoning mix', 'chili']","{'seasoning mix': 4.8, 'chili': 1.5}",[],2,2,1.0,"['dry', 'original']",[],6.3,10.82,7.3,56.56,335.0,10.8,4616.0,0.0,0.0,8.67
+173476,"Seasoning mix, dry, chili, original","['seasoning mix', 'chili']","{'seasoning mix': 4.8, 'chili': 1.95}",[],2,2,1.0,"['dry', 'original']",[],6.75,10.82,7.3,56.56,335.0,10.8,4616.0,0.0,0.0,8.67
 173477,Clif Z bar,['z bar'],{'z bar': 7.56},[],1,1,1.0,[],[],7.56,5.55,9.72,74.72,416.0,8.3,375.0,0.0,2.721,30.56
 173479,"Babyfood, meat, beef, strained","['babyfood', 'meat', 'beef']","{'meat': 7.3, 'beef': 10.25}",['babyfood'],2,3,0.6666666666666666,[],['strained'],0.0,12.03,2.52,2.43,81.0,0.0,41.0,51.0,1.18,0.0
 173480,"Babyfood, meat, ham, junior","['babyfood', 'meat', 'ham']","{'meat': 7.3, 'ham': 8.0}",['babyfood'],2,3,0.6666666666666666,[],[],0.0,11.3,3.8,3.7,97.0,0.0,44.0,29.0,1.271,0.0
@@ -4825,7 +4797,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 173873,"Bologna, chicken, pork","['bologna', 'chicken', 'pork']","{'chicken': 8.0, 'pork': 6.15}",['bologna'],2,3,0.6666666666666666,[],[],0.0,10.31,30.61,4.19,336.0,0.0,1240.0,87.0,9.863,0.0
 173874,"Chicken breast, deli, rotisserie seasoned, sliced, prepackaged",['chicken breast'],{'chicken breast': 4.95},[],1,1,1.0,[],"['seasoned', 'sliced', 'prepackaged']",4.95,17.4,1.86,2.92,98.0,0.0,1032.0,51.0,0.564,0.75
 173875,"Frankfurter, meat and poultry, unheated","['frankfurter', 'meat poultry']",{'frankfurter': 59.28},['meat poultry'],1,2,0.5,['unheated'],[],0.0,9.72,24.18,5.02,277.0,0.0,976.0,78.0,7.583,2.75
-173876,"Pork sausage, link/patty, fully cooked, unheated","['pork sausage', 'link patty']","{'pork sausage': 9.11, 'link patty': 5.7}",[],2,2,1.0,['unheated'],['cooked'],14.81,13.46,37.25,0.69,392.0,0.0,810.0,74.0,12.129,0.53
+173876,"Pork sausage, link/patty, fully cooked, unheated","['pork sausage', 'link patty']",{'pork sausage': 9.11},['link patty'],1,2,0.5,['unheated'],['cooked'],0.0,13.46,37.25,0.69,392.0,0.0,810.0,74.0,12.129,0.53
 173880,"Sausage, chicken or turkey, Italian style,  lower sodium","['sausage', 'chicken turkey']","{'sausage': 10.8, 'chicken turkey': 119.57}",[],2,2,1.0,"['Italian', 'lower']",[],130.37,21.43,4.46,14.25,183.0,0.0,446.0,36.0,0.893,0.81
 173881,"Ham, smoked, extra lean, low sodium",['ham'],{'ham': 8.0},[],1,1,1.0,"['extra', 'lean', 'low']",['smoked'],8.0,18.52,2.71,10.7,141.0,0.0,1062.0,50.0,1.786,10.68
 173882,"Pork sausage, reduced sodium, cooked",['pork sausage'],{'pork sausage': 9.11},[],1,1,1.0,[],"['reduced', 'cooked']",9.11,9.41,22.35,8.13,271.0,0.0,294.0,59.0,8.235,0.0
@@ -4853,19 +4825,14 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 173943,"Apricots, dried, sulfured, stewed, with added sugar",['apricots'],{'apricots': 6.95},[],1,1,1.0,['sulfured'],"['dried', 'stewed', 'added']",6.95,1.17,0.15,29.26,113.0,4.1,3.0,0.0,0.01,
 173944,"Bananas, raw",['bananas'],{'bananas': 4.5},[],1,1,1.0,['raw'],[],4.5,1.09,0.33,22.84,89.0,2.6,1.0,0.0,0.112,12.23
 173945,"Bananas, dehydrated, or banana powder",['bananas'],{'bananas': 4.5},[],1,1,1.0,[],['dehydrated'],4.5,3.89,1.81,88.28,346.0,9.9,3.0,0.0,0.698,47.3
-173946,"Blackberries, raw",['blackberries'],{'blackberries': 6.95},[],1,1,1.0,['raw'],[],6.95,1.39,0.49,9.61,43.0,5.3,1.0,0.0,0.014,4.88
 173947,"Blackberry juice, canned",['blackberry juice'],{'blackberry juice': 9.78},[],1,1,1.0,[],['canned'],9.78,0.3,0.6,7.8,38.0,0.1,1.0,0.0,0.018,7.7
-173948,"Blueberries, canned, heavy syrup, solids and liquids",['blueberries'],{'blueberries': 10.95},[],1,1,1.0,"['canned', 'heavy']",[],10.95,0.65,0.33,22.06,88.0,1.6,3.0,0.0,0.027,20.46
-173949,"Blueberries, wild, frozen (Includes foods for USDA's Food Distribution Program)",['blueberries'],{'blueberries': 10.95},[],1,1,1.0,['wild'],"['frozen', 'Includes']",10.95,0.0,0.16,13.85,57.0,4.4,3.0,0.0,0.03,
-173950,"Blueberries, frozen, unsweetened (Includes foods for USDA's Food Distribution Program)",['blueberries'],{'blueberries': 10.95},[],1,1,1.0,['unsweetened'],"['frozen', 'Includes']",10.95,0.42,0.64,12.17,51.0,2.7,1.0,0.0,0.053,8.45
-173951,"Blueberries, frozen, sweetened",['blueberries'],{'blueberries': 10.95},[],1,1,1.0,[],"['frozen', 'sweetened']",10.95,0.4,0.13,21.95,85.0,2.2,1.0,0.0,0.011,19.72
-173954,"Cherries, sour, red, raw",['cherries'],{'cherries': 9.45},[],1,1,1.0,"['sour', 'red', 'raw']",[],9.45,1.0,0.3,12.18,50.0,1.6,3.0,0.0,0.068,8.49
-173955,"Cherries, sour, red, canned, water pack, solids and liquids","['cherries', 'water pack']","{'cherries': 9.45, 'water pack': 13.2}",[],2,2,1.0,"['sour', 'red', 'canned']",[],22.65,0.77,0.1,8.94,36.0,1.1,7.0,0.0,0.023,7.6
-173956,"Cherries, sour, red, canned, light syrup pack, solids and liquids",['cherries'],{'cherries': 9.45},[],1,1,1.0,"['sour', 'red', 'canned']",[],9.45,0.74,0.1,19.3,75.0,0.8,7.0,0.0,0.022,
-173957,"Cherries, sweet, canned, water pack, solids and liquids","['cherries', 'water pack']","{'cherries': 9.45, 'water pack': 13.2}",[],2,2,1.0,"['sweet', 'canned']",[],22.65,0.77,0.13,11.76,46.0,1.5,1.0,0.0,0.028,10.26
-173958,"Cherries, sweet, canned, juice pack, solids and liquids","['cherries', 'juice pack']","{'cherries': 9.45, 'juice pack': 13.2}",[],2,2,1.0,"['sweet', 'canned']",[],22.65,0.91,0.02,13.81,54.0,1.5,3.0,0.0,0.004,12.31
-173959,"Cherries, sweet, canned, light syrup pack, solids and liquids",['cherries'],{'cherries': 9.45},[],1,1,1.0,"['sweet', 'canned']",[],9.45,0.61,0.15,17.29,67.0,1.5,3.0,0.0,0.034,15.79
-173960,"Cherries, sweet, canned, pitted, heavy syrup pack, solids and liquids",['cherries'],{'cherries': 9.45},[],1,1,1.0,"['sweet', 'canned', 'heavy']",['pitted'],9.45,0.6,0.15,21.27,83.0,1.4,3.0,0.0,0.034,16.18
+173948,"Blueberries, canned, heavy syrup, solids and liquids",['blueberries'],{'blueberries': 3.95},[],1,1,1.0,"['canned', 'heavy']",[],3.95,0.65,0.33,22.06,88.0,1.6,3.0,0.0,0.027,20.46
+173949,"Blueberries, wild, frozen (Includes foods for USDA's Food Distribution Program)",['blueberries'],{'blueberries': 3.95},[],1,1,1.0,['wild'],"['frozen', 'Includes']",3.95,0.0,0.16,13.85,57.0,4.4,3.0,0.0,0.03,
+173950,"Blueberries, frozen, unsweetened (Includes foods for USDA's Food Distribution Program)",['blueberries'],{'blueberries': 3.95},[],1,1,1.0,['unsweetened'],"['frozen', 'Includes']",3.95,0.42,0.64,12.17,51.0,2.7,1.0,0.0,0.053,8.45
+173951,"Blueberries, frozen, sweetened",['blueberries'],{'blueberries': 3.95},[],1,1,1.0,[],"['frozen', 'sweetened']",3.95,0.4,0.13,21.95,85.0,2.2,1.0,0.0,0.011,19.72
+173955,"Cherries, sour, red, canned, water pack, solids and liquids","['cherries', 'water pack']",{'water pack': 13.2},['cherries'],1,2,0.5,"['sour', 'red', 'canned']",[],0.0,0.77,0.1,8.94,36.0,1.1,7.0,0.0,0.023,7.6
+173957,"Cherries, sweet, canned, water pack, solids and liquids","['cherries', 'water pack']",{'water pack': 13.2},['cherries'],1,2,0.5,"['sweet', 'canned']",[],0.0,0.77,0.13,11.76,46.0,1.5,1.0,0.0,0.028,10.26
+173958,"Cherries, sweet, canned, juice pack, solids and liquids","['cherries', 'juice pack']",{'juice pack': 13.2},['cherries'],1,2,0.5,"['sweet', 'canned']",[],0.0,0.91,0.02,13.81,54.0,1.5,3.0,0.0,0.004,12.31
 173961,"Cranberry sauce, canned, sweetened",['cranberry sauce'],{'cranberry sauce': 3.95},[],1,1,1.0,['canned'],['sweetened'],3.95,0.9,0.15,40.4,159.0,1.1,5.0,0.0,0.007,31.75
 173965,"Beef, Australian, imported, grass-fed, loin, tenderloin steak/roast, boneless, separable lean only, raw","['beef', 'loin']","{'beef': 10.25, 'loin': 10.25}",[],2,2,1.0,"['Australian', 'fed', 'boneless', 'separable', 'raw']",['imported'],20.5,20.85,6.11,0.0,138.0,0.0,63.0,49.0,2.725,0.0
 173966,"Beef, Australian, imported, Wagyu, loin, tenderloin steak/roast, boneless, separable lean only, Aust. marble score 4/5, raw","['beef', 'loin', 'tenderloin steak roast']","{'beef': 10.25, 'loin': 10.25, 'tenderloin steak roast': 19.7}",[],3,3,1.0,"['Australian', 'boneless', 'separable', 'raw']",['imported'],40.2,20.19,12.3,0.0,191.0,0.0,64.0,59.0,5.507,0.0
@@ -4932,15 +4899,15 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 174028,"Beef, ground, 95% lean meat / 5% fat, crumbles, cooked, pan-browned","['beef', 'ground']","{'beef': 10.25, 'ground': 4.94}",[],2,2,1.0,"['lean', 'pan-browned']",['cooked'],15.19,29.17,7.58,0.0,193.0,0.0,85.0,89.0,3.298,0.0
 174029,"Beef, ground, 95% lean meat / 5% fat, loaf, cooked, baked","['beef', 'ground', 'loaf']","{'beef': 10.25, 'ground': 4.94}",['loaf'],2,3,0.6666666666666666,['lean'],"['cooked', 'baked']",0.0,27.31,6.37,0.0,174.0,0.0,58.0,88.0,2.788,0.0
 174030,"Beef, ground, 90% lean meat / 10% fat, raw","['beef', 'ground']","{'beef': 10.25, 'ground': 4.94}",[],2,2,1.0,"['lean', 'fat', 'raw']",[],15.19,20.0,10.0,0.0,176.0,0.0,66.0,65.0,3.927,0.0
-174031,"Beef, ground, 90% lean meat / 10% fat, patty, cooked, broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94, 'patty': 5.7}",[],3,3,1.0,"['lean', 'fat']","['cooked', 'broiled']",20.89,26.11,11.75,0.0,217.0,0.0,68.0,88.0,4.628,0.0
-174032,"Beef, ground, 85% lean meat / 15% fat, patty, cooked, broiled","['beef ground', 'patty']","{'beef ground': 4.94, 'patty': 5.7}",[],2,2,1.0,"['lean', 'fat']","['cooked', 'broiled']",10.64,25.93,15.41,0.0,250.0,0.0,72.0,88.0,5.895,0.0
-174033,"Beef, ground, 85% lean meat / 15% fat, patty, cooked, pan-broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94, 'patty': 5.7}",[],3,3,1.0,"['lean', 'fat', 'pan-broiled']",['cooked'],20.89,24.62,14.02,0.0,232.0,0.0,79.0,84.0,5.331,0.0
+174031,"Beef, ground, 90% lean meat / 10% fat, patty, cooked, broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94}",['patty'],2,3,0.6666666666666666,"['lean', 'fat']","['cooked', 'broiled']",0.0,26.11,11.75,0.0,217.0,0.0,68.0,88.0,4.628,0.0
+174032,"Beef, ground, 85% lean meat / 15% fat, patty, cooked, broiled","['beef ground', 'patty']",{'beef ground': 4.94},['patty'],1,2,0.5,"['lean', 'fat']","['cooked', 'broiled']",0.0,25.93,15.41,0.0,250.0,0.0,72.0,88.0,5.895,0.0
+174033,"Beef, ground, 85% lean meat / 15% fat, patty, cooked, pan-broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94}",['patty'],2,3,0.6666666666666666,"['lean', 'fat', 'pan-broiled']",['cooked'],0.0,24.62,14.02,0.0,232.0,0.0,79.0,84.0,5.331,0.0
 174034,"Beef, ground, 85% lean meat / 15% fat, crumbles, cooked, pan-browned",['ground'],{'ground': 4.94},[],1,1,1.0,"['lean', 'fat', 'pan-browned']",['cooked'],4.94,27.73,15.3,0.0,256.0,0.0,89.0,89.0,5.806,0.0
 174035,"Beef, ground, 85% lean meat / 15% fat, loaf, cooked, baked","['beef', 'ground', 'loaf']","{'beef': 10.25, 'ground': 4.94}",['loaf'],2,3,0.6666666666666666,['lean'],"['cooked', 'baked']",0.0,25.93,14.36,0.0,240.0,0.0,64.0,88.0,5.497,0.0
 174036,"Beef, ground, 80% lean meat / 20% fat, raw","['beef', 'ground']","{'beef': 10.25, 'ground': 4.94}",[],2,2,1.0,"['lean', 'fat', 'raw']",[],15.19,17.17,20.0,0.0,254.0,0.0,66.0,71.0,7.581,0.0
 174037,"Beef, ground, 75% lean meat / 25% fat, raw","['beef', 'ground']","{'beef': 10.25, 'ground': 4.94}",[],2,2,1.0,"['lean', 'raw']",[],15.19,15.76,25.0,0.0,293.0,0.0,66.0,75.0,9.568,0.0
-174038,"Beef, ground, 75% lean meat / 25% fat, patty, cooked, broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94, 'patty': 5.7}",[],3,3,1.0,"['lean', 'fat']","['cooked', 'broiled']",20.89,25.56,18.87,0.0,279.0,0.0,78.0,88.0,7.248,0.0
-174039,"Beef, ground, 75% lean meat / 25% fat, patty, cooked, pan-broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94, 'patty': 5.7}",[],3,3,1.0,"['lean', 'fat', 'pan-broiled']",['cooked'],20.89,23.45,16.44,0.0,248.0,0.0,87.0,84.0,6.281,0.0
+174038,"Beef, ground, 75% lean meat / 25% fat, patty, cooked, broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94}",['patty'],2,3,0.6666666666666666,"['lean', 'fat']","['cooked', 'broiled']",0.0,25.56,18.87,0.0,279.0,0.0,78.0,88.0,7.248,0.0
+174039,"Beef, ground, 75% lean meat / 25% fat, patty, cooked, pan-broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94}",['patty'],2,3,0.6666666666666666,"['lean', 'fat', 'pan-broiled']",['cooked'],0.0,23.45,16.44,0.0,248.0,0.0,87.0,84.0,6.281,0.0
 174040,"Beef, ground, 75% lean meat / 25% fat, crumbles, cooked, pan-browned",['ground'],{'ground': 4.94},[],1,1,1.0,"['lean', 'pan-browned']",['cooked'],4.94,26.28,18.21,0.0,277.0,0.0,93.0,89.0,6.926,0.0
 174041,"Beef, short loin, top loin, steak, separable lean only, trimmed to 1/8"" fat, select, raw","['beef', 'loin', 'steak']","{'beef': 10.25, 'loin': 10.25, 'steak': 14.25}",[],3,3,1.0,"['short', 'top', 'separable', 'fat', 'raw']","['trimmed', 'select']",34.75,23.07,3.88,0.0,133.0,0.0,57.0,40.0,1.432,0.0
 174042,"Beef, rib, small end (ribs 10-12), separable lean only, trimmed to 1/8"" fat, select, cooked, broiled",['beef'],{'beef': 10.25},[],1,1,1.0,"['small', 'separable', 'fat', 'select']","['trimmed', 'cooked', 'broiled']",10.25,30.87,6.22,0.0,188.0,0.0,66.0,98.0,2.369,0.0
@@ -5040,8 +5007,8 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 174176,"Beverages, fruit juice drink, reduced sugar, with vitamin E added","['beverages', 'fruit juice drink']",{'fruit juice drink': 3.53},['beverages'],1,2,0.5,[],"['reduced', 'added']",0.0,0.0,0.07,10.0,39.0,0.0,2.0,0.0,0.008,9.0
 174177,"Beverages, Energy drink, VAULT Zero, sugar-free, citrus flavor","['beverages', 'energy drink']",{'energy drink': 3.53},['beverages'],1,2,0.5,"['free', 'citrus']",[],0.0,0.25,0.08,0.7,1.0,0.0,14.0,0.0,0.0,0.0
 174181,"Beverages, nutritional shake mix, high protein, powder","['beverages', 'shake mix']",{'shake mix': 4.8},['beverages'],1,2,0.5,"['nutritional', 'high']",[],0.0,53.57,10.71,20.38,392.0,0.0,1214.0,0.0,0.0,3.57
-174182,"Fish, anchovy, european, raw","['fish', 'anchovy']",{'fish': 5.94},['anchovy'],1,2,0.5,"['european', 'raw']",[],0.0,20.35,4.84,0.0,131.0,0.0,104.0,60.0,1.282,0.0
-174183,"Fish, anchovy, european, canned in oil, drained solids","['fish', 'anchovy']",{'fish': 5.94},['anchovy'],1,2,0.5,['european'],"['canned', 'drained']",0.0,28.89,9.71,0.0,210.0,0.0,3668.0,85.0,2.203,0.0
+174182,"Fish, anchovy, european, raw","['fish', 'anchovy']","{'fish': 5.94, 'anchovy': 2.29}",[],2,2,1.0,"['european', 'raw']",[],8.23,20.35,4.84,0.0,131.0,0.0,104.0,60.0,1.282,0.0
+174183,"Fish, anchovy, european, canned in oil, drained solids","['fish', 'anchovy']","{'fish': 5.94, 'anchovy': 2.29}",[],2,2,1.0,['european'],"['canned', 'drained']",8.23,28.89,9.71,0.0,210.0,0.0,3668.0,85.0,2.203,0.0
 174184,"Fish, bass, fresh water, mixed species, raw","['fish', 'bass', 'water', 'species']",{'fish': 5.94},"['bass', 'water', 'species']",1,4,0.25,"['fresh', 'raw']",['mixed'],0.0,18.86,3.69,0.0,114.0,0.0,70.0,68.0,0.78,
 174185,"Fish, carp, cooked, dry heat","['fish', 'carp']",{'fish': 5.94},['carp'],1,2,0.5,['dry'],['cooked'],0.0,22.86,7.17,0.0,162.0,0.0,63.0,84.0,1.388,
 174186,"Fish, catfish, channel, wild, raw","['fish', 'catfish', 'channel']",{'fish': 5.94},"['catfish', 'channel']",1,3,0.3333333333333333,"['wild', 'raw']",[],0.0,16.38,2.82,0.0,95.0,0.0,43.0,58.0,0.722,
@@ -5529,7 +5496,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 174750,"Beef, New Zealand, imported, rump centre, separable lean and fat, raw",['beef'],{'beef': 10.25},[],1,1,1.0,"['New', 'separable', 'fat', 'raw']",['imported'],10.25,21.65,6.5,0.0,145.0,0.0,49.0,55.0,2.2,0.0
 174751,"Beef, New Zealand, imported, striploin, separable lean and fat, cooked, fast fried","['beef', 'striploin']","{'beef': 10.25, 'striploin': 32.8}",[],2,2,1.0,"['New', 'separable', 'lean', 'fat', 'fast']","['imported', 'cooked', 'fried']",43.05,24.89,22.33,0.02,301.0,0.0,50.0,69.0,8.244,0.0
 174752,"Beef, ground, 93% lean meat / 7% fat, patty, cooked, broiled",['beef ground'],{'beef ground': 4.94},[],1,1,1.0,"['lean', 'fat']","['cooked', 'broiled']",4.94,26.22,8.94,0.0,193.0,0.0,66.0,88.0,3.684,0.0
-174753,"Beef, ground, 93% lean meat /7% fat, patty, cooked, pan-broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94, 'patty': 5.7}",[],3,3,1.0,"['lean', 'fat', 'pan-broiled']",['cooked'],20.89,25.56,8.01,0.06,182.0,0.0,72.0,84.0,3.286,0.0
+174753,"Beef, ground, 93% lean meat /7% fat, patty, cooked, pan-broiled","['beef', 'ground', 'patty']","{'beef': 10.25, 'ground': 4.94}",['patty'],2,3,0.6666666666666666,"['lean', 'fat', 'pan-broiled']",['cooked'],0.0,25.56,8.01,0.06,182.0,0.0,72.0,84.0,3.286,0.0
 174754,"Beef, ground, 93% lean meat / 7% fat, loaf, cooked, baked","['beef', 'ground', 'loaf']","{'beef': 10.25, 'ground': 4.94}",['loaf'],2,3,0.6666666666666666,['lean'],"['cooked', 'baked']",0.0,27.03,8.43,0.0,192.0,0.0,59.0,88.0,3.48,0.0
 174755,"Beef, ground, 93% lean meat / 7% fat, crumbles, cooked, pan-browned","['beef', 'ground']","{'beef': 10.25, 'ground': 4.94}",[],2,2,1.0,"['lean', 'pan-browned']",['cooked'],15.19,28.88,9.51,0.0,209.0,0.0,86.0,89.0,3.897,0.0
 174756,"Beef, ground, 97% lean meat / 3% fat, crumbles, cooked, pan-browned","['beef', 'ground']","{'beef': 10.25, 'ground': 4.94}",[],2,2,1.0,"['lean', 'pan-browned']",['cooked'],15.19,29.46,5.46,0.0,175.0,0.0,84.0,89.0,2.686,0.0
@@ -5948,7 +5915,6 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 326458,"Carrots, frozen, unprepared (Includes foods for USDA's Food Distribution Program)",['carrots'],{'carrots': 2.97},[],1,1,1.0,['unprepared'],"['frozen', 'Includes']",2.97,0.81,0.47,7.92,37.0,3.2,66.0,,0.0,
 326698,"Mustard, prepared, yellow",['mustard'],{'mustard': 5.34},[],1,1,1.0,['yellow'],['prepared'],5.34,4.25,3.38,5.3,61.0,4.3,1100.0,,0.252,
 327357,"Nectarines, raw",['nectarines'],{'nectarines': 10.95},[],1,1,1.0,['raw'],[],10.95,1.06,0.28,9.18,39.0,1.5,13.0,,0.0,
-327699,"Strawberries, raw",['strawberries'],{'strawberries': 19.75},[],1,1,1.0,['raw'],[],19.75,0.64,0.22,7.63,31.0,1.8,10.0,,0.0,
 328637,"Cheese, cheddar",['cheese'],{'cheese': 8.5},[],1,1,1.0,[],[],8.5,23.3,34.0,2.44,408.0,,654.0,100.0,19.2,
 328841,"Cheese, cottage, lowfat, 2% milkfat","['cheese', 'cottage']",{'cheese': 8.5},['cottage'],1,2,0.5,[],[],0.0,11.0,2.3,4.31,84.0,,321.0,12.0,1.26,
 329370,"Cheese, mozzarella, low moisture, part-skim","['cheese', 'mozzarella']","{'cheese': 8.5, 'mozzarella': 8.63}",[],2,2,1.0,['low'],[],17.13,23.7,20.4,4.44,298.0,,699.0,65.0,11.7,
@@ -5995,7 +5961,6 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 746783,"Sausage, turkey, breakfast links, mild, raw","['sausage', 'turkey', 'breakfast links']","{'sausage': 10.8, 'turkey': 119.57}",['breakfast links'],2,3,0.6666666666666666,"['mild', 'raw']",[],0.0,16.7,10.4,0.93,169.0,,599.0,78.0,2.53,
 746785,"Turkey, ground, 93% lean, 7% fat, pan-broiled crumbles",['ground'],{'ground': 4.94},[],1,1,1.0,"['lean', 'fat']",['-broiled'],4.94,27.1,11.6,0.0,220.0,,90.0,104.0,2.97,
 747447,"Broccoli, raw",['broccoli'],{'broccoli': 4.05},[],1,1,1.0,['raw'],[],4.05,2.57,0.34,6.27,31.0,2.4,36.0,,0.039,
-747448,"Strawberries, raw",['strawberries'],{'strawberries': 19.75},[],1,1,1.0,['raw'],[],19.75,0.64,0.22,7.63,31.0,1.8,10.0,,0.0,
 748967,"Eggs, Grade A, Large, egg whole",['eggs'],{'eggs': 4.18},[],1,1,1.0,"['Large', 'whole']",[],4.18,12.4,9.96,0.96,148.0,0.0,129.0,411.0,3.2,
 2705384,"Milk, NFS",['milk'],{'milk': 3.63},[],1,1,1.0,[],[],3.63,3.33,2.14,4.83,52.0,0.0,39.0,9.0,1.249,4.88
 2705385,"Milk, whole",['milk'],{'milk': 3.63},[],1,1,1.0,['whole'],[],3.63,3.27,3.2,4.63,61.0,0.0,38.0,12.0,1.86,4.81
@@ -6529,10 +6494,9 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2706082,"Chicken, neck or ribs",['chicken'],{'chicken': 8.0},[],1,1,1.0,[],[],8.0,19.45,17.95,0.0,245.0,0.0,374.0,69.0,4.958,0.0
 2706083,"Chicken, tail",['chicken'],{'chicken': 8.0},[],1,1,1.0,[],[],8.0,20.36,40.68,0.0,454.0,0.0,65.0,83.0,11.42,0.0
 2706084,Chicken skin,['chicken skin'],{'chicken skin': 3.45},[],1,1,1.0,[],[],3.45,20.19,40.34,0.0,450.0,0.0,387.0,82.0,11.325,0.0
-2706085,Chicken feet,['chicken feet'],{'chicken feet': 3.99},[],1,1,1.0,[],[],3.99,19.4,14.6,0.2,215.0,0.0,67.0,84.0,3.92,0.0
+2706085,Chicken feet,['chicken feet'],{'chicken feet': 6.0},[],1,1,1.0,[],[],6.0,19.4,14.6,0.2,215.0,0.0,67.0,84.0,3.92,0.0
 2706086,"Chicken, canned, meat only",['chicken'],{'chicken': 8.0},[],1,1,1.0,['canned'],[],8.0,25.3,8.1,0.9,185.0,0.0,482.0,50.0,2.25,0.0
 2706087,"Chicken, chicken roll, roasted",['chicken'],{'chicken': 8.0},[],1,1,1.0,[],['roasted'],8.0,26.68,6.33,0.0,164.0,0.0,499.0,112.0,1.573,0.0
-2706088,"Chicken patty, breaded",['chicken patty'],{'chicken patty': 5.7},[],1,1,1.0,[],['breaded'],5.7,14.85,19.58,12.84,287.0,0.3,532.0,43.0,3.662,0.0
 2706089,"Chicken fillet, breaded",['chicken fillet'],{'chicken fillet': 4.4},[],1,1,1.0,[],['breaded'],4.4,14.62,13.58,14.86,240.0,1.7,527.0,36.0,2.437,0.57
 2706090,"Chicken fillet, grilled",['chicken fillet'],{'chicken fillet': 4.4},[],1,1,1.0,[],['grilled'],4.4,22.31,5.81,2.36,151.0,0.0,450.0,68.0,0.887,0.0
 2706091,"Chicken, ground",['chicken'],{'chicken': 8.0},[],1,1,1.0,[],[],8.0,27.14,10.31,0.0,201.0,0.0,400.0,92.0,2.647,0.0
@@ -6784,10 +6748,10 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2706369,"Barbecue meat, NFS",['barbecue meat'],{'barbecue meat': 7.3},[],1,1,1.0,[],[],7.3,18.14,11.17,12.23,226.0,0.3,601.0,65.0,4.02,9.97
 2706370,Beef with tomato-based sauce,['beef tomato sauce'],{'beef tomato sauce': 2.29},[],1,1,1.0,[],['based'],2.29,21.72,6.36,1.58,149.0,0.4,363.0,63.0,2.391,1.06
 2706372,"Guisada, beef","['guisada', 'beef']",{'beef': 10.25},['guisada'],1,2,0.5,[],[],0.0,10.85,6.62,2.52,115.0,0.5,305.0,36.0,2.55,0.63
-2706373,"Chili, NFS",['chili'],{'chili': 1.5},[],1,1,1.0,[],[],1.5,9.8,4.33,10.25,118.0,3.0,340.0,22.0,1.617,1.48
-2706375,Chili with meat and beans,['chili'],{'chili': 1.5},[],1,1,1.0,[],[],1.5,9.8,4.33,10.25,118.0,3.0,340.0,22.0,1.617,1.48
+2706373,"Chili, NFS",['chili'],{'chili': 1.95},[],1,1,1.0,[],[],1.95,9.8,4.33,10.25,118.0,3.0,340.0,22.0,1.617,1.48
+2706375,Chili with meat and beans,['chili'],{'chili': 1.95},[],1,1,1.0,[],[],1.95,9.8,4.33,10.25,118.0,3.0,340.0,22.0,1.617,1.48
 2706376,"Chili with meat, canned",['chili meat'],{'chili meat': 7.3},[],1,1,1.0,['canned'],[],7.3,8.5,3.38,10.82,106.0,3.2,357.0,17.0,1.244,1.43
-2706377,Chili with meat,['chili'],{'chili': 1.5},[],1,1,1.0,[],[],1.5,13.32,8.22,2.41,139.0,0.5,357.0,44.0,3.164,1.37
+2706377,Chili with meat,['chili'],{'chili': 1.95},[],1,1,1.0,[],[],1.95,13.32,8.22,2.41,139.0,0.5,357.0,44.0,3.164,1.37
 2706379,Beef with gravy,['beef gravy'],{'beef gravy': 8.71},[],1,1,1.0,[],[],8.71,21.56,7.05,1.58,156.0,0.0,360.0,64.0,2.568,0.09
 2706380,Salisbury steak with gravy,['salisbury steak'],{'salisbury steak': 14.25},[],1,1,1.0,[],[],14.25,6.98,10.47,6.78,149.0,1.0,509.0,33.0,3.982,0.26
 2706381,Beef with cream or white sauce,['beef cream sauce'],{'beef cream sauce': 3.95},[],1,1,1.0,['white'],[],3.95,22.5,9.31,2.75,185.0,0.0,340.0,70.0,3.773,1.38
@@ -6819,9 +6783,9 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2706422,Spaghetti sauce with poultry,['spaghetti sauce'],{'spaghetti sauce': 3.95},[],1,1,1.0,[],[],3.95,6.29,2.62,6.54,75.0,1.5,410.0,19.0,0.495,4.47
 2706423,Spaghetti sauce with poultry and added vegetables,['spaghetti sauce'],{'spaghetti sauce': 3.95},[],1,1,1.0,[],['added'],3.95,6.39,2.39,6.05,71.0,1.4,331.0,19.0,0.476,4.03
 2706424,"Stewed chicken with tomato-based sauce, Mexican style","['chicken', 'tomato sauce']","{'chicken': 8.0, 'tomato sauce': 2.29}",[],2,2,1.0,['Mexican'],"['Stewed', 'based']",10.29,11.98,7.06,2.48,120.0,0.4,397.0,49.0,1.522,0.97
-2706425,Chili with chicken and beans,['chili'],{'chili': 1.5},[],1,1,1.0,[],[],1.5,10.2,2.08,10.25,99.0,3.0,341.0,31.0,0.563,1.48
+2706425,Chili with chicken and beans,['chili'],{'chili': 1.95},[],1,1,1.0,[],[],1.95,10.2,2.08,10.25,99.0,3.0,341.0,31.0,0.563,1.48
 2706426,Chili with chicken,['chili chicken'],{'chili chicken': 8.0},[],1,1,1.0,[],[],8.0,14.11,3.71,2.41,100.0,0.5,359.0,61.0,1.057,1.37
-2706427,"Chili, white",['chili'],{'chili': 1.5},[],1,1,1.0,['white'],[],1.5,9.92,1.91,9.68,95.0,2.4,324.0,29.0,0.54,0.97
+2706427,"Chili, white",['chili'],{'chili': 1.95},[],1,1,1.0,['white'],[],1.95,9.92,1.91,9.68,95.0,2.4,324.0,29.0,0.54,0.97
 2706428,Chicken with gravy,['chicken gravy'],{'chicken gravy': 8.71},[],1,1,1.0,[],[],8.71,18.88,5.21,1.58,129.0,0.0,526.0,80.0,1.291,0.09
 2706430,Turkey with gravy,['turkey'],{'turkey': 119.57},[],1,1,1.0,[],[],119.57,20.46,3.46,1.58,125.0,0.0,356.0,72.0,0.98,0.09
 2706431,Chicken or turkey with cream sauce,['chicken turkey'],{'chicken turkey': 119.57},[],1,1,1.0,[],[],119.57,19.82,7.48,2.75,157.0,0.0,510.0,85.0,2.497,1.38
@@ -6865,7 +6829,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2706480,"Beef and noodles, no sauce",['beef noodles'],{'beef noodles': 4.15},[],1,1,1.0,[],[],4.15,11.37,8.41,16.24,189.0,0.8,377.0,48.0,2.689,0.26
 2706481,Beef and macaroni with cheese sauce,['beef macaroni cheese sauce'],{'beef macaroni cheese sauce': 3.95},[],1,1,1.0,[],[],3.95,9.12,5.42,12.26,137.0,0.5,394.0,24.0,2.177,1.5
 2706482,Beef and noodles with tomato-based sauce,['beef noodles'],{'beef noodles': 4.15},[],1,1,1.0,[],['based'],4.15,8.74,3.93,10.67,115.0,0.4,274.0,23.0,1.537,2.02
-2706483,Chili with macaroni,['chili'],{'chili': 1.5},[],1,1,1.0,[],[],1.5,8.99,3.65,14.35,126.0,2.8,311.0,18.0,1.327,1.3
+2706483,Chili with macaroni,['chili'],{'chili': 1.95},[],1,1,1.0,[],[],1.95,8.99,3.65,14.35,126.0,2.8,311.0,18.0,1.327,1.3
 2706484,Beef and noodles with gravy,['beef noodles'],{'beef noodles': 4.15},[],1,1,1.0,[],[],4.15,7.7,5.07,15.39,139.0,0.7,304.0,32.0,1.21,0.32
 2706485,Beef and noodles with cream or white sauce,['beef noodles'],{'beef noodles': 4.15},[],1,1,1.0,['white'],[],4.15,7.86,5.33,15.02,140.0,0.6,293.0,34.0,2.081,1.56
 2706487,Beef and noodles with mushroom sauce,['beef noodles'],{'beef noodles': 4.15},[],1,1,1.0,[],[],4.15,7.54,5.14,14.96,136.0,0.8,310.0,29.0,1.258,0.8
@@ -6894,7 +6858,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2706515,"Ham or pork and rice, no sauce",['ham pork rice'],{'ham pork rice': 2.15},[],1,1,1.0,[],[],2.15,6.73,4.99,16.8,143.0,0.2,307.0,14.0,1.089,0.03
 2706516,Ham or pork and potatoes with gravy,['ham pork'],{'ham pork': 6.15},[],1,1,1.0,[],[],6.15,5.4,6.33,11.68,126.0,0.9,301.0,14.0,1.276,0.54
 2706517,Ham or pork and potatoes with cheese sauce,['ham pork'],{'ham pork': 6.15},[],1,1,1.0,[],[],6.15,7.86,5.69,11.11,127.0,0.9,300.0,22.0,2.812,0.48
-2706518,"Stewed pig's feet, Puerto Rican style",['pig s feet'],{'pig s feet': 5.94},[],1,1,1.0,['Rican'],['Stewed'],5.94,9.99,8.7,4.13,136.0,0.5,483.0,44.0,2.264,0.75
+2706518,"Stewed pig's feet, Puerto Rican style",['pig s feet'],{'pig s feet': 6.0},[],1,1,1.0,['Rican'],['Stewed'],6.0,9.99,8.7,4.13,136.0,0.5,483.0,44.0,2.264,0.75
 2706520,"Stew, pork, with pasta","['stew', 'pork']",{'pork': 6.15},['stew'],1,2,0.5,[],[],0.0,9.35,5.58,10.81,133.0,1.1,296.0,29.0,2.015,0.92
 2706522,Lamb or mutton and potatoes with gravy,['lamb mutton'],{'lamb mutton': 14.3},[],1,1,1.0,[],[],14.3,5.13,6.46,12.53,129.0,1.0,308.0,17.0,1.942,0.58
 2706523,Lamb or mutton and potatoes with tomato-based sauce,['lamb mutton'],{'lamb mutton': 14.3},[],1,1,1.0,[],['based'],14.3,5.26,6.22,12.48,126.0,1.5,301.0,16.0,1.812,1.63
@@ -6926,8 +6890,6 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2706557,Shrimp and noodles with soy-based sauce,['shrimp noodles'],{'shrimp noodles': 4.15},[],1,1,1.0,[],['based'],4.15,10.22,7.25,8.17,141.0,0.6,276.0,82.0,1.092,0.87
 2706558,Shrimp and noodles with cheese sauce,['shrimp noodles'],{'shrimp noodles': 4.15},[],1,1,1.0,[],[],4.15,8.18,5.37,13.45,136.0,0.6,192.0,54.0,2.511,0.24
 2706559,Shrimp and noodles with tomato sauce,['shrimp noodles'],{'shrimp noodles': 4.15},[],1,1,1.0,[],[],4.15,6.46,5.22,15.39,134.0,1.1,172.0,49.0,0.82,1.36
-2706560,Tuna cake or patty,['tuna cake patty'],{'tuna cake patty': 5.7},[],1,1,1.0,[],[],5.7,15.33,14.92,2.65,206.0,0.2,372.0,71.0,2.446,0.49
-2706561,Clam cake or patty,['clam cake patty'],{'clam cake patty': 5.7},[],1,1,1.0,[],[],5.7,19.02,15.35,6.79,246.0,0.2,408.0,80.0,2.501,0.49
 2706562,Flounder with crab stuffing,['flounder'],{'flounder': 9.35},[],1,1,1.0,[],[],9.35,15.07,5.52,5.73,136.0,0.3,427.0,73.0,1.209,0.85
 2706563,"Lobster with bread stuffing, baked",['lobster'],{'lobster': 17.64},[],1,1,1.0,[],['baked'],17.64,14.98,8.26,9.83,177.0,0.5,641.0,120.0,4.168,1.21
 2706565,"Shrimp, cake or patty",['shrimp'],{'shrimp': 11.47},[],1,1,1.0,[],[],11.47,13.93,15.34,5.26,218.0,0.3,329.0,156.0,2.56,0.66
@@ -6973,7 +6935,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2706618,"Beef, rice, and vegetables including carrots, broccoli, and/or dark-green leafy; tomato-based sauce","['beef', 'tomato sauce']","{'beef': 10.25, 'tomato sauce': 2.29}",[],2,2,1.0,"['dark', 'green']","['including', 'based']",12.54,5.85,5.4,14.9,131.0,1.1,306.0,12.0,1.034,1.45
 2706619,"Beef, rice, and vegetables excluding carrots, broccoli, and/or dark-green leafy; tomato-based sauce","['beef', 'rice']","{'beef': 10.25, 'rice': 11.0}",[],2,2,1.0,"['dark', 'green']","['excluding', 'based']",21.25,5.91,4.99,16.08,132.0,1.0,302.0,12.0,0.98,1.4
 2706620,Stuffed cabbage rolls with beef and rice,['cabbage rolls'],{'cabbage rolls': 7.45},[],1,1,1.0,[],['Stuffed'],7.45,8.3,5.06,8.83,114.0,1.3,338.0,39.0,1.877,3.45
-2706621,Stuffed grape leaves with beef and rice,['grape leaves'],{'grape leaves': 2.54},[],1,1,1.0,[],['Stuffed'],2.54,8.15,17.03,11.3,228.0,3.1,420.0,22.0,3.659,2.48
+2706621,Stuffed grape leaves with beef and rice,['grape leaves'],{'grape leaves': 0.47},[],1,1,1.0,[],['Stuffed'],0.47,8.15,17.03,11.3,228.0,3.1,420.0,22.0,3.659,2.48
 2706622,"Beef, rice, and vegetables including carrots, broccoli, and/or dark-green leafy; mushroom sauce",['beef'],{'beef': 10.25},[],1,1,1.0,"['dark', 'green']",['including'],10.25,5.78,5.23,14.69,130.0,0.9,311.0,12.0,1.131,0.97
 2706623,"Beef, rice, and vegetables excluding carrots, broccoli, and dark-green leafy; mushroom sauce","['beef', 'rice']","{'beef': 10.25, 'rice': 11.0}",[],2,2,1.0,"['dark', 'green']",['excluding'],21.25,5.81,5.23,15.73,133.0,0.8,306.0,12.0,1.132,0.92
 2706624,"Beef, rice, and vegetables including carrots, broccoli, and/or dark-green leafy; cheese sauce",['beef'],{'beef': 10.25},[],1,1,1.0,"['dark', 'green']",['including'],10.25,8.58,5.51,15.54,147.0,0.8,303.0,23.0,2.713,0.58
@@ -7009,7 +6971,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2706656,"Lamb or mutton, rice, and vegetables excluding carrots, broccoli, and dark-green leafy; gravy",['lamb mutton'],{'lamb mutton': 14.3},[],1,1,1.0,"['dark', 'green']",['excluding'],14.3,5.05,5.51,16.34,136.0,0.7,309.0,14.0,1.645,0.55
 2706657,"Lamb or mutton, rice, and vegetables including carrots, broccoli, and/or dark-green leafy; tomato-based sauce",['lamb mutton'],{'lamb mutton': 14.3},[],1,1,1.0,"['dark', 'green']","['including', 'based']",14.3,5.13,5.31,15.15,130.0,1.1,316.0,13.0,1.537,1.47
 2706658,"Lamb or mutton, rice, and vegetables  including carrots, broccoli, and/or dark-green leafy; gravy",['lamb mutton'],{'lamb mutton': 14.3},[],1,1,1.0,"['dark', 'green']",['including'],14.3,5.02,5.5,15.2,133.0,0.8,315.0,14.0,1.644,0.6
-2706659,Stuffed grape leaves with lamb and rice,['grape leaves'],{'grape leaves': 2.54},[],1,1,1.0,[],['Stuffed'],2.54,8.17,21.52,11.89,271.0,3.3,71.0,25.0,5.562,2.39
+2706659,Stuffed grape leaves with lamb and rice,['grape leaves'],{'grape leaves': 0.47},[],1,1,1.0,[],['Stuffed'],0.47,8.17,21.52,11.89,271.0,3.3,71.0,25.0,5.562,2.39
 2706663,"Venison or deer, potatoes, and vegetables excluding carrots, broccoli, and dark-green leafy; gravy","['venison deer', 'potatoes']",{'potatoes': 4.17},['venison deer'],1,2,0.5,"['dark', 'green']",['excluding'],0.0,6.01,6.1,12.31,127.0,1.3,312.0,16.0,1.122,0.9
 2706664,"Venison or deer, noodles, and vegetables including carrots, broccoli, and/or dark-green leafy; tomato-based sauce","['noodles', 'tomato sauce']","{'noodles': 4.15, 'tomato sauce': 2.29}",[],2,2,1.0,"['dark', 'green']","['including', 'based']",6.44,7.43,5.11,13.64,130.0,1.5,311.0,28.0,0.974,1.61
 2706665,"Venison or deer, noodles, and vegetables excluding carrots, broccoli, and dark-green leafy; tomato-based sauce","['venison deer', 'noodles', 'vegetables', 'tomato sauce']","{'noodles': 4.15, 'vegetables': 3.52, 'tomato sauce': 2.29}",['venison deer'],3,4,0.75,"['dark', 'green']","['excluding', 'based']",0.0,7.47,5.11,14.75,134.0,1.4,305.0,28.0,0.975,1.55
@@ -7195,29 +7157,18 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2706876,"Liver, beef or calves, and onions","['liver', 'beef calves']",{'liver': 5.11},['beef calves'],1,2,0.5,[],[],0.0,16.68,3.6,6.97,129.0,0.5,276.0,232.0,1.681,1.78
 2706878,"Stewed gizzards, Puerto Rican style",['gizzards'],{'gizzards': 3.94},[],1,1,1.0,['Rican'],['Stewed'],3.94,20.26,8.69,4.41,179.0,1.1,380.0,237.0,1.738,1.94
 2706887,"Cheeseburger slider, from fast food",['cheeseburger slider food'],{'cheeseburger slider food': 12.8},[],1,1,1.0,['fast'],[],12.8,16.15,14.29,25.02,298.0,0.9,505.0,44.0,6.25,3.99
-2706889,"Cheeseburger, from fast food, 1 small patty",['cheeseburger food 1 patty'],{'cheeseburger food 1 patty': 5.7},[],1,1,1.0,"['fast', 'small']",[],5.7,16.42,14.78,23.96,299.0,0.8,510.0,46.0,6.53,3.86
-2706897,"Cheeseburger, from fast food, 1 medium patty",['cheeseburger food 1 patty'],{'cheeseburger food 1 patty': 5.7},[],1,1,1.0,"['fast', 'medium']",[],5.7,17.87,16.15,18.71,296.0,0.6,438.0,54.0,6.864,2.98
 2706899,Whopper with cheese (Burger King),['whopper cheese'],{'whopper cheese': 8.5},[],1,1,1.0,[],[],8.5,13.69,15.8,17.73,268.0,1.1,473.0,51.0,5.746,4.5
-2706905,"Double cheeseburger, on white bun, 2 small patties","['cheeseburger', 'bun', '2 patties']","{'bun': 4.22, '2 patties': 5.7}",['cheeseburger'],2,3,0.6666666666666666,"['Double', 'white', 'small']",[],0.0,19.31,17.86,13.31,296.0,0.5,412.0,63.0,7.519,2.15
-2706906,"Double cheeseburger, on wheat bun, 2 small patties","['cheeseburger', 'wheat bun', '2 patties']","{'wheat bun': 4.22, '2 patties': 5.7}",['cheeseburger'],2,3,0.6666666666666666,"['Double', 'small']",[],0.0,19.72,17.88,12.11,292.0,1.4,399.0,63.0,7.488,1.62
-2706907,"Double cheeseburger, on white bun, 2 medium patties","['cheeseburger', 'bun', '2 patties']","{'bun': 4.22, '2 patties': 5.7}",['cheeseburger'],2,3,0.6666666666666666,"['Double', 'white', 'medium']",[],0.0,19.64,18.84,11.79,300.0,0.4,440.0,66.0,8.186,2.03
-2706908,"Double cheeseburger, on wheat bun, 2 medium patties","['cheeseburger', 'wheat bun', '2 patties']","{'wheat bun': 4.22, '2 patties': 5.7}",['cheeseburger'],2,3,0.6666666666666666,"['Double', 'medium']",[],0.0,20.0,18.85,10.76,297.0,1.2,428.0,66.0,8.159,1.57
-2706909,"Cheeseburger, from fast food, 1 large patty",['cheeseburger food 1 patty'],{'cheeseburger food 1 patty': 5.7},[],1,1,1.0,"['fast', 'large']",[],5.7,18.74,17.61,15.26,299.0,0.5,453.0,60.0,7.64,2.53
-2706910,"Double cheeseburger, on white bun, 2 large patties","['cheeseburger', 'bun', '2 patties']","{'bun': 4.22, '2 patties': 5.7}",['cheeseburger'],2,3,0.6666666666666666,"['Double', 'white', 'large']",[],0.0,20.24,19.36,9.66,299.0,0.3,409.0,69.0,8.29,1.66
-2706911,"Double cheeseburger, on wheat bun, 2 large patties","['cheeseburger', 'wheat bun', '2 patties']","{'wheat bun': 4.22, '2 patties': 5.7}",['cheeseburger'],2,3,0.6666666666666666,"['Double', 'large']",[],0.0,20.53,19.37,8.81,296.0,1.0,399.0,69.0,8.268,1.29
-2706912,"Double cheeseburger, from fast food, 2 small patties",['cheeseburger food 2 patties'],{'cheeseburger food 2 patties': 5.7},[],1,1,1.0,"['Double', 'fast', 'small']",[],5.7,18.12,16.6,17.68,297.0,0.6,447.0,56.0,7.115,2.85
-2706917,"Double cheeseburger, from fast food, 2 medium patties",['cheeseburger food 2 patties'],{'cheeseburger food 2 patties': 5.7},[],1,1,1.0,"['Double', 'fast', 'medium']",[],5.7,19.64,18.84,11.79,300.0,0.4,440.0,66.0,8.186,2.03
-2706918,"Double cheeseburger, from fast food, 2 large patties",['cheeseburger food 2 patties'],{'cheeseburger food 2 patties': 5.7},[],1,1,1.0,"['Double', 'fast', 'large']",[],5.7,20.24,19.36,9.66,299.0,0.3,409.0,69.0,8.29,1.66
+2706905,"Double cheeseburger, on white bun, 2 small patties","['cheeseburger', 'bun', '2 patties']",{'bun': 4.22},"['cheeseburger', '2 patties']",1,3,0.3333333333333333,"['Double', 'white', 'small']",[],0.0,19.31,17.86,13.31,296.0,0.5,412.0,63.0,7.519,2.15
+2706906,"Double cheeseburger, on wheat bun, 2 small patties","['cheeseburger', 'wheat bun', '2 patties']",{'wheat bun': 4.22},"['cheeseburger', '2 patties']",1,3,0.3333333333333333,"['Double', 'small']",[],0.0,19.72,17.88,12.11,292.0,1.4,399.0,63.0,7.488,1.62
+2706907,"Double cheeseburger, on white bun, 2 medium patties","['cheeseburger', 'bun', '2 patties']",{'bun': 4.22},"['cheeseburger', '2 patties']",1,3,0.3333333333333333,"['Double', 'white', 'medium']",[],0.0,19.64,18.84,11.79,300.0,0.4,440.0,66.0,8.186,2.03
+2706908,"Double cheeseburger, on wheat bun, 2 medium patties","['cheeseburger', 'wheat bun', '2 patties']",{'wheat bun': 4.22},"['cheeseburger', '2 patties']",1,3,0.3333333333333333,"['Double', 'medium']",[],0.0,20.0,18.85,10.76,297.0,1.2,428.0,66.0,8.159,1.57
+2706910,"Double cheeseburger, on white bun, 2 large patties","['cheeseburger', 'bun', '2 patties']",{'bun': 4.22},"['cheeseburger', '2 patties']",1,3,0.3333333333333333,"['Double', 'white', 'large']",[],0.0,20.24,19.36,9.66,299.0,0.3,409.0,69.0,8.29,1.66
+2706911,"Double cheeseburger, on wheat bun, 2 large patties","['cheeseburger', 'wheat bun', '2 patties']",{'wheat bun': 4.22},"['cheeseburger', '2 patties']",1,3,0.3333333333333333,"['Double', 'large']",[],0.0,20.53,19.37,8.81,296.0,1.0,399.0,69.0,8.268,1.29
 2706919,"Hamburger slider, from fast food",['hamburger slider food'],{'hamburger slider food': 12.8},[],1,1,1.0,['fast'],[],12.8,15.27,11.35,29.18,285.0,1.0,400.0,35.0,4.151,4.24
-2706936,"Double hamburger, on white bun, 2 small patties","['hamburger', '2 patties']",{'2 patties': 5.7},['hamburger'],1,2,0.5,"['Double', 'white', 'small']",[],0.0,19.18,16.65,14.26,289.0,0.5,344.0,60.0,6.505,2.07
-2706937,"Double hamburger, on wheat bun, 2 small patties","['hamburger', '2 patties']",{'2 patties': 5.7},['hamburger'],1,2,0.5,"['Double', 'small']",[],0.0,19.65,16.66,12.93,285.0,1.5,328.0,60.0,6.47,1.48
-2706938,"Double hamburger, on white bun, 2 medium patties","['hamburger', 'bun', '2 patties']","{'bun': 4.22, '2 patties': 5.7}",['hamburger'],2,3,0.6666666666666666,"['Double', 'white', 'medium']",[],0.0,19.51,17.09,13.02,290.0,0.5,336.0,62.0,6.701,1.89
-2706939,"Double hamburger, on wheat bun, 2 medium patties","['hamburger', 'wheat bun', '2 patties']","{'wheat bun': 4.22, '2 patties': 5.7}",['hamburger'],2,3,0.6666666666666666,"['Double', 'medium']",[],0.0,19.93,17.11,11.8,286.0,1.4,322.0,62.0,6.67,1.35
-2706940,"Double hamburger, on white bun, 2 large patties","['hamburger', 'bun', '2 patties']","{'bun': 4.22, '2 patties': 5.7}",['hamburger'],2,3,0.6666666666666666,"['Double', 'white', 'large']",[],0.0,20.22,18.05,10.33,290.0,0.4,322.0,66.0,7.128,1.5
-2706941,"Double hamburger, on wheat bun, 2 large patties","['hamburger', 'wheat bun', '2 patties']","{'wheat bun': 4.22, '2 patties': 5.7}",['hamburger'],2,3,0.6666666666666666,"['Double', 'large']",[],0.0,20.56,18.06,9.36,287.0,1.1,311.0,66.0,7.103,1.07
-2706942,"Double hamburger, from fast food, 2 small patties",['hamburger food 2 patties'],{'hamburger food 2 patties': 5.7},[],1,1,1.0,"['Double', 'fast', 'small']",[],5.7,17.76,14.73,19.68,288.0,0.7,357.0,51.0,5.651,2.86
-2706943,"Double hamburger, from fast food, 2 medium patties",['hamburger food 2 patties'],{'hamburger food 2 patties': 5.7},[],1,1,1.0,"['Double', 'fast', 'medium']",[],5.7,19.51,17.09,13.02,290.0,0.5,336.0,62.0,6.701,1.89
-2706944,"Double hamburger, from fast food, 2 large patties",['hamburger food 2 patties'],{'hamburger food 2 patties': 5.7},[],1,1,1.0,"['Double', 'fast', 'large']",[],5.7,20.22,18.05,10.33,290.0,0.4,322.0,66.0,7.128,1.5
+2706938,"Double hamburger, on white bun, 2 medium patties","['hamburger', 'bun', '2 patties']",{'bun': 4.22},"['hamburger', '2 patties']",1,3,0.3333333333333333,"['Double', 'white', 'medium']",[],0.0,19.51,17.09,13.02,290.0,0.5,336.0,62.0,6.701,1.89
+2706939,"Double hamburger, on wheat bun, 2 medium patties","['hamburger', 'wheat bun', '2 patties']",{'wheat bun': 4.22},"['hamburger', '2 patties']",1,3,0.3333333333333333,"['Double', 'medium']",[],0.0,19.93,17.11,11.8,286.0,1.4,322.0,62.0,6.67,1.35
+2706940,"Double hamburger, on white bun, 2 large patties","['hamburger', 'bun', '2 patties']",{'bun': 4.22},"['hamburger', '2 patties']",1,3,0.3333333333333333,"['Double', 'white', 'large']",[],0.0,20.22,18.05,10.33,290.0,0.4,322.0,66.0,7.128,1.5
+2706941,"Double hamburger, on wheat bun, 2 large patties","['hamburger', 'wheat bun', '2 patties']",{'wheat bun': 4.22},"['hamburger', '2 patties']",1,3,0.3333333333333333,"['Double', 'large']",[],0.0,20.56,18.06,9.36,287.0,1.1,311.0,66.0,7.103,1.07
 2706980,"Bacon, lettuce, tomato sandwich on wheat",['lettuce'],{'lettuce': 3.4},[],1,1,1.0,[],[],3.4,12.02,7.76,27.53,229.0,3.4,515.0,15.0,2.263,3.59
 2706992,Chicken salad sandwich wrap,"['chicken salad', 'sandwich wrap']",{'chicken salad': 11.49},['sandwich wrap'],1,2,0.5,[],[],0.0,12.89,16.56,16.99,269.0,1.3,603.0,48.0,4.511,2.65
 2707018,"Turkey or chicken burger, on white bun","['turkey chicken burger', 'bun']","{'turkey chicken burger': 11.9, 'bun': 4.22}",[],2,2,1.0,['white'],[],16.12,20.03,7.69,20.68,234.0,0.7,356.0,54.0,1.908,3.0
@@ -7254,7 +7205,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2707104,"Beef with spaetzle or rice, vegetable, frozen meal","['beef spaetzle rice', 'meal']","{'beef spaetzle rice': 11.0, 'meal': 5.25}",[],2,2,1.0,[],['frozen'],16.25,6.92,4.37,12.23,118.0,0.6,278.0,16.0,1.231,1.23
 2707105,"Chicken dinner, NFS, frozen meal","['chicken dinner', 'meal']",{'meal': 5.25},['chicken dinner'],1,2,0.5,[],['frozen'],0.0,8.48,5.18,10.73,124.0,0.9,379.0,39.0,2.019,1.58
 2707106,"Chicken, fried, with potatoes, vegetable, frozen meal","['chicken', 'vegetable', 'meal']","{'chicken': 8.0, 'vegetable': 3.52, 'meal': 5.25}",[],3,3,1.0,[],"['fried', 'frozen']",16.77,10.26,8.13,10.63,157.0,1.7,669.0,46.0,2.663,1.29
-2707107,"Chicken patty, or nuggets, boneless, breaded, potatoes, vegetable, frozen meal","['chicken patty', 'nuggets', 'potatoes', 'vegetable', 'meal']","{'chicken patty': 5.7, 'nuggets': 4.95, 'potatoes': 4.17, 'vegetable': 3.52, 'meal': 5.25}",[],5,5,1.0,['boneless'],"['breaded', 'frozen']",23.59,10.68,8.1,16.0,175.0,1.4,376.0,42.0,1.956,1.0
+2707107,"Chicken patty, or nuggets, boneless, breaded, potatoes, vegetable, frozen meal","['chicken patty', 'nuggets', 'potatoes', 'vegetable', 'meal']","{'nuggets': 4.95, 'potatoes': 4.17, 'vegetable': 3.52, 'meal': 5.25}",['chicken patty'],4,5,0.8,['boneless'],"['breaded', 'frozen']",0.0,10.68,8.1,16.0,175.0,1.4,376.0,42.0,1.956,1.0
 2707108,"Chicken, fried, with potatoes, vegetable, dessert, frozen meal, large meat portion","['chicken', 'meal']","{'chicken': 8.0, 'meal': 5.25}",[],2,2,1.0,['large'],"['fried', 'frozen']",13.25,10.88,9.93,18.05,201.0,1.3,551.0,49.0,2.477,6.03
 2707109,"Teriyaki chicken with rice and vegetable, diet frozen meal","['teriyaki chicken rice vegetable', 'diet meal']","{'teriyaki chicken rice vegetable': 3.52, 'diet meal': 5.25}",[],2,2,1.0,[],['frozen'],8.77,5.65,1.56,22.46,126.0,0.7,333.0,16.0,0.327,4.07
 2707110,"Chicken with rice and vegetable, diet frozen meal","['chicken rice vegetable', 'diet meal']","{'chicken rice vegetable': 3.52, 'diet meal': 5.25}",[],2,2,1.0,[],['frozen'],8.77,9.81,3.03,10.99,111.0,0.8,410.0,26.0,0.607,1.86
@@ -7478,7 +7429,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2707407,"Beans with meat, NS as to type",['beans'],{'beans': 2.72},[],1,1,1.0,[],[],2.72,10.7,6.88,20.56,184.0,7.1,275.0,11.0,1.153,0.38
 2707409,Bean cake,['bean cake'],{'bean cake': 4.4},[],1,1,1.0,[],[],4.4,5.8,21.41,49.88,414.0,3.0,186.0,0.0,2.842,20.37
 2707410,"Baked beans, reduced sodium",['beans'],{'beans': 2.72},[],1,1,1.0,[],"['Baked', 'reduced']",2.72,4.77,0.4,20.35,104.0,5.5,270.0,0.0,0.102,7.73
-2707411,"Chili, vegetarian",['chili'],{'chili': 1.5},[],1,1,1.0,[],[],1.5,6.28,2.42,18.89,119.0,6.0,316.0,0.0,0.348,1.57
+2707411,"Chili, vegetarian",['chili'],{'chili': 1.95},[],1,1,1.0,[],[],1.95,6.28,2.42,18.89,119.0,6.0,316.0,0.0,0.348,1.57
 2707412,"Blackeyed peas, NFS",['blackeyed peas'],{'blackeyed peas': 3.6},[],1,1,1.0,[],[],3.6,7.18,7.0,19.29,166.0,6.0,220.0,0.0,0.998,3.07
 2707413,"Blackeyed peas, from dried",['blackeyed peas'],{'blackeyed peas': 3.6},[],1,1,1.0,[],['dried'],3.6,7.18,7.0,19.29,166.0,6.0,220.0,0.0,0.998,3.07
 2707420,"Split peas, from dried, no added fat",['peas'],{'peas': 3.6},[],1,1,1.0,['Split'],"['dried', 'added']",3.6,8.29,0.39,20.97,117.0,8.2,233.0,0.0,0.054,2.88
@@ -8417,7 +8368,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2709061,"Rice, brown, with carrots and dark green vegetables, NS as to fat",['rice'],{'rice': 11.0},[],1,1,1.0,"['brown', 'dark', 'green']",[],11.0,2.47,2.66,21.32,120.0,1.8,167.0,0.0,0.457,0.69
 2709062,"Rice, brown, with carrots and dark green vegetables, no added fat",['rice'],{'rice': 11.0},[],1,1,1.0,"['brown', 'dark', 'green']",['added'],11.0,2.51,0.82,21.72,105.0,1.8,170.0,0.0,0.213,0.7
 2709063,"Rice, brown, with carrots and dark green vegetables, fat added",['rice'],{'rice': 11.0},[],1,1,1.0,"['brown', 'dark', 'green']",['added'],11.0,2.47,2.66,21.32,120.0,1.8,167.0,0.0,0.457,0.69
-2709064,Grape leaves stuffed with rice,"['grape leaves', 'rice']","{'grape leaves': 2.54, 'rice': 11.0}",[],2,2,1.0,[],['stuffed'],13.54,2.28,11.95,13.88,168.0,3.1,166.0,0.0,1.871,2.78
+2709064,Grape leaves stuffed with rice,"['grape leaves', 'rice']","{'grape leaves': 0.47, 'rice': 11.0}",[],2,2,1.0,[],['stuffed'],11.47,2.28,11.95,13.88,168.0,3.1,166.0,0.0,1.871,2.78
 2709065,"Rice, brown, with carrots, dark green vegetables, and tomatoes and/or tomato-based sauce, NS as to fat","['rice', 'tomatoes']","{'rice': 11.0, 'tomatoes': 4.6}",[],2,2,1.0,"['brown', 'dark', 'green', 'fat']",['based'],15.6,2.35,2.57,20.39,114.0,1.7,169.0,0.0,0.44,0.76
 2709066,"Rice, brown, with carrots, dark green vegetables, and tomatoes and/or tomato-based sauce, no added fat","['rice', 'tomatoes']","{'rice': 11.0, 'tomatoes': 4.6}",[],2,2,1.0,"['brown', 'dark', 'green']","['based', 'added']",15.6,2.39,0.8,20.76,100.0,1.8,172.0,0.0,0.206,0.78
 2709067,"Rice, brown, with carrots, dark green vegetables, and tomatoes and/or tomato-based sauce, fat added","['rice', 'tomatoes']","{'rice': 11.0, 'tomatoes': 4.6}",[],2,2,1.0,"['brown', 'dark', 'green']","['based', 'added']",15.6,2.35,2.57,20.39,114.0,1.7,169.0,0.0,0.44,0.76
@@ -8518,10 +8469,8 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2709194,"Fruit juice blend, citrus, 100% juice",['fruit juice blend'],{'fruit juice blend': 7.95},[],1,1,1.0,[],[],7.95,0.77,0.34,10.18,47.0,0.3,2.0,0.0,0.014,8.18
 2709196,"Apple, dried",['apple'],{'apple': 5.9},[],1,1,1.0,[],['dried'],5.9,0.93,0.32,65.89,243.0,8.7,87.0,0.0,0.052,57.19
 2709197,"Apricot, dried",['apricot'],{'apricot': 6.95},[],1,1,1.0,[],['dried'],6.95,3.39,0.51,62.64,241.0,7.3,10.0,0.0,0.017,53.44
-2709198,"Blueberries, dried",['blueberries'],{'blueberries': 10.95},[],1,1,1.0,[],['dried'],10.95,2.5,2.5,80.0,317.0,7.5,3.0,0.0,0.2,67.5
-2709199,"Cherries, dried",['cherries'],{'cherries': 9.45},[],1,1,1.0,[],['dried'],9.45,1.25,0.73,80.45,333.0,2.5,13.0,0.0,0.146,67.15
+2709198,"Blueberries, dried",['blueberries'],{'blueberries': 3.95},[],1,1,1.0,[],['dried'],3.95,2.5,2.5,80.0,317.0,7.5,3.0,0.0,0.2,67.5
 2709200,Banana chips,['banana chips'],{'banana chips': 7.6},[],1,1,1.0,[],[],7.6,2.3,33.6,58.4,519.0,7.7,6.0,0.0,28.97,35.34
-2709202,"Cranberries, dried",['cranberries'],{'cranberries': 17.7},[],1,1,1.0,[],['dried'],17.7,0.17,1.09,82.8,308.0,5.3,5.0,0.0,0.088,72.56
 2709203,Date,['date'],{'date': 4.12},[],1,1,1.0,[],[],4.12,2.45,0.39,75.03,282.0,8.0,2.0,0.0,0.032,63.35
 2709204,"Fig, dried",['fig'],{'fig': 8.97},[],1,1,1.0,[],['dried'],8.97,3.3,0.92,63.9,277.0,9.8,10.0,0.0,0.144,47.9
 2709205,"Mango, dried",['mango'],{'mango': 4.95},[],1,1,1.0,[],['dried'],4.95,2.45,1.18,78.58,319.0,2.4,162.0,0.0,0.287,66.27
@@ -8539,10 +8488,6 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2709225,"Banana, baked",['banana'],{'banana': 4.5},[],1,1,1.0,[],['baked'],4.5,0.82,3.21,32.43,161.0,1.8,3.0,8.0,1.728,24.74
 2709226,"Cantaloupe, raw",['cantaloupe'],{'cantaloupe': 15.3},[],1,1,1.0,['raw'],[],15.3,0.82,0.18,8.16,38.0,0.8,30.0,0.0,0.051,7.88
 2709227,"Melon, frozen",['melon'],{'melon': 7.72},[],1,1,1.0,[],['frozen'],7.72,0.66,0.16,8.27,35.0,0.7,16.0,0.0,0.035,7.4
-2709229,"Cherries, maraschino",['cherries'],{'cherries': 9.45},[],1,1,1.0,[],[],9.45,0.22,0.21,41.97,165.0,3.2,4.0,0.0,0.039,38.77
-2709231,"Cherries, raw",['cherries'],{'cherries': 9.45},[],1,1,1.0,['raw'],[],9.45,1.04,0.19,16.16,71.0,2.1,0.0,0.0,0.038,13.87
-2709232,"Cherries, canned",['cherries'],{'cherries': 9.45},[],1,1,1.0,['canned'],[],9.45,0.71,0.14,18.79,74.0,1.4,1.0,0.0,0.026,17.42
-2709233,"Cherries, frozen",['cherries'],{'cherries': 9.45},[],1,1,1.0,[],['frozen'],9.45,1.04,0.19,16.16,71.0,2.1,0.0,0.0,0.038,13.87
 2709234,Dragon fruit,['dragon fruit'],{'dragon fruit': 3.0},[],1,1,1.0,[],[],3.0,0.68,0.21,16.24,68.0,1.8,1.0,0.0,0.052,12.0
 2709235,"Fig, raw",['fig'],{'fig': 8.97},[],1,1,1.0,['raw'],[],8.97,0.75,0.3,19.18,74.0,2.9,1.0,0.0,0.06,16.26
 2709236,"Fig, canned",['fig'],{'fig': 8.97},[],1,1,1.0,['canned'],[],8.97,0.56,0.24,19.36,76.0,2.2,1.0,0.0,0.045,17.18
@@ -8577,19 +8522,9 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2709266,"Plum, canned",['plum'],{'plum': 7.95},[],1,1,1.0,['canned'],[],7.95,0.52,0.23,13.54,55.0,1.0,1.0,0.0,0.013,12.43
 2709267,"Pomegranate, raw",['pomegranate'],{'pomegranate': 5.96},[],1,1,1.0,['raw'],[],5.96,1.67,1.17,18.7,83.0,4.0,3.0,0.0,0.12,13.67
 2709270,"Watermelon, raw",['watermelon'],{'watermelon': 5.85},[],1,1,1.0,['raw'],[],5.85,0.61,0.15,7.55,30.0,0.4,1.0,0.0,0.016,6.2
-2709271,"Berries, NFS",['berries'],{'berries': 12.21},[],1,1,1.0,[],[],12.21,0.66,0.25,9.94,44.0,2.0,0.0,0.0,0.008,6.21
-2709272,"Berries, frozen",['berries'],{'berries': 12.21},[],1,1,1.0,[],['frozen'],12.21,0.76,0.34,12.47,52.0,4.1,1.0,0.0,0.023,6.59
-2709273,"Blackberries, raw",['blackberries'],{'blackberries': 6.95},[],1,1,1.0,['raw'],[],6.95,1.39,0.49,9.61,43.0,5.3,1.0,0.0,0.014,4.88
-2709274,"Blackberries, frozen",['blackberries'],{'blackberries': 6.95},[],1,1,1.0,[],['frozen'],6.95,1.18,0.43,15.67,64.0,5.0,1.0,0.0,0.015,10.67
-2709275,"Blueberries, raw",['blueberries'],{'blueberries': 10.95},[],1,1,1.0,['raw'],[],10.95,0.7,0.31,14.57,64.0,2.4,0.0,0.0,0.028,9.36
-2709277,"Blueberries, frozen",['blueberries'],{'blueberries': 10.95},[],1,1,1.0,[],['frozen'],10.95,0.42,0.64,12.17,51.0,2.7,1.0,0.0,0.053,8.45
-2709279,"Cranberries, raw",['cranberries'],{'cranberries': 17.7},[],1,1,1.0,['raw'],[],17.7,0.46,0.13,11.97,46.0,3.6,2.0,0.0,0.008,4.27
+2709275,"Blueberries, raw",['blueberries'],{'blueberries': 3.95},[],1,1,1.0,['raw'],[],3.95,0.7,0.31,14.57,64.0,2.4,0.0,0.0,0.028,9.36
+2709277,"Blueberries, frozen",['blueberries'],{'blueberries': 3.95},[],1,1,1.0,[],['frozen'],3.95,0.42,0.64,12.17,51.0,2.7,1.0,0.0,0.053,8.45
 2709280,Cranberry sauce,['cranberry sauce'],{'cranberry sauce': 3.95},[],1,1,1.0,[],[],3.95,0.9,0.15,40.4,159.0,1.1,5.0,0.0,0.007,31.75
-2709281,"Raspberries, raw",['raspberries'],{'raspberries': 12.44},[],1,1,1.0,['raw'],[],12.44,1.01,0.19,12.9,57.0,6.5,0.0,0.0,0.019,2.68
-2709282,"Raspberries, frozen",['raspberries'],{'raspberries': 12.44},[],1,1,1.0,[],['frozen'],12.44,1.01,0.19,12.9,57.0,6.5,0.0,0.0,0.019,2.68
-2709283,"Strawberries, raw",['strawberries'],{'strawberries': 19.75},[],1,1,1.0,['raw'],[],19.75,0.64,0.22,7.96,36.0,1.8,0.0,0.0,0.0,4.86
-2709284,"Strawberries, canned",['strawberries'],{'strawberries': 19.75},[],1,1,1.0,['canned'],[],19.75,0.56,0.26,23.53,92.0,1.7,4.0,0.0,0.014,21.83
-2709285,"Strawberries, frozen",['strawberries'],{'strawberries': 19.75},[],1,1,1.0,[],['frozen'],19.75,0.43,0.11,9.13,35.0,2.1,2.0,0.0,0.006,4.56
 2709287,"Fruit salad, fresh or raw, excluding citrus fruits, no dressing",['fruit salad'],{'fruit salad': 11.49},[],1,1,1.0,"['fresh', 'raw']",['excluding'],11.49,0.64,0.21,13.94,59.0,1.5,4.0,0.0,0.045,10.45
 2709288,"Fruit salad, fresh or raw, including citrus fruits, no dressing","['fruit salad', 'citrus fruits']",{'fruit salad': 11.49},['citrus fruits'],1,2,0.5,"['fresh', 'raw']",['including'],0.0,0.71,0.19,13.48,56.0,1.7,4.0,0.0,0.039,10.22
 2709289,"Fruit cocktail, canned, NFS",['fruit cocktail'],{'fruit cocktail': 11.7},[],1,1,1.0,['canned'],[],11.7,0.41,0.08,14.1,55.0,0.9,5.0,0.0,0.009,13.08
@@ -8730,27 +8665,27 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2709453,"Potato, scalloped, from dry mix, with meat",['potato'],{'potato': 4.17},[],1,1,1.0,['dry'],['scalloped'],4.17,7.3,9.6,13.12,167.0,0.7,442.0,28.0,5.096,2.19
 2709454,"Potato, scalloped, ready-to-heat",['potato'],{'potato': 4.17},[],1,1,1.0,['ready'],['scalloped'],4.17,6.8,10.98,13.31,178.0,0.7,400.0,29.0,5.727,2.18
 2709455,"Potato, scalloped, ready-to-heat, with meat",['potato'],{'potato': 4.17},[],1,1,1.0,['ready'],['scalloped'],4.17,7.1,11.58,12.74,183.0,0.7,430.0,31.0,5.925,2.14
-2709456,"Potato, french fries, NFS","['potato', 'fries']","{'potato': 4.17, 'fries': 4.75}",[],2,2,1.0,['french'],[],8.92,2.5,14.07,23.23,225.0,1.8,295.0,0.0,1.986,0.34
-2709457,"Potato, french fries, NS as to fresh or frozen","['potato', 'fries']","{'potato': 4.17, 'fries': 4.75}",[],2,2,1.0,"['french', 'fresh']",['frozen'],8.92,2.5,14.07,23.23,225.0,1.8,295.0,0.0,1.986,0.34
-2709458,"Potato, french fries, from fresh, fried","['potato', 'fries']","{'potato': 4.17, 'fries': 4.75}",[],2,2,1.0,"['french', 'fresh']",['fried'],8.92,1.93,13.1,18.5,198.0,1.6,141.0,0.0,1.763,1.25
-2709459,"Potato, french fries, from fresh, baked","['potato', 'fries']","{'potato': 4.17, 'fries': 4.75}",[],2,2,1.0,"['french', 'fresh']",['baked'],8.92,2.02,9.16,19.34,166.0,1.7,147.0,0.0,1.238,1.3
-2709460,"Potato, french fries, from frozen, baked","['potato', 'fries']","{'potato': 4.17, 'fries': 4.75}",[],2,2,1.0,['french'],"['frozen', 'baked']",8.92,2.75,5.48,25.55,158.0,2.0,324.0,0.0,0.848,0.37
-2709461,"Potato, french fries, fast food","['potato', 'fries', 'food']","{'potato': 4.17, 'fries': 4.75, 'food': 12.8}",[],3,3,1.0,"['french', 'fast']",[],21.72,3.43,14.73,41.44,312.0,3.8,210.0,0.0,2.336,0.3
-2709462,"Potato, french fries, restaurant","['potato', 'fries']","{'potato': 4.17, 'fries': 4.75}",[],2,2,1.0,['french'],[],8.92,3.49,14.04,37.2,289.0,3.9,357.0,1.0,2.489,0.28
-2709463,"Potato, french fries, from frozen, fried","['potato', 'fries']","{'potato': 4.17, 'fries': 4.75}",[],2,2,1.0,['french'],"['frozen', 'fried']",8.92,2.5,14.07,23.23,225.0,1.8,295.0,0.0,1.986,0.34
-2709464,"Potato, french fries, school","['potato', 'fries']","{'potato': 4.17, 'fries': 4.75}",[],2,2,1.0,['french'],[],8.92,2.02,9.16,19.34,166.0,1.7,147.0,0.0,1.238,1.3
-2709465,"Potato, french fries, with cheese, fast food / restaurant","['potato', 'fries']","{'potato': 4.17, 'fries': 4.75}",[],2,2,1.0,"['french', 'fast']",[],8.92,3.33,14.22,29.76,260.0,2.6,365.0,3.0,2.595,0.3
-2709466,"Potato, french fries, with cheese, school","['potato', 'fries']","{'potato': 4.17, 'fries': 4.75}",[],2,2,1.0,['french'],[],8.92,4.55,10.29,17.67,181.0,1.5,195.0,8.0,2.374,1.2
-2709467,"Potato, french fries, with chili, fast food / restaurant","['potato', 'fries']","{'potato': 4.17, 'fries': 4.75}",[],2,2,1.0,"['french', 'fast']",[],8.92,5.2,10.78,30.79,241.0,3.6,261.0,6.0,1.956,0.69
-2709468,"Potato, french fries, with chili and cheese, fast food / restaurant","['potato', 'fries']","{'potato': 4.17, 'fries': 4.75}",[],2,2,1.0,"['french', 'fast']",[],8.92,4.66,11.42,24.87,221.0,2.7,363.0,7.0,2.246,0.59
-2709469,"Potato, french fries, with cheese","['potato', 'fries']","{'potato': 4.17, 'fries': 4.75}",[],2,2,1.0,['french'],[],8.92,3.33,14.22,29.76,260.0,2.6,365.0,3.0,2.595,0.3
-2709470,"Potato, french fries, with chili and cheese","['potato', 'fries']","{'potato': 4.17, 'fries': 4.75}",[],2,2,1.0,['french'],[],8.92,4.66,11.42,24.87,221.0,2.7,363.0,7.0,2.246,0.59
-2709471,"Potato, french fries, with chili","['potato', 'fries']","{'potato': 4.17, 'fries': 4.75}",[],2,2,1.0,['french'],[],8.92,5.2,10.78,30.79,241.0,3.6,261.0,6.0,1.956,0.69
+2709456,"Potato, french fries, NFS","['potato', 'fries']","{'potato': 4.17, 'fries': 5.97}",[],2,2,1.0,['french'],[],10.14,2.5,14.07,23.23,225.0,1.8,295.0,0.0,1.986,0.34
+2709457,"Potato, french fries, NS as to fresh or frozen","['potato', 'fries']","{'potato': 4.17, 'fries': 5.97}",[],2,2,1.0,"['french', 'fresh']",['frozen'],10.14,2.5,14.07,23.23,225.0,1.8,295.0,0.0,1.986,0.34
+2709458,"Potato, french fries, from fresh, fried","['potato', 'fries']","{'potato': 4.17, 'fries': 5.97}",[],2,2,1.0,"['french', 'fresh']",['fried'],10.14,1.93,13.1,18.5,198.0,1.6,141.0,0.0,1.763,1.25
+2709459,"Potato, french fries, from fresh, baked","['potato', 'fries']","{'potato': 4.17, 'fries': 5.97}",[],2,2,1.0,"['french', 'fresh']",['baked'],10.14,2.02,9.16,19.34,166.0,1.7,147.0,0.0,1.238,1.3
+2709460,"Potato, french fries, from frozen, baked","['potato', 'fries']","{'potato': 4.17, 'fries': 5.97}",[],2,2,1.0,['french'],"['frozen', 'baked']",10.14,2.75,5.48,25.55,158.0,2.0,324.0,0.0,0.848,0.37
+2709461,"Potato, french fries, fast food","['potato', 'fries', 'food']","{'potato': 4.17, 'fries': 5.97, 'food': 12.8}",[],3,3,1.0,"['french', 'fast']",[],22.94,3.43,14.73,41.44,312.0,3.8,210.0,0.0,2.336,0.3
+2709462,"Potato, french fries, restaurant","['potato', 'fries']","{'potato': 4.17, 'fries': 5.97}",[],2,2,1.0,['french'],[],10.14,3.49,14.04,37.2,289.0,3.9,357.0,1.0,2.489,0.28
+2709463,"Potato, french fries, from frozen, fried","['potato', 'fries']","{'potato': 4.17, 'fries': 5.97}",[],2,2,1.0,['french'],"['frozen', 'fried']",10.14,2.5,14.07,23.23,225.0,1.8,295.0,0.0,1.986,0.34
+2709464,"Potato, french fries, school","['potato', 'fries']","{'potato': 4.17, 'fries': 5.97}",[],2,2,1.0,['french'],[],10.14,2.02,9.16,19.34,166.0,1.7,147.0,0.0,1.238,1.3
+2709465,"Potato, french fries, with cheese, fast food / restaurant","['potato', 'fries']","{'potato': 4.17, 'fries': 5.97}",[],2,2,1.0,"['french', 'fast']",[],10.14,3.33,14.22,29.76,260.0,2.6,365.0,3.0,2.595,0.3
+2709466,"Potato, french fries, with cheese, school","['potato', 'fries']","{'potato': 4.17, 'fries': 5.97}",[],2,2,1.0,['french'],[],10.14,4.55,10.29,17.67,181.0,1.5,195.0,8.0,2.374,1.2
+2709467,"Potato, french fries, with chili, fast food / restaurant","['potato', 'fries']","{'potato': 4.17, 'fries': 5.97}",[],2,2,1.0,"['french', 'fast']",[],10.14,5.2,10.78,30.79,241.0,3.6,261.0,6.0,1.956,0.69
+2709468,"Potato, french fries, with chili and cheese, fast food / restaurant","['potato', 'fries']","{'potato': 4.17, 'fries': 5.97}",[],2,2,1.0,"['french', 'fast']",[],10.14,4.66,11.42,24.87,221.0,2.7,363.0,7.0,2.246,0.59
+2709469,"Potato, french fries, with cheese","['potato', 'fries']","{'potato': 4.17, 'fries': 5.97}",[],2,2,1.0,['french'],[],10.14,3.33,14.22,29.76,260.0,2.6,365.0,3.0,2.595,0.3
+2709470,"Potato, french fries, with chili and cheese","['potato', 'fries']","{'potato': 4.17, 'fries': 5.97}",[],2,2,1.0,['french'],[],10.14,4.66,11.42,24.87,221.0,2.7,363.0,7.0,2.246,0.59
+2709471,"Potato, french fries, with chili","['potato', 'fries']","{'potato': 4.17, 'fries': 5.97}",[],2,2,1.0,['french'],[],10.14,5.2,10.78,30.79,241.0,3.6,261.0,6.0,1.956,0.69
 2709472,"Potato, home fries, NFS",['potato'],{'potato': 4.17},[],1,1,1.0,[],[],4.17,1.92,13.03,18.4,197.0,1.6,340.0,0.0,1.754,1.24
 2709473,"Potato, home fries, from restaurant / fast food",['potato'],{'potato': 4.17},[],1,1,1.0,['fast'],[],4.17,1.87,15.2,17.91,213.0,1.6,396.0,0.0,4.959,1.21
 2709474,"Potato, home fries, from fresh",['potato'],{'potato': 4.17},[],1,1,1.0,['fresh'],[],4.17,1.96,11.52,18.76,185.0,1.6,279.0,0.0,1.553,1.26
-2709475,"Potato, home fries, ready-to-heat","['potato', 'home fries']","{'potato': 4.17, 'home fries': 4.75}",[],2,2,1.0,['ready'],[],8.92,1.92,13.03,18.4,197.0,1.6,340.0,0.0,1.754,1.24
-2709476,"Potato, home fries, with vegetables","['potato', 'home fries']","{'potato': 4.17, 'home fries': 4.75}",[],2,2,1.0,[],[],8.92,1.72,11.77,15.6,173.0,1.5,382.0,0.0,1.587,1.84
+2709475,"Potato, home fries, ready-to-heat","['potato', 'home fries']","{'potato': 4.17, 'home fries': 5.97}",[],2,2,1.0,['ready'],[],10.14,1.92,13.03,18.4,197.0,1.6,340.0,0.0,1.754,1.24
+2709476,"Potato, home fries, with vegetables","['potato', 'home fries']","{'potato': 4.17, 'home fries': 5.97}",[],2,2,1.0,[],[],10.14,1.72,11.77,15.6,173.0,1.5,382.0,0.0,1.587,1.84
 2709477,"Potato, hash brown, NFS",['potato'],{'potato': 4.17},[],1,1,1.0,['brown'],[],4.17,2.62,11.48,28.23,217.0,3.2,398.0,0.0,0.925,0.27
 2709478,"Potato, hash brown, from fast food",['potato'],{'potato': 4.17},[],1,1,1.0,"['brown', 'fast']",[],4.17,2.58,17.04,28.88,272.0,2.7,566.0,0.0,2.54,0.56
 2709479,"Potato, hash brown, from fast food, with cheese","['potato', 'hash']",{'potato': 4.17},['hash'],1,2,0.5,"['brown', 'fast']",[],0.0,6.03,19.87,24.47,295.0,2.2,581.0,17.0,5.317,0.52
@@ -8784,7 +8719,6 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2709507,"Potato, mashed, ready-to-heat, NFS",['potato'],{'potato': 4.17},[],1,1,1.0,['ready'],['mashed'],4.17,1.97,5.01,13.29,106.0,1.9,298.0,13.0,2.632,1.76
 2709508,"Potato, mashed, ready-to-heat, with cheese",['potato'],{'potato': 4.17},[],1,1,1.0,['ready'],['mashed'],4.17,4.26,8.12,12.13,138.0,1.7,336.0,22.0,4.407,1.61
 2709509,"Potato, mashed, ready-to-heat, with gravy",['potato'],{'potato': 4.17},[],1,1,1.0,['ready'],['mashed'],4.17,1.72,4.53,11.69,94.0,1.5,316.0,11.0,2.233,1.47
-2709510,Potato patty,['potato patty'],{'potato patty': 5.7},[],1,1,1.0,[],[],5.7,3.89,11.32,13.49,171.0,1.5,219.0,74.0,3.112,1.48
 2709511,"Potato tots, NFS",['potato tots'],{'potato tots': 6.28},[],1,1,1.0,[],[],6.28,1.9,15.46,24.4,237.0,2.3,421.0,0.0,2.315,0.28
 2709512,"Potato tots, fast food / restaurant",['potato tots'],{'potato tots': 6.28},[],1,1,1.0,['fast'],[],6.28,1.89,15.4,24.31,236.0,2.3,571.0,0.0,3.631,0.27
 2709513,"Potato tots, school",['potato tots'],{'potato tots': 6.28},[],1,1,1.0,[],[],6.28,2.02,9.16,19.34,166.0,1.7,147.0,0.0,1.238,1.3
@@ -8833,7 +8767,7 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2709557,"Soup, potato with meat",['soup'],{'soup': 4.59},[],1,1,1.0,[],[],4.59,3.78,6.43,8.81,109.0,1.0,246.0,22.0,3.135,0.95
 2709563,Plantain chips,['plantain chips'],{'plantain chips': 7.6},[],1,1,1.0,[],[],7.6,2.28,29.59,63.84,531.0,3.5,202.0,0.0,8.337,0.92
 2709564,"Cassava, cooked",['cassava'],{'cassava': 3.98},[],1,1,1.0,[],['cooked'],3.98,1.42,3.03,39.62,191.0,1.9,145.0,2.0,0.793,1.78
-2709565,Yuca fries,['fries'],{'fries': 4.75},[],1,1,1.0,[],[],4.75,1.24,13.94,34.72,269.0,1.6,154.0,0.0,1.896,1.55
+2709565,Yuca fries,['fries'],{'fries': 5.97},[],1,1,1.0,[],[],5.97,1.24,13.94,34.72,269.0,1.6,154.0,0.0,1.896,1.55
 2709566,"Casabe, cassava bread","['casabe', 'cassava bread']",{'cassava bread': 3.15},['casabe'],1,2,0.5,[],[],0.0,2.54,0.52,71.22,299.0,3.4,1185.0,0.0,0.138,3.18
 2709569,Taro chips,['taro chips'],{'taro chips': 7.6},[],1,1,1.0,[],[],7.6,2.3,24.9,68.1,498.0,7.2,342.0,0.0,6.43,3.82
 2709570,"Beet greens, raw",['beet greens'],{'beet greens': 2.12},[],1,1,1.0,['raw'],[],2.12,2.2,0.13,4.33,22.0,3.7,226.0,0.0,0.02,0.5
@@ -8947,12 +8881,12 @@ fdc_id,description,product,item_prices,unpriced_items,priced_items,total_items,p
 2709706,"Sweet potato, canned, no added fat",['potato'],{'potato': 4.17},[],1,1,1.0,"['Sweet', 'canned']",['added'],4.17,1.64,0.2,21.04,91.0,1.8,207.0,0.0,0.041,4.98
 2709707,"Sweet potato, canned, fat added",['potato'],{'potato': 4.17},[],1,1,1.0,"['Sweet', 'canned', 'fat']",['added'],4.17,1.58,4.35,20.05,124.0,1.7,211.0,3.0,1.127,4.75
 2709708,"Sweet potato, casserole or mashed",['potato'],{'potato': 4.17},[],1,1,1.0,['Sweet'],['mashed'],4.17,1.89,2.56,17.22,99.0,2.4,132.0,7.0,1.384,8.05
-2709709,"Sweet potato fries, NFS",['potato fries'],{'potato fries': 12.95},[],1,1,1.0,['Sweet'],[],12.95,2.27,9.39,37.45,192.0,6.0,154.0,0.0,1.218,13.58
+2709709,"Sweet potato fries, NFS",['potato fries'],{'potato fries': 5.97},[],1,1,1.0,['Sweet'],[],5.97,2.27,9.39,37.45,192.0,6.0,154.0,0.0,1.218,13.58
 2709710,Sweet potato chips,['potato chips'],{'potato chips': 7.6},[],1,1,1.0,['Sweet'],[],7.6,2.92,32.19,56.54,529.0,8.8,227.0,0.0,2.926,8.78
-2709711,"Sweet potato fries, frozen",['potato fries'],{'potato fries': 12.95},[],1,1,1.0,['Sweet'],['frozen'],12.95,2.27,9.39,37.45,192.0,6.0,154.0,0.0,1.218,13.58
-2709712,"Sweet potato fries, from fresh",['potato fries'],{'potato fries': 12.95},[],1,1,1.0,"['Sweet', 'fresh']",[],12.95,1.49,9.42,16.35,156.0,2.8,140.0,0.0,1.228,5.72
-2709713,"Sweet potato fries, fast food / restaurant",['potato fries'],{'potato fries': 12.95},[],1,1,1.0,"['Sweet', 'fast']",[],12.95,1.92,23.93,31.63,305.0,5.1,267.0,0.0,6.257,11.47
-2709714,"Sweet potato fries, school",['potato fries'],{'potato fries': 12.95},[],1,1,1.0,['Sweet'],[],12.95,2.27,9.39,37.45,192.0,6.0,154.0,0.0,1.218,13.58
+2709711,"Sweet potato fries, frozen",['potato fries'],{'potato fries': 5.97},[],1,1,1.0,['Sweet'],['frozen'],5.97,2.27,9.39,37.45,192.0,6.0,154.0,0.0,1.218,13.58
+2709712,"Sweet potato fries, from fresh",['potato fries'],{'potato fries': 5.97},[],1,1,1.0,"['Sweet', 'fresh']",[],5.97,1.49,9.42,16.35,156.0,2.8,140.0,0.0,1.228,5.72
+2709713,"Sweet potato fries, fast food / restaurant",['potato fries'],{'potato fries': 5.97},[],1,1,1.0,"['Sweet', 'fast']",[],5.97,1.92,23.93,31.63,305.0,5.1,267.0,0.0,6.257,11.47
+2709714,"Sweet potato fries, school",['potato fries'],{'potato fries': 5.97},[],1,1,1.0,['Sweet'],[],5.97,2.27,9.39,37.45,192.0,6.0,154.0,0.0,1.218,13.58
 2709715,Sweet potato tots,['potato tots'],{'potato tots': 6.28},[],1,1,1.0,['Sweet'],[],6.28,2.26,9.35,37.3,191.0,6.0,315.0,0.0,1.213,13.52
 2709716,"Sweet potato tots, fast food / restaurant",['potato tots'],{'potato tots': 6.28},[],1,1,1.0,"['Sweet', 'fast']",[],6.28,2.12,15.6,34.87,240.0,5.6,295.0,0.0,3.376,12.64
 2709717,"Sweet potato tots, school",['potato tots'],{'potato tots': 6.28},[],1,1,1.0,['Sweet'],[],6.28,2.27,9.39,37.45,192.0,6.0,154.0,0.0,1.218,13.58
