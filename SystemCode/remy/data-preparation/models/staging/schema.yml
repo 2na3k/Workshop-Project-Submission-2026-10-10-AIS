@@ -1,0 +1,22 @@
+version: 2
+
+sources:
+  - name: fooddata_central_files
+    description: "Raw FoodData Central files that are not dbt CSV seeds."
+    meta:
+      external_location: "read_parquet('seeds/central_food/{name}/*.parquet')"
+    tables:
+      - name: food_nutrient
+        description: "Food nutrient observations used by stg_food_nutrient."
+
+models:
+  - name: stg_recipes
+    description: "Recipe source rows from the 13k recipe dataset."
+  - name: stg_food
+    description: "1:1 staging table from the FoodData Central food seed."
+  - name: stg_branded_food
+    description: "1:1 staging table from the branded_food seed."
+  - name: stg_food_component
+    description: "1:1 staging table from the food_component seed."
+  - name: stg_food_nutrient
+    description: "1:1 staging table from the Parquet-optimized food_nutrient source."

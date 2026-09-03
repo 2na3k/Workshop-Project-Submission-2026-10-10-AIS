@@ -81,6 +81,7 @@ Desktop.ini
 target/
 dbt_packages/
 .dbt/
+.user.yml
 logs/
 
 # Logs and local runtime files

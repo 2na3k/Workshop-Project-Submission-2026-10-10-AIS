@@ -15,4 +15,5 @@ RUN uv sync --frozen --no-dev --package remy-data-preparation --no-install-works
 COPY remy/data-preparation remy/data-preparation
 RUN uv sync --frozen --no-dev --package remy-data-preparation
 
-CMD ["uv", "run", "--frozen", "--no-dev", "--package", "remy-data-preparation", "dbt", "build", "--project-dir", "remy/data-preparation"]
+WORKDIR /workspace/remy/data-preparation
+CMD ["sh", "-c", "mkdir -p target/${DBT_TARGET:-nonprod}/staging target/${DBT_TARGET:-nonprod}/ducklake/data && exec uv run --frozen --no-dev --package remy-data-preparation dbt build --profiles-dir . --exclude tag:serving"]
