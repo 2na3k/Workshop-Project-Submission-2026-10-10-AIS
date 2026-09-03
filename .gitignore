@@ -78,6 +78,7 @@ Thumbs.db
 Desktop.ini
 
 # dbt and local data artifacts
+seeds/
 target/
 dbt_packages/
 .dbt/

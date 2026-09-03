@@ -2,14 +2,27 @@
 
 The dbt project builds the food and recipe staging/mart models with DuckDB and DuckLake.
 
-From `SystemCode`:
+## Setup
 
-```bash
-uv sync --all-packages
-make dbt
-```
+1. Download the data from [Google Drive](https://drive.google.com/drive/folders/1Gvgsyn0SwnXeCXB457-B1KTeu11VjmrI?usp=sharing).
+2. Put the downloaded data in `remy/data-preparation/seeds` so the files include:
 
-Non-production is the default. Use `DBT_TARGET=prod make dbt` for production, or override database files with `DBT_NONPROD_PATH` and `DBT_PROD_PATH`.
+   ```text
+   seeds/13k-recipe/13k-recipes.csv
+   seeds/central_food/branded_food.csv
+   seeds/central_food/food.csv
+   seeds/central_food/food_component.csv
+   seeds/central_food/food_nutrient/data.parquet
+   ```
+
+3. From `SystemCode`, install dependencies and run dbt:
+
+   ```bash
+   make install
+   make dbt
+   ```
+
+The `seeds` directory is ignored by Git. Non-production is the default. Use `DBT_TARGET=prod make dbt` for production, or override database files with `DBT_NONPROD_PATH` and `DBT_PROD_PATH`.
 
 ## Serve to Neo4j
 
