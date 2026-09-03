@@ -11,3 +11,6 @@ node_modules
 .env*
 !.env.example
 *.log
+**/target
+**/dbt_packages
+**/logs

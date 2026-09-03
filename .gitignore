@@ -78,9 +78,11 @@ Thumbs.db
 Desktop.ini
 
 # dbt and local data artifacts
+seeds/
 target/
 dbt_packages/
 .dbt/
+.user.yml
 logs/
 
 # Logs and local runtime files

@@ -1,0 +1,113 @@
+version: 2
+
+models:
+  - name: node_recipe
+    description: "One Recipe node per source recipe."
+    columns:
+      - name: recipe_id
+        description: "Canonical recipe key."
+        tests: [not_null, unique]
+      - name: source
+        tests: [not_null]
+
+  - name: node_food_concept
+    description: "Normalized ingredient concepts, including unmatched requirements."
+    columns:
+      - name: canonical_key
+        tests: [not_null, unique]
+      - name: status
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['matched', 'unmatched']
+      - name: normalization_version
+        tests: [not_null]
+
+  - name: node_food
+    description: "Retained FoodData Central foods with selected nutrition embedded."
+    columns:
+      - name: food_key
+        description: "Namespaced graph key, fdc:<fdc_id>."
+        tests: [not_null, unique]
+      - name: fdc_id
+        tests: [not_null, unique]
+      - name: source
+        tests: [not_null]
+
+  - name: node_component
+    description: "FoodData Central component nodes keyed by food_component.id."
+    columns:
+      - name: component_id
+        tests: [not_null, unique]
+      - name: source
+        tests: [not_null]
+
+  - name: edge_requires
+    description: "One REQUIRES edge per retained recipe ingredient occurrence."
+    columns:
+      - name: occurrence_id
+        tests: [not_null, unique]
+      - name: recipe_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('node_recipe')
+              field: recipe_id
+      - name: normalized_name
+        tests:
+          - not_null
+          - relationships:
+              to: ref('node_food_concept')
+              field: canonical_key
+      - name: source
+        tests: [not_null]
+
+  - name: edge_fulfills
+    description: "Capped direct and explicit substitution candidates from FoodData Central to concepts."
+    columns:
+      - name: food_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('node_food')
+              field: food_key
+      - name: canonical_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('node_food_concept')
+              field: canonical_key
+      - name: kind
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['direct', 'substitute']
+      - name: confidence
+        tests: [not_null]
+      - name: match_method
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['exact_normalized_description', 'approved_alias', 'strong_fuzzy_name', 'ingredient_text_only', 'rule_based_substitution']
+      - name: source
+        tests: [not_null]
+
+  - name: edge_has_component
+    description: "Food-to-component composition edges; every source component row is retained."
+    columns:
+      - name: id
+        tests: [not_null, unique]
+      - name: food_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('node_food')
+              field: food_key
+      - name: component_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('node_component')
+              field: component_id
+      - name: source
+        tests: [not_null]
