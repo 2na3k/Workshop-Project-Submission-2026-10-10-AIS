@@ -379,7 +379,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--engine", choices=["selenium", "requests"], default="selenium",
                     help="selenium scrolls for every product (default); requests "
                          "grabs only the server-rendered first page")
-    ap.add_argument("--out", default="data/products.csv")
+    ap.add_argument("--out", default="data/raw_matched_food_prices.csv")
     ap.add_argument("--json", dest="json_out", default=None)
     ap.add_argument("--max-scrolls", type=int, default=400)
     ap.add_argument("--scroll-pause", type=float, default=2.5)

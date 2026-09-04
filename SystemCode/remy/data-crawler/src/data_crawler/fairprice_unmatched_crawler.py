@@ -182,7 +182,7 @@ def main(argv: list[str] | None = None) -> int:
                     help="search this term instead of reading the CSV (repeatable)")
     ap.add_argument("--min-rows", type=int, default=0,
                     help="skip terms accounting for fewer than N unmatched rows")
-    ap.add_argument("--out", default="data/unmatched_food_prices.csv")
+    ap.add_argument("--out", default="data/raw_unmatched_food_prices.csv")
     ap.add_argument("--top", type=int, default=0,
                     help="keep only the first N results per term (0 = all)")
     ap.add_argument("--jobs", type=int, default=6, help="concurrent searches")
