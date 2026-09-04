@@ -3,9 +3,9 @@
 FairPrice search crawler for the unmatched head terms.
 
 The category crawl (fairprice_crawler.py) covers the five aisles in
-CRAWL_INSTRUCT.md; whatever nutrient row it cannot price is summarised in
-data/unmatched_food.csv as (name, occurrences). This script goes after those
-terms one by one:
+CRAWL_INSTRUCT.md; whatever nutrient row it cannot price is summarised by
+process_price.ipynb in data/output_raw/frequent_unmatched_food.csv as
+(head_term, rows). This script goes after those terms one by one:
 
     https://www.fairprice.com.sg/search?query=<term>
 
@@ -66,8 +66,8 @@ CATEGORY_HREF_RE = re.compile(r"^/category/([^/?#]+)")
 
 # term/occurrences carried through so a row still says which unmatched food it
 # was fetched for, and how much of the gap that food accounts for. Column order
-# matches the existing data/unmatched_food_prices.csv so --resume can append to
-# a file an earlier run left behind.
+# matches the existing data/output_raw/raw_unmatched_food_prices.csv so
+# --resume can append to a file an earlier run left behind.
 FIELDS = ["term", "occurrences", "rank", "product_id", "category", "name",
           "price_value", "quantity", "dietary"]
 
@@ -176,13 +176,13 @@ class CategoryLookup:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--terms-csv", default="data/frequent_unmatched_food.csv",
+    ap.add_argument("--terms-csv", default="data/output_raw/frequent_unmatched_food.csv",
                     help="input: the name/occurrences table (default: %(default)s)")
     ap.add_argument("--term", action="append", default=None,
                     help="search this term instead of reading the CSV (repeatable)")
     ap.add_argument("--min-rows", type=int, default=0,
                     help="skip terms accounting for fewer than N unmatched rows")
-    ap.add_argument("--out", default="data/raw_unmatched_food_prices.csv")
+    ap.add_argument("--out", default="data/output_raw/raw_unmatched_food_prices.csv")
     ap.add_argument("--top", type=int, default=0,
                     help="keep only the first N results per term (0 = all)")
     ap.add_argument("--jobs", type=int, default=6, help="concurrent searches")

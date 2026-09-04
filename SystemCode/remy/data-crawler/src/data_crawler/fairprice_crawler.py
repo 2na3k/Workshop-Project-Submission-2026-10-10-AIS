@@ -17,7 +17,7 @@ infinite scroll (there is no ?page= parameter; it is ignored), so the full crawl
 drives headless Chrome and scrolls until the grid stops growing.
 
 Usage:
-    python3 fairprice_crawler.py                    # all 5 categories -> data/products.csv
+    python3 fairprice_crawler.py                    # all 5 categories -> data/output_raw/
     python3 fairprice_crawler.py --engine requests  # first page of each, no browser
     python3 fairprice_crawler.py --url https://www.fairprice.com.sg/category/frozen
 """
@@ -379,7 +379,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--engine", choices=["selenium", "requests"], default="selenium",
                     help="selenium scrolls for every product (default); requests "
                          "grabs only the server-rendered first page")
-    ap.add_argument("--out", default="data/raw_matched_food_prices.csv")
+    ap.add_argument("--out", default="data/output_raw/raw_matched_food_prices.csv")
     ap.add_argument("--json", dest="json_out", default=None)
     ap.add_argument("--max-scrolls", type=int, default=400)
     ap.add_argument("--scroll-pause", type=float, default=2.5)
