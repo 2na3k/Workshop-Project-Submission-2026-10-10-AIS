@@ -3,7 +3,7 @@
     {% set delimiter = config.get('delimiter', ',') %}
     {% set sql %}
       COPY {{ this.render() }} FROM '{{ seed_file_path }}'
-      (FORMAT CSV, HEADER TRUE, DELIMITER '{{ delimiter }}', STRICT_MODE FALSE, PARALLEL FALSE)
+      (FORMAT CSV, HEADER TRUE, DELIMITER '{{ delimiter }}', QUOTE '"', ESCAPE '"', STRICT_MODE FALSE, PARALLEL FALSE)
     {% endset %}
     {% do adapter.add_query(sql, abridge_sql_log=True) %}
     {{ return(sql) }}

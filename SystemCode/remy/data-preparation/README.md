@@ -13,6 +13,14 @@ The dbt project builds the food and recipe staging/mart models with DuckDB and D
    seeds/central_food/food.csv
    seeds/central_food/food_component.csv
    seeds/central_food/food_nutrient/data.parquet
+   seeds/fairprice/price_mapped_nutrients.csv
+   ```
+
+   Refresh the FairPrice mapping from the crawler output when needed:
+
+   ```bash
+   cp remy/data-crawler/src/data_crawler/data/output_final/price_mapped_nutrients.csv \
+      remy/data-preparation/seeds/fairprice/price_mapped_nutrients.csv
    ```
 
 3. From `SystemCode`, install dependencies and run dbt:
@@ -34,14 +42,12 @@ Set `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, and `NEO4J_DATABASE` in `Sy
 make dbt-all
 ```
 
-To load already-built marts only:
+To synchronize already-built marts, withdrawing stale projection-owned facts before loading:
 
 ```bash
 make serve-neo4j
 ```
 
-Replace the existing recipe graph projection before loading:
+Synchronization is deliberately replacement-only and transactional. Before the first load over a legacy ownerless projection, back it up and perform a reviewed one-time migration that either removes the legacy projection or assigns `projection_owner = 'remy_recipe_graph'` only to verified Remy nodes and relationships. The loader never deletes ownerless data automatically.
 
-```bash
-make serve-neo4j-replace
-```
+`make serve-neo4j-replace` remains an alias for `make serve-neo4j`.

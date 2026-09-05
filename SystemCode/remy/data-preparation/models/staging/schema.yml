@@ -20,3 +20,22 @@ models:
     description: "1:1 staging table from the food_component seed."
   - name: stg_food_nutrient
     description: "1:1 staging table from the Parquet-optimized food_nutrient source."
+
+  - name: stg_price_mapped_nutrients
+    description: "Preferred compact FDC profiles; aggregate prices remain audit-only."
+    columns:
+      - name: fdc_id
+        tests: [not_null, unique]
+      - name: source_snapshot_id
+        tests: [not_null]
+
+  - name: stg_retail_listing
+    description: "Raw legacy aisle and search listings with explicit lineage and unknown offer evidence."
+    columns:
+      - name: source_row_id
+        tests: [not_null, unique]
+      - name: source_kind
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['aisle', 'search']

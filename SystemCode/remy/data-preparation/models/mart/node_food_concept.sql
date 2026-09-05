@@ -1,16 +1,24 @@
 with requirements as (
     select distinct normalized_name as canonical_key
     from {{ ref('edge_requires') }}
-    group by normalized_name
-), fulfillment_status as (
-    select canonical_key, count(*) as fulfillment_count
+), food_fulfillment as (
+    select distinct canonical_key
     from {{ ref('edge_fulfills') }}
-    group by canonical_key
+    where approval_status = 'accepted'
+), product_fulfillment as (
+    select distinct canonical_key
+    from {{ ref('edge_product_fulfills') }}
+    where approval_status = 'accepted'
 )
 select
     r.canonical_key,
     r.canonical_key as name,
-    case when coalesce(f.fulfillment_count, 0) > 0 then 'matched' else 'unmatched' end as status,
-    'recipe-food-v2' as normalization_version
+    case
+        when p.canonical_key is not null then 'purchasable_candidate'
+        when f.canonical_key is not null then 'nutrition_only'
+        else 'unmatched'
+    end as status,
+    'recipe-food-v3' as normalization_version
 from requirements r
-left join fulfillment_status f using (canonical_key)
+left join food_fulfillment f using (canonical_key)
+left join product_fulfillment p using (canonical_key)
