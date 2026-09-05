@@ -14,20 +14,13 @@ with failures as (
     where approval_status <> 'accepted' or match_method in ('ingredient_text_only', 'strong_fuzzy_name')
        or (match_method = 'rule_based_substitution' and rule_id is null)
     union all
-    select 'fabricated_product_fulfillment'
-    from {{ ref('edge_product_fulfills') }}
+    select 'invalid_consumed_cost_basis'
+    from {{ ref('edge_fulfills') }}
+    where cost_basis_compatible and (price_basis <> 'package_mass' or package_mass_g <= 0 or reference_price_minor <= 0)
     union all
-    select 'fabricated_product_nutrition'
-    from {{ ref('edge_uses_nutrition') }}
-    union all
-    select 'fabricated_current_offer'
-    from {{ ref('node_offer') }}
-    union all
-    select 'fabricated_allergen_assessment'
-    from {{ ref('edge_allergen_status') }}
-    union all
-    select 'fabricated_diet_assessment'
-    from {{ ref('edge_diet_status') }}
+    select 'span_reference_used_for_cost'
+    from {{ ref('edge_fulfills') }}
+    where price_basis = 'span_reference' and cost_basis_compatible
     union all
     select 'graph_allocation_exceeded'
     from {{ ref('graph_quality_manifest') }} where not within_allocation

@@ -96,7 +96,7 @@ class Dbt:
         if name == "graph_quality_manifest":
             return Relation(
                 ["entity", "row_count", "allocation", "within_allocation"],
-                [("TOTAL_NODE", 8, 96220, True), ("TOTAL_RELATIONSHIP", 8, 358200, True)],
+                [("TOTAL_NODE", 8, 84200, True), ("TOTAL_RELATIONSHIP", 8, 208200, True)],
             )
         return Relation(["id"], [(1,)])
 
@@ -141,7 +141,9 @@ assert any("DELETE r" in statement for statement, _ in requests)
 statements = "\n".join(statement for statement, _ in requests)
 assert "projection_owner" in statements
 assert "Product" in statements and "Offer" in statements and "Allergen" in statements and "Diet" in statements
-assert "FOOD_FULFILLS" in result and "PRODUCT_FULFILLS" in result and "DIET_STATUS" in result
+assert "candidate_key" in statements
+assert "FULFILLS" in result and "HAS_COMPONENT" in result
+assert "PRODUCT_FULFILLS" not in result and "DIET_STATUS" not in result
 
 requests.clear()
 failing = Neo4jSession(fail_on_load=True)
@@ -177,8 +179,8 @@ class BadManifestDbt(Dbt):
         if name == "graph_quality_manifest":
             return Relation(
                 ["entity", "row_count", "allocation", "within_allocation"],
-                [("Food", 32001, 32000, False), ("TOTAL_NODE", 32001, 96220, True),
-                 ("TOTAL_RELATIONSHIP", 0, 358200, True)],
+                [("Food", 32001, 32000, False), ("TOTAL_NODE", 32001, 84200, True),
+                 ("TOTAL_RELATIONSHIP", 0, 208200, True)],
             )
         return super().ref(name)
 

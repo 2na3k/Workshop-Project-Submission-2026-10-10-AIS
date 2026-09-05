@@ -12,7 +12,8 @@ with listings as (
         nullif(trim(origin), '') as origin,
         nullif(trim(brand), '') as brand,
         nullif(trim(variant), '') as variant,
-        nullif(trim(product), '') as product_name
+        nullif(trim(product), '') as product_name,
+        cast(null as varchar) as search_term
     from {{ ref('retail_aisle_listing') }}
     union all
     select
@@ -25,7 +26,8 @@ with listings as (
         nullif(trim(quantity), ''),
         try_cast(price_value as decimal(18, 2)),
         nullif(trim(dietary), ''),
-        cast(null as varchar), cast(null as varchar), cast(null as varchar), cast(null as varchar)
+        cast(null as varchar), cast(null as varchar), cast(null as varchar), cast(null as varchar),
+        nullif(trim(term), '')
     from {{ ref('retail_search_listing') }}
 ), snapshots as (
     select
@@ -34,7 +36,7 @@ with listings as (
             md5(concat_ws('|', source_row_id, retailer, coalesce(retailer_product_id, ''),
                 coalesce(category, ''), coalesce(name, ''), coalesce(quantity_raw, ''),
                 cast(raw_price as varchar), coalesce(dietary_raw, ''), coalesce(origin, ''),
-                coalesce(brand, ''), coalesce(variant, ''), coalesce(product_name, ''))),
+                coalesce(brand, ''), coalesce(variant, ''), coalesce(product_name, ''), coalesce(search_term, ''))),
             '' order by source_row_id
         ))) as source_snapshot_id
     from listings
@@ -42,6 +44,6 @@ with listings as (
 )
 select l.source_kind, s.source_snapshot_id, l.source_row_id, l.retailer,
     l.retailer_product_id, l.category, l.name, l.quantity_raw, l.raw_price,
-    l.dietary_raw, l.origin, l.brand, l.variant, l.product_name
+    l.dietary_raw, l.origin, l.brand, l.variant, l.product_name, l.search_term
 from listings l
 join snapshots s using (source_kind)

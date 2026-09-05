@@ -30,7 +30,23 @@ The dbt project builds the food and recipe staging/mart models with DuckDB and D
    make dbt
    ```
 
-The `seeds` directory is ignored by Git. Non-production is the default. Use `DBT_TARGET=prod make dbt` for production, or override database files with `DBT_NONPROD_PATH` and `DBT_PROD_PATH`.
+The `seeds` directory is ignored by Git. Non-production is the default. Use `DBT_TARGET=prod make dbt` for production. For an isolated validation build, set all three paths and create their parent directories first:
+
+```bash
+export DBT_NONPROD_PATH=target/lean-validation/db.duckdb
+export DBT_NONPROD_DUCKLAKE_CATALOG=target/lean-validation/ducklake/catalog.sqlite
+export DBT_NONPROD_DUCKLAKE_DATA=target/lean-validation/ducklake/data
+mkdir -p "$(dirname "$DBT_NONPROD_PATH")" "$(dirname "$DBT_NONPROD_DUCKLAKE_CATALOG")" "$DBT_NONPROD_DUCKLAKE_DATA"
+uv run dbt build --exclude tag:serving
+```
+
+Run the query-time estimate without writing Neo4j:
+
+```bash
+uv run python scripts/recipe_estimate.py 882 --assumed-servings 2 --requested-portions 1 --halal-mode off
+```
+
+Add `--require-cost` when cost completeness is required. Results remain partial when any mandatory choice, quantity, conversion, evidence, or matching package basis is unresolved.
 
 ## Serve to Neo4j
 

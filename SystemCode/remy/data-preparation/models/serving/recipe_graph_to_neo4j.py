@@ -10,12 +10,9 @@ NODES = (
     ("Recipe", "node_recipe", "recipe_id"),
     ("FoodConcept", "node_food_concept", "canonical_key"),
     ("Food", "node_food", "food_key"),
-    ("Product", "node_product", "product_key"),
-    ("Offer", "node_offer", "offer_key"),
-    ("Allergen", "node_allergen", "allergen_key"),
-    ("Diet", "node_diet", "diet_key"),
     ("Component", "node_component", "component_id"),
 )
+RETIRED_LABELS = ("Product", "Offer", "Allergen", "Diet")
 
 NODE_STATEMENTS = {
     label: (
@@ -38,42 +35,7 @@ SET e += row, e.projection_owner = $owner
 UNWIND $rows AS row
 MATCH (a:Food {food_key: row.food_key})
 MATCH (b:FoodConcept {canonical_key: row.canonical_key})
-MERGE (a)-[e:FULFILLS {kind: row.kind}]->(b)
-SET e += row, e.projection_owner = $owner
-"""),
-    ("PRODUCT_FULFILLS", "edge_product_fulfills", """
-UNWIND $rows AS row
-MATCH (a:Product {product_key: row.product_key})
-MATCH (b:FoodConcept {canonical_key: row.canonical_key})
-MERGE (a)-[e:FULFILLS {kind: row.kind}]->(b)
-SET e += row, e.projection_owner = $owner
-"""),
-    ("USES_NUTRITION", "edge_uses_nutrition", """
-UNWIND $rows AS row
-MATCH (a:Product {product_key: row.product_key})
-MATCH (b:Food {food_key: row.food_key})
-MERGE (a)-[e:USES_NUTRITION]->(b)
-SET e += row, e.projection_owner = $owner
-"""),
-    ("HAS_OFFER", "edge_has_offer", """
-UNWIND $rows AS row
-MATCH (a:Product {product_key: row.product_key})
-MATCH (b:Offer {offer_key: row.offer_key})
-MERGE (a)-[e:HAS_OFFER]->(b)
-SET e += row, e.projection_owner = $owner
-"""),
-    ("ALLERGEN_STATUS", "edge_allergen_status", """
-UNWIND $rows AS row
-MATCH (a:Product {product_key: row.product_key})
-MATCH (b:Allergen {allergen_key: row.allergen_key})
-MERGE (a)-[e:ALLERGEN_STATUS]->(b)
-SET e += row, e.projection_owner = $owner
-"""),
-    ("DIET_STATUS", "edge_diet_status", """
-UNWIND $rows AS row
-MATCH (a:Product {product_key: row.product_key})
-MATCH (b:Diet {diet_key: row.diet_key})
-MERGE (a)-[e:DIET_STATUS]->(b)
+MERGE (a)-[e:FULFILLS {candidate_key: row.candidate_key}]->(b)
 SET e += row, e.projection_owner = $owner
 """),
     ("HAS_COMPONENT", "edge_has_component", """
@@ -142,19 +104,10 @@ def model(dbt, session):
         ("Recipe", dbt.ref("node_recipe"), NODE_STATEMENTS["Recipe"]),
         ("FoodConcept", dbt.ref("node_food_concept"), NODE_STATEMENTS["FoodConcept"]),
         ("Food", dbt.ref("node_food"), NODE_STATEMENTS["Food"]),
-        ("Product", dbt.ref("node_product"), NODE_STATEMENTS["Product"]),
-        ("Offer", dbt.ref("node_offer"), NODE_STATEMENTS["Offer"]),
-        ("Allergen", dbt.ref("node_allergen"), NODE_STATEMENTS["Allergen"]),
-        ("Diet", dbt.ref("node_diet"), NODE_STATEMENTS["Diet"]),
         ("Component", dbt.ref("node_component"), NODE_STATEMENTS["Component"]),
         ("REQUIRES", dbt.ref("edge_requires"), EDGE_LOADS[0][2]),
-        ("FOOD_FULFILLS", dbt.ref("edge_fulfills"), EDGE_LOADS[1][2]),
-        ("PRODUCT_FULFILLS", dbt.ref("edge_product_fulfills"), EDGE_LOADS[2][2]),
-        ("USES_NUTRITION", dbt.ref("edge_uses_nutrition"), EDGE_LOADS[3][2]),
-        ("HAS_OFFER", dbt.ref("edge_has_offer"), EDGE_LOADS[4][2]),
-        ("ALLERGEN_STATUS", dbt.ref("edge_allergen_status"), EDGE_LOADS[5][2]),
-        ("DIET_STATUS", dbt.ref("edge_diet_status"), EDGE_LOADS[6][2]),
-        ("HAS_COMPONENT", dbt.ref("edge_has_component"), EDGE_LOADS[7][2]),
+        ("FULFILLS", dbt.ref("edge_fulfills"), EDGE_LOADS[1][2]),
+        ("HAS_COMPONENT", dbt.ref("edge_has_component"), EDGE_LOADS[2][2]),
     )
     transaction = neo4j.begin_transaction()
 
@@ -170,7 +123,7 @@ def model(dbt, session):
             )
             if result["deleted"] < batch_size:
                 break
-        for label, _, _ in NODES:
+        for label in tuple(label for label, _, _ in NODES) + RETIRED_LABELS:
             while True:
                 result = tx_run(
                     f"MATCH (n:{label}) WHERE n.projection_owner = $owner AND NOT (n)--() WITH n LIMIT $limit DELETE n RETURN count(*) AS deleted",
@@ -193,7 +146,10 @@ def model(dbt, session):
             counts.append((entity, loaded))
         transaction.commit()
     except Exception:
-        transaction.rollback()
+        try:
+            transaction.rollback()
+        except Exception:
+            pass
         raise
     finally:
         neo4j.close()

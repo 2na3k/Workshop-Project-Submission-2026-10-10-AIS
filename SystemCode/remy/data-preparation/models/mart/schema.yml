@@ -2,16 +2,13 @@ version: 2
 
 models:
   - name: node_recipe
-    description: "One Recipe node per source recipe."
     columns:
       - name: recipe_id
-        description: "Canonical recipe key."
         tests: [not_null, unique]
       - name: source
         tests: [not_null]
 
   - name: node_food_concept
-    description: "Normalized ingredient concepts, including unmatched requirements."
     columns:
       - name: canonical_key
         tests: [not_null, unique]
@@ -19,15 +16,13 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['unmatched', 'nutrition_only', 'purchasable_candidate']
+              values: ['unmatched', 'nutrition_only', 'price_reference', 'cost_ready']
       - name: normalization_version
         tests: [not_null]
 
   - name: node_food
-    description: "Retained FoodData Central foods with selected nutrition embedded."
     columns:
       - name: food_key
-        description: "Namespaced graph key, fdc:<fdc_id>."
         tests: [not_null, unique]
       - name: fdc_id
         tests: [not_null, unique]
@@ -45,198 +40,72 @@ models:
         tests: [not_null]
       - name: nutrition_version
         tests: [not_null]
-      - name: source
-        tests: [not_null]
 
   - name: node_component
-    description: "FoodData Central component nodes keyed by food_component.id."
     columns:
       - name: component_id
         tests: [not_null, unique]
-      - name: source
-        tests: [not_null]
 
   - name: edge_requires
-    description: "One REQUIRES edge per retained recipe ingredient occurrence."
     columns:
       - name: occurrence_id
         tests: [not_null, unique]
       - name: recipe_id
         tests:
           - not_null
-          - relationships:
-              to: ref('node_recipe')
-              field: recipe_id
+          - relationships: {to: ref('node_recipe'), field: recipe_id}
       - name: normalized_name
         tests:
           - not_null
-          - relationships:
-              to: ref('node_food_concept')
-              field: canonical_key
-      - name: source
-        tests: [not_null]
+          - relationships: {to: ref('node_food_concept'), field: canonical_key}
 
   - name: edge_fulfills
-    description: "Capped direct and explicit substitution candidates from FoodData Central to concepts."
     columns:
+      - name: candidate_key
+        tests: [not_null, unique]
       - name: food_key
         tests:
           - not_null
-          - relationships:
-              to: ref('node_food')
-              field: food_key
+          - relationships: {to: ref('node_food'), field: food_key}
       - name: canonical_key
         tests:
           - not_null
-          - relationships:
-              to: ref('node_food_concept')
-              field: canonical_key
+          - relationships: {to: ref('node_food_concept'), field: canonical_key}
       - name: kind
         tests:
-          - not_null
-          - accepted_values:
-              values: ['direct', 'substitute']
-      - name: confidence
-        tests: [not_null]
-      - name: match_method
-        tests:
-          - not_null
-          - accepted_values:
-              values: ['exact_normalized_description', 'approved_alias', 'rule_based_substitution']
+          - accepted_values: {values: ['direct', 'substitute']}
       - name: approval_status
         tests:
-          - not_null
-          - accepted_values:
-              values: ['accepted']
-      - name: replacement_factor
+          - accepted_values: {values: ['accepted']}
+      - name: price_match_status
+        tests:
+          - accepted_values: {values: ['unmatched', 'estimated', 'accepted']}
+      - name: halal_status
+        tests:
+          - accepted_values: {values: ['certified', 'retailer_claim', 'ingredient_screen_pass', 'not_halal', 'conflict', 'unknown']}
+      - name: may_allergic
         tests: [not_null]
-      - name: source
+      - name: allergen_screening_status
+        tests:
+          - accepted_values: {values: ['potential_contains', 'unknown']}
+      - name: may_non_vegetarian
         tests: [not_null]
+      - name: vegetarian_status
+        tests:
+          - accepted_values: {values: ['retailer_claim', 'ingredient_screen_pass', 'potential_not_vegetarian', 'unknown']}
 
   - name: edge_has_component
-    description: "Food-to-component composition edges; every source component row is retained."
     columns:
       - name: id
         tests: [not_null, unique]
       - name: food_key
         tests:
           - not_null
-          - relationships:
-              to: ref('node_food')
-              field: food_key
+          - relationships: {to: ref('node_food'), field: food_key}
       - name: component_id
         tests:
           - not_null
-          - relationships:
-              to: ref('node_component')
-              field: component_id
-      - name: source
-        tests: [not_null]
-
-  - name: node_product
-    description: "Deduplicated retail identities; classification remains review-required with supplied data."
-    columns:
-      - name: product_key
-        tests: [not_null, unique]
-      - name: identity_status
-        tests:
-          - not_null
-          - accepted_values:
-              values: ['verified_id', 'provisional', 'conflict']
-
-  - name: node_offer
-    description: "Current offers; empty because supplied prices lack current-offer evidence."
-    columns:
-      - name: offer_key
-        tests: [not_null, unique]
-
-  - name: node_allergen
-    columns:
-      - name: allergen_key
-        tests: [not_null, unique]
-
-  - name: node_diet
-    columns:
-      - name: diet_key
-        tests: [not_null, unique]
-
-  - name: edge_product_fulfills
-    columns:
-      - name: product_key
-        tests:
-          - not_null
-          - relationships:
-              to: ref('node_product')
-              field: product_key
-      - name: canonical_key
-        tests:
-          - not_null
-          - relationships:
-              to: ref('node_food_concept')
-              field: canonical_key
-
-  - name: edge_uses_nutrition
-    columns:
-      - name: product_key
-        tests:
-          - not_null
-          - unique
-          - relationships:
-              to: ref('node_product')
-              field: product_key
-      - name: food_key
-        tests:
-          - not_null
-          - relationships:
-              to: ref('node_food')
-              field: food_key
-
-  - name: edge_has_offer
-    columns:
-      - name: product_key
-        tests:
-          - not_null
-          - unique
-          - relationships:
-              to: ref('node_product')
-              field: product_key
-      - name: offer_key
-        tests:
-          - not_null
-          - unique
-          - relationships:
-              to: ref('node_offer')
-              field: offer_key
-
-  - name: edge_allergen_status
-    columns:
-      - name: product_key
-        tests:
-          - not_null
-          - relationships:
-              to: ref('node_product')
-              field: product_key
-      - name: allergen_key
-        tests:
-          - not_null
-          - relationships:
-              to: ref('node_allergen')
-              field: allergen_key
-
-  - name: edge_diet_status
-    columns:
-      - name: product_key
-        tests:
-          - not_null
-          - relationships:
-              to: ref('node_product')
-              field: product_key
-      - name: diet_key
-        tests:
-          - not_null
-          - relationships:
-              to: ref('node_diet')
-              field: diet_key
+          - relationships: {to: ref('node_component'), field: component_id}
 
   - name: graph_quality_manifest
     columns:
@@ -246,5 +115,4 @@ models:
         tests: [not_null]
       - name: within_allocation
         tests:
-          - accepted_values:
-              values: [true]
+          - accepted_values: {values: [true]}

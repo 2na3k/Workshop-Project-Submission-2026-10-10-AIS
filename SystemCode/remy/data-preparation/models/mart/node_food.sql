@@ -1,23 +1,10 @@
-with preferred_ids as (
-    select fdc_id, 0 as priority
-    from {{ ref('stg_price_mapped_nutrients') }}
-), fallback_candidates as (
-    select distinct try_cast(fdc_id as bigint) as fdc_id, 1 as priority
+with selected_ids as (
+    select distinct try_cast(regexp_replace(food_key, '^fdc:', '') as bigint) as fdc_id
+    from {{ ref('edge_fulfills') }}
+    union
+    select distinct try_cast(fdc_id as bigint)
     from {{ ref('stg_food_component') }}
     where try_cast(fdc_id as bigint) is not null
-    union all
-    select distinct try_cast(regexp_replace(food_key, '^fdc:', '') as bigint) as fdc_id, 2 as priority
-    from {{ ref('edge_fulfills') }}
-), fallback_ids as (
-    select fdc_id, min(priority) as priority
-    from fallback_candidates
-    where fdc_id is not null and fdc_id not in (select fdc_id from preferred_ids)
-    group by fdc_id
-    qualify row_number() over (order by min(priority), fdc_id) <= 20000
-), selected_ids as (
-    select fdc_id from preferred_ids
-    union
-    select fdc_id from fallback_ids
 ), food as (
     select * from {{ ref('stg_food') }}
     qualify row_number() over (partition by try_cast(fdc_id as bigint) order by description) = 1
@@ -48,10 +35,7 @@ select
     n.cholesterol_mg,
     coalesce(n.nutrition_source, 'fooddata_central') as nutrition_source,
     coalesce(n.nutrition_basis, 'per_100g') as nutrition_basis,
-    coalesce(
-        n.nutrition_version,
-        concat('fooddata_central:selection_v1:', sha256(concat(cast(s.fdc_id as varchar), '|missing_profile')))
-    ) as nutrition_version,
+    coalesce(n.nutrition_version, concat('fooddata_central:selection_v1:', sha256(concat(cast(s.fdc_id as varchar), '|missing_profile')))) as nutrition_version,
     coalesce(n.nutrition_status, 'missing') as nutrition_status,
     'fooddata_central' as source
 from selected_ids s
