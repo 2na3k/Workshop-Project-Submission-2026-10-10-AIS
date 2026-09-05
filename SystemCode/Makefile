@@ -61,10 +61,9 @@ dbt-all: _neo4j-creds
 	$(MAKE) serve-neo4j DBT_TARGET=$(DBT_TARGET)
 
 serve-neo4j: _neo4j-creds
-	cd remy/data-preparation && DBT_TARGET=$(DBT_TARGET) $(UV) run --package $(DBT_PACKAGE) dbt run --profiles-dir . --select recipe_graph_to_neo4j
-
-serve-neo4j-replace: _neo4j-creds
 	cd remy/data-preparation && DBT_TARGET=$(DBT_TARGET) NEO4J_REPLACE=true $(UV) run --package $(DBT_PACKAGE) dbt run --profiles-dir . --select recipe_graph_to_neo4j
+
+serve-neo4j-replace: serve-neo4j
 
 build:
 	$(COMPOSE) build api
