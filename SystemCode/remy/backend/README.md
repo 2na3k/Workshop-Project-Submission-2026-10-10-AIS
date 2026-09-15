@@ -24,7 +24,7 @@ Interactive docs at http://127.0.0.1:8000/docs. See `.env.example` for settings.
 | ------ | -------------------------- | ------- |
 | `POST` | `/auth/signup`             | Create an account. `201`, or `409` if taken. |
 | `POST` | `/auth/signin`             | Check credentials. `200`, or `401`. |
-| `GET`  | `/auth/available/{name}`   | Is this username free? Answered from memory where possible. |
+| `POST` | `/auth/available`          | Is this username free? Answered from memory where possible. |
 | `GET`  | `/health`                  | Liveness, plus live Bloom filter stats. |
 
 Usernames are lowercased before validation, so `Alice` and `alice` are the same

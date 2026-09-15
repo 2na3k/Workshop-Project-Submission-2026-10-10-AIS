@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from pydantic import BaseModel, Field, field_validator
 
 # Same shape the database enforces in app_user_username_format, so a bad
@@ -8,16 +10,15 @@ from pydantic import BaseModel, Field, field_validator
 USERNAME_PATTERN = r"^[a-z0-9][a-z0-9._-]{2,31}$"
 
 
-class Credentials(BaseModel):
+class UsernameIn(BaseModel):
+    """A request carrying just a username, e.g. the availability check."""
+
     username: str = Field(min_length=3, max_length=32)
-    password: str = Field(min_length=8, max_length=1024)
 
     @field_validator("username")
     @classmethod
     def normalise_username(cls, value: str) -> str:
         """Lowercase before validating, so Alice and alice are one account."""
-        import re
-
         lowered = value.strip().lower()
         if not re.fullmatch(USERNAME_PATTERN, lowered):
             raise ValueError(
@@ -25,6 +26,10 @@ class Credentials(BaseModel):
                 "dash or underscore, and start with a letter or digit"
             )
         return lowered
+
+
+class Credentials(UsernameIn):
+    password: str = Field(min_length=8, max_length=1024)
 
 
 class AccountOut(BaseModel):
