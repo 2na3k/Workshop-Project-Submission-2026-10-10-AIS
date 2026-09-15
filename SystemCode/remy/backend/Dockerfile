@@ -1,12 +1,14 @@
-FROM node:22-alpine
+FROM python:3.12-slim
+
+# uv resolves the workspace, so the build context is SystemCode/.
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
-COPY remy/app/ ./
+COPY pyproject.toml uv.lock ./
+COPY remy/backend/ ./remy/backend/
 
-# The frontend is optional until its package manifest is added.
-RUN if [ -f package-lock.json ]; then npm ci; \
-    elif [ -f package.json ]; then npm install; \
-    fi
+RUN uv sync --package remy-backend --frozen --no-dev
 
-EXPOSE 5173
-CMD ["sh", "-c", "if [ -f package.json ]; then npm run dev -- --host 0.0.0.0; else echo 'Add remy/app/package.json to start the frontend'; sleep infinity; fi"]
+EXPOSE 8000
+CMD ["uv", "run", "--package", "remy-backend", \
+     "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
