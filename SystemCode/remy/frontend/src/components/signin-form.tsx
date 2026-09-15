@@ -1,17 +1,38 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Field from "@/components/field";
+import FormError from "@/components/form-error";
+import { ApiError, signIn } from "@/lib/api";
 
 export default function SignInForm() {
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    // TODO: authenticate with new FormData(event.currentTarget), then land the
-    // user on Discover. Returning users already have preferences, so no cold
-    // start here - that belongs to sign up only.
-    router.push("/");
+    const data = new FormData(event.currentTarget);
+
+    setError(null);
+    setPending(true);
+
+    try {
+      await signIn({
+        username: String(data.get("username") ?? ""),
+        password: String(data.get("password") ?? ""),
+      });
+      // Returning users already have a preference row, so no cold start.
+      router.push("/");
+    } catch (caught) {
+      setError(
+        caught instanceof ApiError ? caught.message : "Something went wrong.",
+      );
+      // Only on failure: on success the route change unmounts this form, and
+      // clearing pending first would flash the button back to its idle label.
+      setPending(false);
+    }
   }
 
   return (
@@ -30,11 +51,14 @@ export default function SignInForm() {
         placeholder="••••••••"
       />
 
+      <FormError message={error} />
+
       <button
         type="submit"
-        className="w-full rounded-full bg-accent px-4 py-3 text-sm font-bold text-accent-foreground transition hover:opacity-90"
+        disabled={pending}
+        className="w-full rounded-full bg-accent px-4 py-3 text-sm font-bold text-accent-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        Sign in
+        {pending ? "Signing in…" : "Sign in"}
       </button>
     </form>
   );

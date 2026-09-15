@@ -1,7 +1,7 @@
 import random
 import string
 
-from backend.bloom import BloomFilter
+from app.bloom import BloomFilter
 
 
 def _names(n: int, seed: int) -> list[str]:
