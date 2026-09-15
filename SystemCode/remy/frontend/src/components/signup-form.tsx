@@ -1,16 +1,37 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Field from "@/components/field";
+import FormError from "@/components/form-error";
+import { ApiError, signUp } from "@/lib/api";
 
 export default function SignUpForm() {
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    // TODO: create the account, then hand off to the cold start. A brand new
-    // account has no preference row yet, which is exactly what /welcome fills.
-    router.push("/welcome");
+    const data = new FormData(event.currentTarget);
+
+    setError(null);
+    setPending(true);
+
+    try {
+      await signUp({
+        username: String(data.get("username") ?? ""),
+        password: String(data.get("password") ?? ""),
+      });
+      // A brand new account has no preference row yet, which is what the cold
+      // start fills in.
+      router.push("/welcome");
+    } catch (caught) {
+      setError(
+        caught instanceof ApiError ? caught.message : "Something went wrong.",
+      );
+      setPending(false);
+    }
   }
 
   return (
@@ -21,6 +42,10 @@ export default function SignUpForm() {
         autoComplete="username"
         placeholder="yourname"
       />
+      <p className="-mt-1 text-xs text-muted">
+        3–32 characters: letters, digits, dot, dash or underscore.
+      </p>
+
       <Field
         id="password"
         label="Password"
@@ -29,11 +54,14 @@ export default function SignUpForm() {
         placeholder="At least 8 characters"
       />
 
+      <FormError message={error} />
+
       <button
         type="submit"
-        className="w-full rounded-full bg-accent px-4 py-3 text-sm font-bold text-accent-foreground transition hover:opacity-90"
+        disabled={pending}
+        className="w-full rounded-full bg-accent px-4 py-3 text-sm font-bold text-accent-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        Create account
+        {pending ? "Creating account…" : "Create account"}
       </button>
 
       <p className="text-center text-xs leading-relaxed text-muted">
