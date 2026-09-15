@@ -7,6 +7,7 @@ dependencies = [
     "argon2-cffi>=23.1,<26",
     "asyncpg>=0.30,<0.31",
     "fastapi>=0.115,<1",
+    "pyjwt>=2.9,<3",
     "uvicorn[standard]>=0.30,<1",
 ]
 
