@@ -4,7 +4,13 @@ import asyncpg
 from fastapi import APIRouter, Header, HTTPException, Request, status
 
 from app import db, security, tokens
-from app.schemas import AvailabilityOut, Credentials, RefreshOut, SessionOut
+from app.schemas import (
+    AvailabilityOut,
+    Credentials,
+    RefreshOut,
+    SessionOut,
+    UsernameIn,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -106,16 +112,16 @@ async def refresh(
     )
 
 
-@router.get("/available/{username}", response_model=AvailabilityOut)
-async def availability(username: str, request: Request) -> AvailabilityOut:
-    """Live check for the sign up form, answered from memory where possible."""
-    try:
-        candidate = Credentials(username=username, password="placeholder").username
-    except ValueError:
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid username."
-        ) from None
+@router.post("/available", response_model=AvailabilityOut)
+async def availability(body: UsernameIn, request: Request) -> AvailabilityOut:
+    """Live check for the sign up form, answered from memory where possible.
 
+    POST with the name in the body rather than GET /available/{username}: a
+    username in the path lands in access logs, browser history and referrer
+    headers, which is more exposure than a availability probe deserves. Pydantic
+    validates and lowercases it, so a malformed name is a 422 before any lookup.
+    """
+    candidate = body.username
     bloom = request.app.state.bloom
 
     if candidate not in bloom:

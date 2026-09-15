@@ -15,17 +15,16 @@ PUBLIC_PATHS = frozenset(
         # Refresh reads the token itself, including expired ones, so it has to
         # sit outside a check that rejects expired tokens.
         "/auth/refresh",
+        "/auth/available",
         "/docs",
         "/redoc",
         "/openapi.json",
     }
 )
 
-PUBLIC_PREFIXES = ("/auth/available/",)
-
 
 def _is_public(path: str) -> bool:
-    return path in PUBLIC_PATHS or path.startswith(PUBLIC_PREFIXES)
+    return path in PUBLIC_PATHS
 
 
 class JWTAuthMiddleware(BaseHTTPMiddleware):
