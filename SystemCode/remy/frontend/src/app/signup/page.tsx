@@ -1,31 +1,31 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import AuthLayout from "@/components/auth-layout";
-import SignInForm from "@/components/signin-form";
+import SignUpForm from "@/components/signup-form";
 
 export const metadata: Metadata = {
-  title: "Sign in · Remymy",
-  description: "Sign in to Remymy.",
+  title: "Create account · Remymy",
+  description: "Create a Remymy account.",
 };
 
 export default function Page() {
   return (
     <AuthLayout
-      title="Welcome back"
-      subtitle="Pick up where you left off — your preferences are already saved."
+      title="Let's get you fed"
+      subtitle="Make an account and we'll tune suggestions to how you actually eat."
       footer={
         <>
-          New here?{" "}
+          Already cooking with us?{" "}
           <Link
-            href="/signup"
+            href="/signin"
             className="font-bold text-accent underline-offset-4 hover:underline"
           >
-            Create an account
+            Sign in
           </Link>
         </>
       }
     >
-      <SignInForm />
+      <SignUpForm />
     </AuthLayout>
   );
 }

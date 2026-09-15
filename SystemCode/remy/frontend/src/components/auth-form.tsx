@@ -14,7 +14,7 @@ export default function AuthForm() {
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     // TODO: call the auth endpoint with new FormData(event.currentTarget).
-    // Existing users would go straight to /prompt once that lands.
+    // Existing users would skip onboarding once that lands.
     router.push("/onboarding");
   }
 
@@ -23,7 +23,7 @@ export default function AuthForm() {
       <div
         role="tablist"
         aria-label="Authentication mode"
-        className="mb-6 grid grid-cols-2 gap-1 rounded-lg bg-background p-1"
+        className="mb-6 grid grid-cols-2 gap-1 rounded-full bg-background p-1"
       >
         {(["signin", "signup"] as const).map((value) => (
           <button
@@ -32,9 +32,9 @@ export default function AuthForm() {
             role="tab"
             aria-selected={mode === value}
             onClick={() => setMode(value)}
-            className={`rounded-md px-3 py-2 text-sm font-medium transition ${
+            className={`rounded-full px-3 py-2 text-sm font-bold transition ${
               mode === value
-                ? "bg-surface text-foreground shadow-sm"
+                ? "bg-sage text-sage-foreground"
                 : "text-muted hover:text-foreground"
             }`}
           >
@@ -50,7 +50,7 @@ export default function AuthForm() {
             id="name"
             label="Name"
             autoComplete="name"
-            placeholder="Remy Ratatouille"
+            placeholder="Your name"
           />
         )}
 
@@ -72,7 +72,7 @@ export default function AuthForm() {
 
         <button
           type="submit"
-          className="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-accent/40"
+          className="w-full rounded-full bg-accent px-4 py-3 text-sm font-bold text-accent-foreground transition hover:opacity-90"
         >
           {isSignUp ? "Create account" : "Sign in"}
         </button>
