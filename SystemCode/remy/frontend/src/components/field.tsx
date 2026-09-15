@@ -1,4 +1,3 @@
-/** Labelled text input. `id` doubles as the form field name. */
 export default function Field({
   id,
   label,
@@ -16,7 +15,7 @@ export default function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium">
+      <label htmlFor={id} className="block text-sm font-bold">
         {label}
       </label>
       <input
@@ -26,7 +25,7 @@ export default function Field({
         autoComplete={autoComplete}
         placeholder={placeholder}
         required={required}
-        className="w-full rounded-lg border border-subtle bg-background px-3 py-2 text-sm outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/25"
+        className="w-full rounded-xl border border-subtle bg-background px-3.5 py-2.5 text-sm outline-none transition placeholder:text-muted/60 focus:border-accent focus:ring-2 focus:ring-accent/20"
       />
     </div>
   );

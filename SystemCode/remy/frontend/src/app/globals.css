@@ -1,41 +1,53 @@
 @import "tailwindcss";
 
+/* A warm, deliberately light brand. No dark variant: the palette is the
+   identity, and inverting it would not be the same product. */
 :root {
-  --background: #faf9f7;
-  --foreground: #1c1917;
+  color-scheme: light;
+
+  --background: #f7f5ef;
   --surface: #ffffff;
-  --muted: #78716c;
-  --subtle: #e7e5e4;
-  --accent: #c2410c;
+  --panel: #fbfaf5;
+  --foreground: #21382a;
+  --muted: #6e7469;
+  --subtle: #e6e2d6;
+  --accent: #e8663c;
   --accent-foreground: #ffffff;
+  --sage: #dde7d4;
+  --sage-deep: #cbd9c0;
+  --sage-foreground: #2c4633;
+  --cream: #f1ece0;
 }
 
 @theme inline {
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --color-surface: var(--surface);
+  --color-panel: var(--panel);
+  --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-subtle: var(--subtle);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-sage: var(--sage);
+  --color-sage-deep: var(--sage-deep);
+  --color-sage-foreground: var(--sage-foreground);
+  --color-cream: var(--cream);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0c0a09;
-    --foreground: #f5f5f4;
-    --surface: #1c1917;
-    --muted: #a8a29e;
-    --subtle: #292524;
-    --accent: #fb923c;
-    --accent-foreground: #1c1917;
-  }
+  --font-sans: var(--font-jakarta);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The eyebrow labels above each section heading. */
+.eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
 }

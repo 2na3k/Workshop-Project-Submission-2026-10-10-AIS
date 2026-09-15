@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 /** Mutually exclusive: "vegetarian" and "meat" contradict each other. */
@@ -12,19 +11,11 @@ const DIETS = [
 ] as const;
 
 const CUISINES = [
-  "Chinese",
-  "Malay",
-  "Indian",
-  "Peranakan",
-  "Thai",
-  "Vietnamese",
-  "Japanese",
-  "Korean",
-  "Western",
-  "Italian",
-  "Mexican",
-  "Middle Eastern",
+  "Chinese", "Malay", "Indian", "Peranakan", "Thai", "Vietnamese",
+  "Japanese", "Korean", "Western", "Italian", "Mexican", "Middle Eastern",
 ] as const;
+
+const NUTRIENTS = ["Protein", "Fibre", "Lower sodium", "Lower sugar"] as const;
 
 type Diet = (typeof DIETS)[number]["id"];
 
@@ -32,6 +23,7 @@ export default function PreferencesForm() {
   const router = useRouter();
   const [diet, setDiet] = useState<Diet | null>(null);
   const [cuisines, setCuisines] = useState<string[]>([]);
+  const [nutrient, setNutrient] = useState<string | null>(null);
 
   function toggleCuisine(cuisine: string) {
     setCuisines((current) =>
@@ -43,24 +35,24 @@ export default function PreferencesForm() {
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    // TODO: persist { diet, cuisines } against the signed-in user.
-    router.push("/prompt");
+    // TODO: PUT { diet, cuisines, nutrient } to the preference table.
+    router.push("/");
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      <fieldset>
-        <legend className="text-sm font-medium">Diet</legend>
-        <p className="mt-1 text-sm text-muted">Pick the one that fits you.</p>
+    <form onSubmit={handleSubmit} className="mt-8 space-y-8">
+      <fieldset className="rounded-3xl border border-subtle bg-surface p-6">
+        <legend className="float-left w-full text-sm font-bold">Diet</legend>
+        <p className="clear-both text-sm text-muted">Pick the one that fits you.</p>
 
-        <div className="mt-3 space-y-2">
+        <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
           {DIETS.map(({ id, label, hint }) => (
             <label
               key={id}
-              className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition ${
+              className={`cursor-pointer rounded-2xl border p-4 transition ${
                 diet === id
                   ? "border-accent bg-accent/5"
-                  : "border-subtle hover:border-muted/40"
+                  : "border-subtle hover:border-sage-deep"
               }`}
             >
               <input
@@ -69,24 +61,24 @@ export default function PreferencesForm() {
                 value={id}
                 checked={diet === id}
                 onChange={() => setDiet(id)}
-                className="mt-0.5 size-4 accent-accent"
+                className="sr-only"
               />
-              <span>
-                <span className="block text-sm font-medium">{label}</span>
-                <span className="block text-sm text-muted">{hint}</span>
+              <span className="block font-bold">{label}</span>
+              <span className="mt-1 block text-sm leading-snug text-muted">
+                {hint}
               </span>
             </label>
           ))}
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend className="text-sm font-medium">Cuisines</legend>
-        <p className="mt-1 text-sm text-muted">
+      <fieldset className="rounded-3xl border border-subtle bg-surface p-6">
+        <legend className="float-left w-full text-sm font-bold">Cuisines</legend>
+        <p className="clear-both text-sm text-muted">
           Choose as many as you like, or skip and we&rsquo;ll suggest broadly.
         </p>
 
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           {CUISINES.map((cuisine) => {
             const selected = cuisines.includes(cuisine);
             return (
@@ -97,8 +89,8 @@ export default function PreferencesForm() {
                 onClick={() => toggleCuisine(cuisine)}
                 className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
                   selected
-                    ? "border-accent bg-accent text-accent-foreground"
-                    : "border-subtle text-muted hover:border-muted/40 hover:text-foreground"
+                    ? "border-sage-deep bg-sage font-medium text-sage-foreground"
+                    : "border-subtle text-muted hover:border-sage-deep hover:text-foreground"
                 }`}
               >
                 {cuisine}
@@ -108,22 +100,36 @@ export default function PreferencesForm() {
         </div>
       </fieldset>
 
-      <div className="flex items-center justify-between gap-4 border-t border-subtle pt-6">
-        <Link
-          href="/signin"
-          className="text-sm text-muted underline-offset-4 hover:text-foreground hover:underline"
-        >
-          Back
-        </Link>
+      <fieldset className="rounded-3xl border border-subtle bg-surface p-6">
+        <legend className="float-left w-full text-sm font-bold">Aim for</legend>
+        <p className="clear-both text-sm text-muted">One nutrient to steer suggestions by.</p>
 
-        <button
-          type="submit"
-          disabled={diet === null}
-          className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-accent/40 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          Continue
-        </button>
-      </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {NUTRIENTS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={nutrient === option}
+              onClick={() => setNutrient(nutrient === option ? null : option)}
+              className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
+                nutrient === option
+                  ? "border-sage-deep bg-sage font-medium text-sage-foreground"
+                  : "border-subtle text-muted hover:border-sage-deep hover:text-foreground"
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
+      <button
+        type="submit"
+        disabled={diet === null}
+        className="rounded-full bg-accent px-6 py-3 text-sm font-bold text-accent-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Save preferences
+      </button>
     </form>
   );
 }
