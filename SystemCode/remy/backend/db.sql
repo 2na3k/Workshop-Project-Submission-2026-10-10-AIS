@@ -1,8 +1,6 @@
 CREATE DATABASE remy_main;
 
-USE DATABASE remy_main;
-
-BEGIN;
+\c remy_main
 
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS trigger
