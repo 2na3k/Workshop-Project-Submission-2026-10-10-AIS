@@ -3,8 +3,8 @@ import AppShell from "@/components/app-shell";
 import PreferencesForm from "@/components/preferences-form";
 
 export const metadata: Metadata = {
-  title: "Your preferences · Remy",
-  description: "Tell Remy about your diet and the cuisines you enjoy.",
+  title: "Your preferences · Remymy",
+  description: "Change your diet, cuisines and nutrient goal.",
 };
 
 export default function Page() {
@@ -15,8 +15,7 @@ export default function Page() {
         What do you eat?
       </h1>
       <p className="mt-3 max-w-md leading-relaxed text-muted">
-        This shapes every idea Remy suggests. You can change it whenever you
-        like.
+        This shapes every idea Remymy suggests. Change it whenever you like.
       </p>
 
       <PreferencesForm />
