@@ -37,3 +37,21 @@ class AvailabilityOut(BaseModel):
     # True when the filter alone settled it, i.e. no database round trip was
     # needed. Useful for seeing the filter earn its keep.
     answered_by_filter: bool
+
+
+class SessionOut(BaseModel):
+    """What sign up and sign in return: the account plus its bearer token."""
+
+    username: str
+    access_token: str
+    token_type: str = "bearer"
+    expires_at: int  # unix seconds
+
+
+class RefreshOut(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_at: int
+    # False when the presented token still had plenty of life and was handed
+    # straight back, so a client can call refresh on every app open cheaply.
+    refreshed: bool

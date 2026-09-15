@@ -1,22 +1,29 @@
 from __future__ import annotations
 
 import asyncpg
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Header, HTTPException, Request, status
 
-from app import db, security
-from app.schemas import AccountOut, AvailabilityOut, Credentials
+from app import db, security, tokens
+from app.schemas import AvailabilityOut, Credentials, RefreshOut, SessionOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/signup", response_model=AccountOut, status_code=status.HTTP_201_CREATED)
-async def signup(body: Credentials, request: Request) -> AccountOut:
+def _session(username: str, request: Request) -> SessionOut:
+    token = tokens.issue(username, request.app.state.settings.tokens)
+    return SessionOut(
+        username=username, access_token=token.value, expires_at=token.expires_at
+    )
+
+
+@router.post("/signup", response_model=SessionOut, status_code=status.HTTP_201_CREATED)
+async def signup(body: Credentials, request: Request) -> SessionOut:
     pool = request.app.state.pool
     bloom = request.app.state.bloom
 
     # The Bloom filter's job. A miss is definitive, so most sign ups with a
-    # fresh username skip the existence query entirely and go straight to the
-    # insert. A hit is only probable, so it has to be confirmed.
+    # fresh username skip the existence query and go straight to the insert.
+    # A hit is only probable, so it has to be confirmed.
     if body.username in bloom and await db.user_exists(pool, body.username):
         raise HTTPException(
             status.HTTP_409_CONFLICT, detail="That username is already taken."
@@ -28,18 +35,17 @@ async def signup(body: Credentials, request: Request) -> AccountOut:
         await db.insert_user(pool, body.username, password_hash)
     except asyncpg.UniqueViolationError:
         # The filter is an optimisation, never the authority: two requests can
-        # both pass the check above and race to insert. The primary key is what
-        # actually settles it.
+        # both pass the check above and race to insert. The primary key settles it.
         raise HTTPException(
             status.HTTP_409_CONFLICT, detail="That username is already taken."
         ) from None
 
     bloom.add(body.username)
-    return AccountOut(username=body.username)
+    return _session(body.username, request)
 
 
-@router.post("/signin", response_model=AccountOut)
-async def signin(body: Credentials, request: Request) -> AccountOut:
+@router.post("/signin", response_model=SessionOut)
+async def signin(body: Credentials, request: Request) -> SessionOut:
     pool = request.app.state.pool
 
     # Deliberately no Bloom filter here. It could answer "certainly not
@@ -65,7 +71,39 @@ async def signin(body: Credentials, request: Request) -> AccountOut:
             pool, body.username, security.hash_password(body.password)
         )
 
-    return AccountOut(username=body.username)
+    return _session(body.username, request)
+
+
+@router.post("/refresh", response_model=RefreshOut)
+async def refresh(
+    request: Request, authorization: str = Header(default="")
+) -> RefreshOut:
+    """Trade a near-expiry or recently expired token for a fresh one.
+
+    Public by design: it must accept tokens the auth middleware would reject,
+    because an expired token is exactly the case it exists to handle. The
+    signature is still verified, so an expired token cannot be forged.
+    """
+    scheme, _, presented = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not presented:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            detail="Missing bearer token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        token, minted = tokens.renew(presented, request.app.state.settings.tokens)
+    except tokens.TokenError as error:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            detail=str(error),
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from None
+
+    return RefreshOut(
+        access_token=token.value, expires_at=token.expires_at, refreshed=minted
+    )
 
 
 @router.get("/available/{username}", response_model=AvailabilityOut)
