@@ -23,12 +23,20 @@ ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
 
 
 @dataclass(frozen=True, slots=True)
+class CookieConfig:
+    name: str
+    secure: bool
+    samesite: str
+
+
+@dataclass(frozen=True, slots=True)
 class Settings:
     database_url: str
     cors_origins: tuple[str, ...]
     bloom_capacity: int
     bloom_error_rate: float
     tokens: TokenConfig
+    cookie: CookieConfig
 
 
 def _jwt_secret() -> str:
@@ -83,5 +91,16 @@ def load_settings() -> Settings:
             expired_grace_seconds=int(
                 os.environ.get("REMY_JWT_EXPIRED_GRACE_SECONDS", 7 * 24 * 60 * 60)
             ),
+        ),
+        cookie=CookieConfig(
+            name=os.environ.get("REMY_COOKIE_NAME", "remy_session"),
+            # Must be true wherever the site is served over HTTPS; a Secure
+            # cookie is simply not sent over plain http, which breaks local dev.
+            secure=os.environ.get("REMY_COOKIE_SECURE", "false").lower() == "true",
+            # "lax" is right while the API and the app share a site (localhost
+            # ports count as one site). Split them across domains and this has
+            # to become "none", which needs Secure and reopens CSRF - see the
+            # note in README.
+            samesite=os.environ.get("REMY_COOKIE_SAMESITE", "lax").lower(),
         ),
     )

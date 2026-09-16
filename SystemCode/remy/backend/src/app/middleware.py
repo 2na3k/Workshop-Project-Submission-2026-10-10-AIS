@@ -16,6 +16,7 @@ PUBLIC_PATHS = frozenset(
         # sit outside a check that rejects expired tokens.
         "/auth/refresh",
         "/auth/available",
+        "/auth/logout",
         "/docs",
         "/redoc",
         "/openapi.json",
@@ -34,9 +35,10 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
     not have to decode the token a second time.
     """
 
-    def __init__(self, app, config: TokenConfig) -> None:
+    def __init__(self, app, config: TokenConfig, cookie_name: str) -> None:
         super().__init__(app)
         self._config = config
+        self._cookie_name = cookie_name
 
     async def dispatch(self, request: Request, call_next):
         # CORS preflight carries no Authorization header by design; CORSMiddleware
@@ -45,11 +47,9 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
         if request.method == "OPTIONS" or _is_public(request.url.path):
             return await call_next(request)
 
-        header = request.headers.get("Authorization", "")
-        scheme, _, token = header.partition(" ")
-
-        if scheme.lower() != "bearer" or not token:
-            return _unauthorized("Missing bearer token.")
+        token = read_token(request, self._cookie_name)
+        if not token:
+            return _unauthorized("Missing credentials.")
 
         try:
             request.state.username = username_of(token, self._config)
@@ -57,6 +57,17 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
             return _unauthorized(str(error))
 
         return await call_next(request)
+
+
+def read_token(request: Request, cookie_name: str) -> str | None:
+    """The HttpOnly cookie is where browsers keep it; the Authorization header
+    stays supported for curl, tests and any non-browser client."""
+    cookie = request.cookies.get(cookie_name)
+    if cookie:
+        return cookie
+
+    scheme, _, token = request.headers.get("Authorization", "").partition(" ")
+    return token if scheme.lower() == "bearer" and token else None
 
 
 def _unauthorized(detail: str) -> JSONResponse:

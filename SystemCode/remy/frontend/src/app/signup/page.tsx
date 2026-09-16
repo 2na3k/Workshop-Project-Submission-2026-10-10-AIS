@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import AuthLayout from "@/components/auth-layout";
+import RedirectIfSignedIn from "@/components/redirect-if-signed-in";
 import SignUpForm from "@/components/signup-form";
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default function Page() {
         </>
       }
     >
+      <RedirectIfSignedIn />
       <SignUpForm />
     </AuthLayout>
   );
