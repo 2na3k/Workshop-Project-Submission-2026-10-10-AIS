@@ -94,13 +94,7 @@ def load_settings() -> Settings:
         ),
         cookie=CookieConfig(
             name=os.environ.get("REMY_COOKIE_NAME", "remy_session"),
-            # Must be true wherever the site is served over HTTPS; a Secure
-            # cookie is simply not sent over plain http, which breaks local dev.
             secure=os.environ.get("REMY_COOKIE_SECURE", "false").lower() == "true",
-            # "lax" is right while the API and the app share a site (localhost
-            # ports count as one site). Split them across domains and this has
-            # to become "none", which needs Secure and reopens CSRF - see the
-            # note in README.
-            samesite=os.environ.get("REMY_COOKIE_SAMESITE", "lax").lower(),
+            samesite=os.environ.get("REMY_COOKIE_SAMESITE", "strict").lower(),
         ),
     )
