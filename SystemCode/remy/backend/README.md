@@ -5,15 +5,37 @@ hashing, and a Bloom filter in front of the username existence check.
 
 ## Run it
 
-```bash
-# from SystemCode/ - this is a uv workspace
-uv sync --package remy-backend
+This is a uv workspace member, so there are two ways in. Either works; the
+`.venv` here is self-contained and does not need uv at all once created.
 
+**With uv, from `SystemCode/`:**
+
+```bash
+uv sync --package remy-backend
+uv run --package remy-backend uvicorn main:app --reload --port 8000
+```
+
+**With the backend's own venv, from this directory:**
+
+```bash
+uv venv --python 3.12          # or: python3.12 -m venv .venv
+.venv/bin/pip install -r requirements.txt -e .
+.venv/bin/pip install -r requirements-dev.txt   # tests only
+.venv/bin/python -m uvicorn main:app --reload --port 8000
+```
+
+`requirements.txt` is the frozen runtime set and `requirements-dev.txt` adds the
+test tools. Both are pinned exactly; regenerate with `uv pip freeze` after
+changing `pyproject.toml`, which stays the source of truth for version ranges.
+
+## Database
+
+```bash
 createdb remy_main                 # if it does not exist yet
-psql -d remy_main -f remy/backend/db.sql
+psql -d remy_main -f db.sql
 
 export REMY_DATABASE_URL="postgresql://localhost:5432/remy_main"
-uv run --package remy-backend uvicorn backend.main:app --reload --port 8000
+export REMY_JWT_SECRET="$(openssl rand -base64 48)"
 ```
 
 Interactive docs at http://127.0.0.1:8000/docs. See `.env.example` for settings.
@@ -83,7 +105,8 @@ false positive rate degrades past it.
 ## Tests
 
 ```bash
-uv run --package remy-backend pytest remy/backend/tests
+uv run --package remy-backend pytest remy/backend/tests   # from SystemCode/
+.venv/bin/python -m pytest tests                          # from here
 ```
 
 Covers the property sign up depends on (no false negatives), that the measured

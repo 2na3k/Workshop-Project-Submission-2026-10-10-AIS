@@ -11,4 +11,4 @@ RUN uv sync --package remy-backend --frozen --no-dev
 
 EXPOSE 8000
 CMD ["uv", "run", "--package", "remy-backend", \
-     "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+     "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

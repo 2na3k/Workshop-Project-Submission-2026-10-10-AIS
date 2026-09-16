@@ -60,4 +60,16 @@ CREATE INDEX IF NOT EXISTS preference_cuisine_idx
     ON preference (cuisine)
     WHERE cuisine IS NOT NULL;
 
+CREATE TABLE IF NOT EXISTS preference_cuisine (
+    username TEXT NOT NULL
+             REFERENCES app_user (username)
+             ON DELETE CASCADE
+             ON UPDATE CASCADE,
+    cuisine  TEXT NOT NULL,
+    PRIMARY KEY (username, cuisine)
+);
+
+CREATE INDEX IF NOT EXISTS preference_cuisine_lookup_idx
+    ON preference_cuisine (cuisine);
+
 COMMIT;
