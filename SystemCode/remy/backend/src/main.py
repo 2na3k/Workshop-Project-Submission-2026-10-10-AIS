@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import db
 from app.config import load_settings
 from app.middleware import JWTAuthMiddleware
-from app.routes import auth
+from app.routes import auth, preferences
 
 settings = load_settings()
 
@@ -17,8 +17,6 @@ settings = load_settings()
 async def lifespan(app: FastAPI):
     app.state.settings = settings
     app.state.pool = await db.create_pool(settings.database_url)
-    # Built once, from the table, at startup. Each worker process keeps its own
-    # copy in memory; a restart rebuilds it.
     app.state.bloom = await db.load_bloom(
         app.state.pool, settings.bloom_capacity, settings.bloom_error_rate
     )
@@ -30,9 +28,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Remy Backend", version="0.1.0", lifespan=lifespan)
 
-# Order matters: the last middleware added is the outermost. CORS must wrap the
-# auth check so that a 401 still comes back with CORS headers - otherwise the
-# browser reports an opaque network error instead of the real status.
 app.add_middleware(JWTAuthMiddleware, config=settings.tokens)
 app.add_middleware(
     CORSMiddleware,
@@ -43,6 +38,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(preferences.router)
 
 
 @app.get("/health", tags=["meta"])
@@ -58,7 +54,15 @@ async def me(request: Request) -> dict[str, str]:
 
 
 def run() -> None:
-    """Entry point for `uv run remy-backend`."""
+    """Entry point for `python src/main.py` and for the remy-backend script."""
     import uvicorn
 
-    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)
+    # Passed as a string rather than the app object because reload=True needs an
+    # import path it can re-import in the worker process after each edit.
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+
+
+# Without this, `python src/main.py` defines the app and exits without ever
+# starting the server.
+if __name__ == "__main__":
+    run()

@@ -4,6 +4,9 @@ import logging
 import os
 import secrets
 from dataclasses import dataclass
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 from app.tokens import TokenConfig
 
@@ -11,6 +14,12 @@ _log = logging.getLogger(__name__)
 
 HALF_DAY_SECONDS = 12 * 60 * 60
 MIN_SECRET_BYTES = 32
+
+# src/app/config.py -> src/app -> src -> backend/. Anchored to this file rather
+# than the working directory, because the app is started from several places
+# (backend/ by hand, SystemCode/ by `uv run`, / in the container) and a
+# cwd-relative lookup silently finds nothing from most of them.
+ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,8 +34,6 @@ class Settings:
 def _jwt_secret() -> str:
     secret = os.environ.get("REMY_JWT_SECRET", "").strip()
     if secret:
-        # HS256 keys shorter than the 256-bit hash add no security beyond their
-        # own length (RFC 7518 s3.2), and PyJWT warns about it.
         if len(secret.encode()) < MIN_SECRET_BYTES:
             _log.warning(
                 "REMY_JWT_SECRET is only %d bytes. Use at least %d "
@@ -36,10 +43,6 @@ def _jwt_secret() -> str:
             )
         return secret
 
-    # No hardcoded fallback: a known signing key lets anyone mint a token for
-    # any account. A fresh random key per process is safe, at the cost of
-    # invalidating every issued token whenever the server restarts - fine for
-    # development, which is the only place this branch should ever run.
     _log.warning(
         "REMY_JWT_SECRET is not set. Generated a random key for this process; "
         "all tokens become invalid when it restarts, and separate workers will "
@@ -49,6 +52,11 @@ def _jwt_secret() -> str:
 
 
 def load_settings() -> Settings:
+    # override=False so a real environment variable always beats the file: a
+    # deployment injects its own config, and a stray .env in the image must not
+    # quietly replace it. Missing file is not an error - production has no .env.
+    load_dotenv(ENV_FILE, override=False)
+
     return Settings(
         database_url=os.environ.get(
             "REMY_DATABASE_URL",
@@ -61,9 +69,6 @@ def load_settings() -> Settings:
             ).split(",")
             if origin.strip()
         ),
-        # Sized for the expected number of accounts, not the current one: a
-        # Bloom filter cannot be resized without rebuilding, and its false
-        # positive rate climbs once it holds more than `capacity` items.
         bloom_capacity=int(os.environ.get("REMY_BLOOM_CAPACITY", "100000")),
         bloom_error_rate=float(os.environ.get("REMY_BLOOM_ERROR_RATE", "0.01")),
         tokens=TokenConfig(

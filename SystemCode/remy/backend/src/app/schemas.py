@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import re
 
+from typing import Literal
+
 from pydantic import BaseModel, Field, field_validator
 
 # Same shape the database enforces in app_user_username_format, so a bad
@@ -60,3 +62,41 @@ class RefreshOut(BaseModel):
     # False when the presented token still had plenty of life and was handed
     # straight back, so a client can call refresh on every app open cheaply.
     refreshed: bool
+
+
+# Mirrors the preference_special_diet_known CHECK in db.sql.
+Diet = Literal["halal", "vegetarian", "meat"]
+
+
+class PreferencesIn(BaseModel):
+    """What the cold start collects. Every field is optional: the wizard lets
+    the user skip cuisines and nutrient, and skip the whole thing entirely."""
+
+    special_diet: Diet | None = None
+    cuisines: list[str] = Field(default_factory=list, max_length=40)
+    preferred_nutrient: str | None = Field(default=None, max_length=64)
+
+    @field_validator("cuisines")
+    @classmethod
+    def clean_cuisines(cls, value: list[str]) -> list[str]:
+        """Trim, drop blanks, de-duplicate, keep the order chosen.
+
+        De-duplication matters: (username, cuisine) is the primary key of
+        preference_cuisine, so a repeat would abort the insert.
+        """
+        seen: set[str] = set()
+        cleaned: list[str] = []
+        for raw in value:
+            cuisine = raw.strip()
+            if not cuisine or len(cuisine) > 64:
+                continue
+            key = cuisine.casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            cleaned.append(cuisine)
+        return cleaned
+
+
+class PreferencesOut(PreferencesIn):
+    username: str

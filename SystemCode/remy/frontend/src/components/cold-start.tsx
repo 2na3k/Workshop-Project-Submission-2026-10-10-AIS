@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Chip from "@/components/chip";
+import FormError from "@/components/form-error";
+import { ApiError, savePreferences } from "@/lib/api";
 import {
   CUISINES,
   DIETS,
@@ -23,13 +25,41 @@ export default function ColdStart() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [prefs, setPrefs] = useState<Preferences>(EMPTY_PREFERENCES);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const isLast = step === STEPS.length - 1;
   // Only the diet step blocks progress; the other two are genuinely optional.
   const canAdvance = step !== 0 || prefs.diet !== null;
 
-  function finish() {
-    // TODO: POST prefs to the preference table for the new account.
+  async function finish() {
+    setError(null);
+    setSaving(true);
+
+    try {
+      await savePreferences({
+        special_diet: prefs.diet,
+        cuisines: prefs.cuisines,
+        preferred_nutrient: prefs.nutrient,
+      });
+      router.push("/");
+    } catch (caught) {
+      // A dead or missing token means there is nothing to attach these
+      // preferences to, so send them back to sign in rather than looping on an
+      // error they cannot clear.
+      if (caught instanceof ApiError && caught.status === 401) {
+        router.push("/signin");
+        return;
+      }
+      setError(
+        caught instanceof ApiError ? caught.message : "Could not save that.",
+      );
+      setSaving(false);
+    }
+  }
+
+  /** Straight into the app without writing anything, as the label promises. */
+  function skip() {
     router.push("/");
   }
 
@@ -124,7 +154,11 @@ export default function ColdStart() {
         )}
       </div>
 
-      <div className="mt-6 flex items-center justify-between gap-4">
+      <div className="mt-5">
+        <FormError message={error} />
+      </div>
+
+      <div className="mt-5 flex items-center justify-between gap-4">
         {step === 0 ? (
           <Link
             href="/signup"
@@ -145,7 +179,7 @@ export default function ColdStart() {
         <div className="flex items-center gap-4">
           <button
             type="button"
-            onClick={finish}
+            onClick={skip}
             className="text-sm text-muted underline-offset-4 hover:text-foreground hover:underline"
           >
             Skip for now
@@ -153,11 +187,11 @@ export default function ColdStart() {
 
           <button
             type="button"
-            disabled={!canAdvance}
-            onClick={() => (isLast ? finish() : setStep((c) => c + 1))}
+            disabled={!canAdvance || saving}
+            onClick={() => (isLast ? void finish() : setStep((c) => c + 1))}
             className="rounded-full bg-accent px-6 py-3 text-sm font-bold text-accent-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {isLast ? "Start cooking" : "Continue"}
+            {isLast ? (saving ? "Saving…" : "Start cooking") : "Continue"}
           </button>
         </div>
       </div>
