@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import asyncpg
-from fastapi import APIRouter, Header, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request, Response, status
 
 from app import db, security, tokens
+from app.middleware import read_token
 from app.schemas import (
     AvailabilityOut,
     Credentials,
@@ -15,15 +16,35 @@ from app.schemas import (
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-def _session(username: str, request: Request) -> SessionOut:
-    token = tokens.issue(username, request.app.state.settings.tokens)
-    return SessionOut(
-        username=username, access_token=token.value, expires_at=token.expires_at
+def _set_cookie(response: Response, request: Request, token: tokens.Token) -> None:
+    """Attach the session cookie.
+
+    httponly keeps it out of reach of JavaScript, which is the whole point:
+    an XSS bug can no longer read the token. max_age matches the token's own
+    lifetime so the browser drops a cookie that could not be used anyway.
+    """
+    cookie = request.app.state.settings.cookie
+    response.set_cookie(
+        key=cookie.name,
+        value=token.value,
+        httponly=True,
+        secure=cookie.secure,
+        samesite=cookie.samesite,
+        max_age=request.app.state.settings.tokens.ttl_seconds,
+        path="/",
     )
 
 
+def _session(username: str, request: Request, response: Response) -> SessionOut:
+    token = tokens.issue(username, request.app.state.settings.tokens)
+    _set_cookie(response, request, token)
+    return SessionOut(username=username, expires_at=token.expires_at)
+
+
 @router.post("/signup", response_model=SessionOut, status_code=status.HTTP_201_CREATED)
-async def signup(body: Credentials, request: Request) -> SessionOut:
+async def signup(
+    body: Credentials, request: Request, response: Response
+) -> SessionOut:
     pool = request.app.state.pool
     bloom = request.app.state.bloom
 
@@ -47,11 +68,13 @@ async def signup(body: Credentials, request: Request) -> SessionOut:
         ) from None
 
     bloom.add(body.username)
-    return _session(body.username, request)
+    return _session(body.username, request, response)
 
 
 @router.post("/signin", response_model=SessionOut)
-async def signin(body: Credentials, request: Request) -> SessionOut:
+async def signin(
+    body: Credentials, request: Request, response: Response
+) -> SessionOut:
     pool = request.app.state.pool
 
     # Deliberately no Bloom filter here. It could answer "certainly not
@@ -77,24 +100,22 @@ async def signin(body: Credentials, request: Request) -> SessionOut:
             pool, body.username, security.hash_password(body.password)
         )
 
-    return _session(body.username, request)
+    return _session(body.username, request, response)
 
 
 @router.post("/refresh", response_model=RefreshOut)
-async def refresh(
-    request: Request, authorization: str = Header(default="")
-) -> RefreshOut:
+async def refresh(request: Request, response: Response) -> RefreshOut:
     """Trade a near-expiry or recently expired token for a fresh one.
 
     Public by design: it must accept tokens the auth middleware would reject,
     because an expired token is exactly the case it exists to handle. The
     signature is still verified, so an expired token cannot be forged.
     """
-    scheme, _, presented = authorization.partition(" ")
-    if scheme.lower() != "bearer" or not presented:
+    presented = read_token(request, request.app.state.settings.cookie.name)
+    if not presented:
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,
-            detail="Missing bearer token.",
+            detail="Missing credentials.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -107,8 +128,27 @@ async def refresh(
             headers={"WWW-Authenticate": "Bearer"},
         ) from None
 
-    return RefreshOut(
-        access_token=token.value, expires_at=token.expires_at, refreshed=minted
+    # Re-set the cookie even when the same token came back, so its max_age
+    # slides forward with each visit.
+    _set_cookie(response, request, token)
+    return RefreshOut(expires_at=token.expires_at, refreshed=minted)
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(request: Request, response: Response) -> None:
+    """Clear the session cookie.
+
+    Has to be a server call: JavaScript cannot delete an HttpOnly cookie, so
+    signing out is not something the frontend can do on its own. Public, so that
+    a session which has already lapsed can still be cleared.
+    """
+    cookie = request.app.state.settings.cookie
+    response.delete_cookie(
+        key=cookie.name,
+        httponly=True,
+        secure=cookie.secure,
+        samesite=cookie.samesite,
+        path="/",
     )
 
 

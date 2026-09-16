@@ -28,7 +28,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Remy Backend", version="0.1.0", lifespan=lifespan)
 
-app.add_middleware(JWTAuthMiddleware, config=settings.tokens)
+app.add_middleware(
+    JWTAuthMiddleware,
+    config=settings.tokens,
+    cookie_name=settings.cookie.name,
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(settings.cors_origins),

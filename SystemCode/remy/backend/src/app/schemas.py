@@ -47,17 +47,18 @@ class AvailabilityOut(BaseModel):
 
 
 class SessionOut(BaseModel):
-    """What sign up and sign in return: the account plus its bearer token."""
+    """What sign up and sign in return.
+
+    No token here on purpose - it is set as an HttpOnly cookie, which the
+    browser stores and replays but JavaScript cannot read. Putting a copy in
+    the body would hand it straight back to any script on the page.
+    """
 
     username: str
-    access_token: str
-    token_type: str = "bearer"
     expires_at: int  # unix seconds
 
 
 class RefreshOut(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
     expires_at: int
     # False when the presented token still had plenty of life and was handed
     # straight back, so a client can call refresh on every app open cheaply.

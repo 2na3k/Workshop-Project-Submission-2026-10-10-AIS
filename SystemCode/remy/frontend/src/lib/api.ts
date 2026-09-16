@@ -1,6 +1,9 @@
-/** Client for the FastAPI backend in ../../backend. */
-
-import { clearSession, readSession, saveSession } from "@/lib/session";
+/** Client for the FastAPI backend in ../../backend.
+ *
+ *  There is no token handling here. The session lives in an HttpOnly cookie
+ *  that this code cannot read or write - the browser attaches it automatically
+ *  because every request below sets `credentials: "include"`. That is the point
+ *  of the arrangement: an XSS bug cannot exfiltrate a token it cannot see. */
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -16,19 +19,13 @@ export class ApiError extends Error {
 
 export type Credentials = { username: string; password: string };
 
-/** Wire shape of the preference row; snake_case to match the API. */
 export type PreferencesPayload = {
   special_diet: string | null;
   cuisines: string[];
   preferred_nutrient: string | null;
 };
 
-type SessionResponse = {
-  username: string;
-  access_token: string;
-  token_type: string;
-  expires_at: number;
-};
+type SessionResponse = { username: string; expires_at: number };
 
 /** FastAPI returns `detail` as a string for HTTPException and as a list of
  *  `{loc, msg}` for request validation errors. Flatten both to one line. */
@@ -49,17 +46,17 @@ async function request<T>(
   method: string,
   path: string,
   body?: unknown,
-  token?: string,
 ): Promise<T> {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (token) headers.Authorization = `Bearer ${token}`;
-
   let response: Response;
 
   try {
     response = await fetch(`${API_URL}${path}`, {
       method,
-      headers,
+      // Sends and accepts the session cookie across the origin boundary. The
+      // backend must name this exact origin in CORS and allow credentials -
+      // a wildcard origin is rejected by the browser when this is set.
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
@@ -71,64 +68,46 @@ async function request<T>(
     );
   }
 
+  if (response.status === 204) return undefined as T;
+
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
-    // A rejected token is worse than useless - drop it so the next screen can
-    // send the user back to sign in rather than retrying with a dead one.
-    if (response.status === 401 && token) clearSession();
     throw new ApiError(messageFrom(payload, response.status), response.status);
   }
 
   return payload as T;
 }
 
-function keepSession(response: SessionResponse): SessionResponse {
-  saveSession({
-    username: response.username,
-    accessToken: response.access_token,
-    expiresAt: response.expires_at,
-  });
-  return response;
-}
+export const signUp = (credentials: Credentials) =>
+  request<SessionResponse>("POST", "/auth/signup", credentials);
 
-export async function signUp(credentials: Credentials) {
-  return keepSession(
-    await request<SessionResponse>("POST", "/auth/signup", credentials),
-  );
-}
+export const signIn = (credentials: Credentials) =>
+  request<SessionResponse>("POST", "/auth/signin", credentials);
 
-export async function signIn(credentials: Credentials) {
-  return keepSession(
-    await request<SessionResponse>("POST", "/auth/signin", credentials),
-  );
-}
+/** Clearing the cookie is a server call - script cannot delete an HttpOnly one. */
+export const logOut = () => request<void>("POST", "/auth/logout");
 
-function requireToken(): string {
-  const session = readSession();
-  if (!session) {
-    throw new ApiError("Your session has expired. Please sign in again.", 401);
-  }
-  return session.accessToken;
-}
+/** Renews the cookie. The backend re-sets it even when the same token comes
+ *  back, so the expiry slides forward on every app open. */
+export const refreshSession = () =>
+  request<{ expires_at: number; refreshed: boolean }>("POST", "/auth/refresh");
+
+/** Who the cookie belongs to. This is the only proof of a session the frontend
+ *  has, since it cannot inspect the token itself. */
+export const fetchAccount = () => request<{ username: string }>("GET", "/me");
 
 export const savePreferences = (preferences: PreferencesPayload) =>
   request<PreferencesPayload & { username: string }>(
     "PUT",
     "/preferences",
     preferences,
-    requireToken(),
   );
 
 /** Resolves to null when nothing has been saved yet (the backend 404s). */
 export async function loadPreferences(): Promise<PreferencesPayload | null> {
   try {
-    return await request<PreferencesPayload>(
-      "GET",
-      "/preferences",
-      undefined,
-      requireToken(),
-    );
+    return await request<PreferencesPayload>("GET", "/preferences");
   } catch (caught) {
     if (caught instanceof ApiError && caught.status === 404) return null;
     throw caught;
