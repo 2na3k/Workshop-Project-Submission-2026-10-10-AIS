@@ -1,4 +1,4 @@
-# Calculator API — Frontend Documentation
+# Calculate API — Frontend Documentation
 
 **Base URL:** `/api/v1`
 **Content Type:** `application/json`
