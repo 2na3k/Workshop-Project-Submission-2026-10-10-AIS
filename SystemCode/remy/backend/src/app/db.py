@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import asyncpg
 
 from app.bloom import BloomFilter
@@ -59,50 +61,43 @@ async def save_preferences(
     cuisines: list[str],
     preferred_nutrient: str | None,
 ) -> None:
-    """Replace this user's preferences outright.
+    """Replace this user's preferences outright with a single upsert.
 
-    One transaction, because the cuisine set is rewritten as delete-then-insert:
-    a failure partway through would otherwise leave the user with some of their
-    old cuisines and some of their new ones.
+    Cuisines live in one JSONB column as an array (cuisine JSONB in db.sql),
+    so the whole preference set is written in one statement - there is no
+    child table to keep in sync, and the chosen order is preserved as-is.
     """
-    async with pool.acquire() as connection:
-        async with connection.transaction():
-            await connection.execute(
-                """
-                INSERT INTO preference (username, special_diet, preferred_nutrient)
-                VALUES ($1, $2, $3)
-                ON CONFLICT (username) DO UPDATE
-                    SET special_diet = EXCLUDED.special_diet,
-                        preferred_nutrient = EXCLUDED.preferred_nutrient
-                """,
-                username,
-                special_diet,
-                preferred_nutrient,
-            )
-            await connection.execute(
-                "DELETE FROM preference_cuisine WHERE username = $1", username
-            )
-            if cuisines:
-                await connection.executemany(
-                    "INSERT INTO preference_cuisine (username, cuisine) VALUES ($1, $2)",
-                    [(username, cuisine) for cuisine in cuisines],
-                )
+    await pool.execute(
+        """
+        INSERT INTO preference (username, special_diet, cuisine, preferred_nutrient)
+        VALUES ($1, $2, $3::jsonb, $4)
+        ON CONFLICT (username) DO UPDATE
+            SET special_diet = EXCLUDED.special_diet,
+                cuisine = EXCLUDED.cuisine,
+                preferred_nutrient = EXCLUDED.preferred_nutrient
+        """,
+        username,
+        special_diet,
+        json.dumps(cuisines),
+        preferred_nutrient,
+    )
 
 
 async def fetch_preferences(pool: asyncpg.Pool, username: str) -> dict | None:
     row = await pool.fetchrow(
-        "SELECT special_diet, preferred_nutrient FROM preference WHERE username = $1",
+        "SELECT special_diet, cuisine, preferred_nutrient "
+        "FROM preference WHERE username = $1",
         username,
     )
     if row is None:
         return None
 
-    cuisines = await pool.fetch(
-        "SELECT cuisine FROM preference_cuisine WHERE username = $1 ORDER BY cuisine",
-        username,
-    )
+    # asyncpg hands jsonb back as raw text, so decode it here; NULL means the
+    # user never picked any cuisines and becomes an empty list.
+    raw = row["cuisine"]
+    cuisines = json.loads(raw) if raw is not None else []
     return {
         "special_diet": row["special_diet"],
         "preferred_nutrient": row["preferred_nutrient"],
-        "cuisines": [record["cuisine"] for record in cuisines],
+        "cuisines": cuisines,
     }
