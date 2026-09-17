@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Chip from "@/components/chip";
 import FormError from "@/components/form-error";
-import { ApiError, savePreferences } from "@/lib/api";
+import { ApiError, createPreferences } from "@/lib/api";
 import {
   CUISINES,
   DIETS,
@@ -37,7 +37,7 @@ export default function ColdStart() {
     setSaving(true);
 
     try {
-      await savePreferences({
+      await createPreferences({
         special_diet: prefs.diet,
         cuisines: prefs.cuisines,
         preferred_nutrient: prefs.nutrient,

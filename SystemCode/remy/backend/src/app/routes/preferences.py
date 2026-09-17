@@ -13,10 +13,20 @@ router = APIRouter(prefix="/preferences", tags=["preferences"])
 # because the username never comes from the request body.
 
 
+@router.post("", response_model=PreferencesOut, status_code=status.HTTP_201_CREATED)
+async def create(body: PreferencesIn, request: Request) -> PreferencesOut:
+    """Store the answers from the cold start, straight after sign up.
+
+    The session cookie set by /auth/signup is what authenticates this call, so
+    the preferences land on the account that was just created. An upsert, so a
+    retried request (or someone rerunning the wizard) does not fail.
+    """
+    return await save(body, request)
+
+
 @router.put("", response_model=PreferencesOut)
 async def save(body: PreferencesIn, request: Request) -> PreferencesOut:
-    """Write the whole preference set. Called at the end of the cold start and
-    whenever the preferences page is saved."""
+    """Replace the whole preference set from the preferences page."""
     username = request.state.username
     await db.save_preferences(
         request.app.state.pool,

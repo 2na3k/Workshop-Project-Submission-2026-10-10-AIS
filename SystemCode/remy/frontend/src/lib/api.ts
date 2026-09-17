@@ -97,6 +97,14 @@ export const refreshSession = () =>
  *  has, since it cannot inspect the token itself. */
 export const fetchAccount = () => request<{ username: string }>("GET", "/me");
 
+/** First write, from the cold start. Rides on the cookie /auth/signup just set. */
+export const createPreferences = (preferences: PreferencesPayload) =>
+  request<PreferencesPayload & { username: string }>(
+    "POST",
+    "/preferences",
+    preferences,
+  );
+
 export const savePreferences = (preferences: PreferencesPayload) =>
   request<PreferencesPayload & { username: string }>(
     "PUT",
