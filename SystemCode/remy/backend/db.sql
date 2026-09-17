@@ -72,4 +72,16 @@ CREATE TABLE IF NOT EXISTS preference_cuisine (
 CREATE INDEX IF NOT EXISTS preference_cuisine_lookup_idx
     ON preference_cuisine (cuisine);
 
+CREATE TABLE meal(
+    id UUID PRIMARY KEY ,
+    recipe JSONB
+);
+
+CREATE TABLE past_meals(
+    id uuid PRIMARY KEY ,
+    username TEXT,
+    meal_id UUID,
+    FOREIGN KEY (meal_id) REFERENCES meal(id)
+);
+
 COMMIT;
