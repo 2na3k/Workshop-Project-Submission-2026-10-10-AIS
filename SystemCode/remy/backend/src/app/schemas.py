@@ -82,8 +82,9 @@ class PreferencesIn(BaseModel):
     def clean_cuisines(cls, value: list[str]) -> list[str]:
         """Trim, drop blanks, de-duplicate, keep the order chosen.
 
-        De-duplication matters: (username, cuisine) is the primary key of
-        preference_cuisine, so a repeat would abort the insert.
+        De-duplication is why we do not accept duplicates in the payload: the
+        list is stored as one JSONB array and read back verbatim, so repeats
+        would surface to the user rather than collapse silently.
         """
         seen: set[str] = set()
         cleaned: list[str] = []
