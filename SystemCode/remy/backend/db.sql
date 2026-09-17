@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS preference (
                                    ON DELETE CASCADE
                                    ON UPDATE CASCADE,
     special_diet       TEXT,
-    cuisine            TEXT,
+    cuisine            JSONB,
     preferred_nutrient TEXT,
     created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -60,18 +60,6 @@ CREATE INDEX IF NOT EXISTS preference_cuisine_idx
     ON preference (cuisine)
     WHERE cuisine IS NOT NULL;
 
-CREATE TABLE IF NOT EXISTS preference_cuisine (
-    username TEXT NOT NULL
-             REFERENCES app_user (username)
-             ON DELETE CASCADE
-             ON UPDATE CASCADE,
-    cuisine  TEXT NOT NULL,
-    PRIMARY KEY (username, cuisine)
-);
-
-CREATE INDEX IF NOT EXISTS preference_cuisine_lookup_idx
-    ON preference_cuisine (cuisine);
-
 CREATE TABLE meal(
     id UUID PRIMARY KEY ,
     recipe JSONB
@@ -79,9 +67,11 @@ CREATE TABLE meal(
 
 CREATE TABLE past_meals(
     id uuid PRIMARY KEY ,
-    username TEXT,
+    username TEXT NOT NULL,
     meal_id UUID,
     FOREIGN KEY (meal_id) REFERENCES meal(id)
 );
+
+CREATE INDEX IF NOT EXISTS user_meal_lookup_idx ON past_meals(username);
 
 COMMIT;
