@@ -17,6 +17,7 @@ package = false
 [tool.uv.workspace]
 members = [
     "remy/api",
+    "remy/backend",
     "remy/workflows",
     "remy/data-crawler",
     "remy/data-preparation",
