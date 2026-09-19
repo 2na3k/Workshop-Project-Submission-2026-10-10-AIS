@@ -1,6 +1,7 @@
 import AppShell from "@/components/app-shell";
 import Plate from "@/components/plate";
 import PromptConsole from "@/components/prompt-console";
+import CalculatorSearch from "@/components/calculator-search";
 import Shortlist from "@/components/shortlist";
 
 export default function Page() {
@@ -23,6 +24,10 @@ export default function Page() {
 
       <div className="mt-10">
         <PromptConsole />
+      </div>
+
+      <div className="mt-6">
+        <CalculatorSearch />
       </div>
 
       <Shortlist />

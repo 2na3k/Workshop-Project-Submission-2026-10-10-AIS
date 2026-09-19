@@ -6,6 +6,13 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  async rewrites() {
+    const calculatorUrl = "http://localhost:8081";
+    return [{
+      source: "/api/v1/calculate/cost-and-nutrition",
+      destination: `${calculatorUrl}/api/v1/calculate/cost-and-nutrition`,
+    }];
+  },
 };
 
 export default nextConfig;
