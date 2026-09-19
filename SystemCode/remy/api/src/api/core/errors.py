@@ -3,15 +3,15 @@ from pydantic import BaseModel, Field
 
 
 class ErrorDetail(BaseModel):
-    field: str | None = None
-    issue: str
+    field: str | None = Field(default=None, description="Invalid field path using dot notation, such as ingredients.0.unit.")
+    issue: str = Field(description="Description of the field-level problem.")
 
 
 class ErrorBody(BaseModel):
-    code: str
-    message: str
-    details: list[ErrorDetail] = Field(default_factory=list)
-    timestamp: datetime
+    code: str = Field(description="Machine-readable error code.")
+    message: str = Field(description="Human-readable error message.")
+    details: list[ErrorDetail] = Field(default_factory=list, description="Field-level issues; may be empty.")
+    timestamp: datetime = Field(description="Time the error occurred, in ISO 8601 format.")
 
 
 class ErrorEnvelope(BaseModel):
