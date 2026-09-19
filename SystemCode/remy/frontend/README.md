@@ -16,6 +16,29 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Ingredient calculator
+
+The home page has a separate **Check an ingredient** search bar. Enter one
+ingredient name and choose its quantity, unit, and number of servings (defaults:
+100 g, 1 serving). The name is lowercased, preparation/filler words are removed,
+and plural words are singularized before submission. The normalized name is
+shown beneath the input. Quantity and unit come from their controls, not the name.
+
+Start the calculation service from `SystemCode`:
+
+```bash
+uv run --package remy-api uvicorn api.main:app --reload --port 8001
+```
+
+Next.js proxies `POST /api/v1/calculate/cost-and-nutrition` to
+`http://127.0.0.1:8001`, avoiding cross-origin browser requests. Override this
+server-side destination with `CALCULATOR_API_URL` in `.env.local` when needed,
+then restart the frontend. Auth continues to use `NEXT_PUBLIC_API_URL` on port 8000.
+The calculator requires the calculation service's populated Neo4j database.
+
+Run `npm test` for normalization and calculator request/error tests (Node 22.18+
+for native TypeScript support), and `npm run lint` for lint checks.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

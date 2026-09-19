@@ -26,3 +26,22 @@ its Swagger page does not contain calculator routes. Use port 8001 to run both.
 Documentation can be viewed without connecting to Neo4j. Executing a calculation
 requires a populated Neo4j database. Configure `NEO4J_URI`, `NEO4J_USERNAME`, and
 `NEO4J_PASSWORD` in `SystemCode/.env` or `remy/api/.env` before starting the server.
+
+## Installing with pip
+
+With a Python 3.12 virtual environment activated, run **from `SystemCode`**:
+
+```bash
+python -m pip install -r remy/api/requirements.txt
+uvicorn api.main:app --reload --port 8001
+```
+
+The requirements include only the API's locked runtime dependency tree, including
+its declared `remy-workflows` dependency (LangGraph). Local editable paths are
+relative to `SystemCode`, not to the requirements file.
+
+Regenerate from `SystemCode` without freezing unrelated installed packages:
+
+```bash
+uv export --package remy-api --no-dev --no-hashes --no-annotate --locked --output-file remy/api/requirements.txt
+```
