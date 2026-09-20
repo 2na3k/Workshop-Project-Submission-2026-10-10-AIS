@@ -10,8 +10,7 @@ const nextConfig: NextConfig = {
     const calculatorUrl = "http://localhost:8081";
     return [{
       source: "/api/v1/calculate/cost-and-nutrition",
-      destination: `${calculatorUrl}/api/v1/calculate/cost-and-nutrition`,
-    }];
+      destination: `${calculatorUrl}/api/v1/calculate/cost-and-nutrition`,    }];
   },
 };
 
