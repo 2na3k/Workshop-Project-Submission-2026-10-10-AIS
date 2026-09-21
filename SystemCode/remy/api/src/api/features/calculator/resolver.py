@@ -1,14 +1,17 @@
 import re
 import unicodedata
+import inflect
 from difflib import SequenceMatcher
 from .exceptions import AmbiguousIngredient, UnresolvableIngredient
 from .synonyms import ALIASES
 
+p = inflect.engine()
 
 def normalize_name(value: str) -> str:
     value = unicodedata.normalize("NFKD", value)
     value = "".join(c for c in value if not unicodedata.combining(c)).lower()
-    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]+", " ", value)).strip()
+    value = re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]+", " ", value)).strip()
+    return " ".join(p.singular_noun(w) or w for w in value.split())
 
 
 def _token_score(a: str, b: str) -> float:
