@@ -9,10 +9,12 @@ ENV UV_COMPILE_BYTECODE=1 \
 COPY pyproject.toml uv.lock ./
 COPY remy/api/pyproject.toml remy/api/pyproject.toml
 COPY remy/workflows/pyproject.toml remy/workflows/pyproject.toml
+COPY remy/domain/pyproject.toml remy/domain/pyproject.toml
 COPY remy/data-crawler/pyproject.toml remy/data-crawler/pyproject.toml
 COPY remy/data-preparation/pyproject.toml remy/data-preparation/pyproject.toml
 RUN uv sync --frozen --no-dev --package remy-api --no-install-workspace
 
+COPY remy/domain remy/domain
 COPY remy/api remy/api
 COPY remy/workflows remy/workflows
 RUN uv sync --frozen --no-dev --package remy-api

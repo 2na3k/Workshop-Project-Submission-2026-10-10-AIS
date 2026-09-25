@@ -1,21 +1,6 @@
 from dataclasses import dataclass, field
 
-
-NUTRIENT_FIELDS = ("calories_kcal", "protein_g", "carbs_g", "fat_g", "fiber_g",
-                   "sugar_g", "sodium_mg", "calcium_mg", "iron_mg")
-
-
-@dataclass(frozen=True)
-class NutrientProfile:
-    calories_kcal: float | None = None
-    protein_g: float | None = None
-    carbs_g: float | None = None
-    fat_g: float | None = None
-    fiber_g: float | None = None
-    sugar_g: float | None = None
-    sodium_mg: float | None = None
-    calcium_mg: float | None = None
-    iron_mg: float | None = None
+from domain.types import NUTRIENT_FIELDS, NutrientProfile
 
 
 @dataclass(frozen=True)

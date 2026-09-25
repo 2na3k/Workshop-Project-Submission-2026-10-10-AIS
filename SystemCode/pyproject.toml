@@ -17,8 +17,12 @@ package = false
 
 [tool.uv.workspace]
 members = [
+    "remy/domain",
     "remy/api",
     "remy/workflows",
     "remy/data-crawler",
     "remy/data-preparation",
 ]
+
+[dependency-groups]
+dev = ["import-linter>=2,<3"]
