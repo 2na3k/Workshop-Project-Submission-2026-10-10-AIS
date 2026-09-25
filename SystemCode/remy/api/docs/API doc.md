@@ -222,7 +222,6 @@ and excluded allergens.
 | Field                  | Type            | In   | Nullable / Required     | Description                                                |
 |------------------------|-----------------|------|-------------------------|------------------------------------------------------------|
 | `horizon_days`         | `integer`       | Body | Required                | Planning duration in days (1 to 14).                       |
-| `meal_slots`           | `array[string]` | Body | Required                | Target daily slots (e.g.,breakfast", "lunch", "dinner"]`). |
 | `servings`             | `integer`       | Body | Optional (Default: `1`) | Number of servings per meal slot.                          |
 | `daily_budget_sgd`     | `number`        | Body | Nullable                | Max daily spending cap in SGD.                             |
 | `allergies`            | `array[object]` | Body | Nullable                | Excluded allergens.                                        |
@@ -247,7 +246,6 @@ and excluded allergens.
     "dinner"
   ],
   "servings": 1,
-  "daily_budget_sgd": 15.00,
   "allergies": [
     {
       "code": "peanut",

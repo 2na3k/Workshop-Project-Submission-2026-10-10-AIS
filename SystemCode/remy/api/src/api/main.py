@@ -13,9 +13,11 @@ from .core.database import lifespan
 from .core.errors import ErrorDetail, error_envelope
 from .core.exceptions import AppError
 from .features.calculator.router import router as calculator_router
+from .features.plan.router import router as plan_router
 
 app = FastAPI(title="Remy API", lifespan=lifespan)
 app.include_router(calculator_router, prefix="/api/v1/calculate", tags=["calculator"])
+app.include_router(plan_router, prefix="/api/v1/plan", tags=["plan"])
 
 
 @app.exception_handler(AppError)
@@ -30,6 +32,11 @@ async def validation_error_handler(_: Request, exc: RequestValidationError):
     details = [ErrorDetail(field=".".join(str(part) for part in error["loc"] if part != "body"),
                            issue=error["msg"])
                for error in exc.errors()]
+    if any("min cannot be greater than max" in error["msg"] for error in exc.errors()):
+        return JSONResponse(status_code=400,
+                            content=error_envelope("INVALID_NUTRIENT_RANGE",
+                                                   "Nutrient limit min cannot be greater than max",
+                                                   details))
     return JSONResponse(status_code=422,
                         content=error_envelope("VALIDATION_ERROR", "Request validation failed",
                                                details))

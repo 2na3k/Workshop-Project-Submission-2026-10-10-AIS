@@ -1,9 +1,10 @@
 from dataclasses import asdict
-from .domain.conversion import to_grams
+from domain.exceptions import UnitConversionError
+from domain.nutrients import per_serving, scale_nutrients, sum_nutrients
+from domain.types import NutrientProfile
+from domain.units import to_grams
 from .domain.cost import consumed_cost, round_money, round_nutrient, select_package
-from .domain.nutrition import per_serving, scale_nutrients, sum_nutrients
 from .exceptions import UnresolvableIngredient
-from .models import NutrientProfile
 from .resolver import normalize_name, resolve
 from .schemas import (CalculationSummary, CostNutritionRequest, CostNutritionResponse,
                       ItemWarning, ItemizedCalculation, MatchedPackage, Nutrients)
@@ -36,8 +37,11 @@ class CostNutritionService:
             food = facts.get(key)
             if food is None:
                 raise UnresolvableIngredient(f"No facts found for '{ingredient.name}'")
-            grams, warning_codes = to_grams(ingredient.quantity, ingredient.unit,
-                                             food.grams_per_tbsp, food.grams_per_piece)
+            try:
+                grams, warning_codes = to_grams(ingredient.quantity, ingredient.unit)
+            except UnitConversionError as exc:
+                from .exceptions import MissingUnitConversion
+                raise MissingUnitConversion(str(exc)) from exc
             warnings = [ItemWarning(code=code, message="Millilitres are treated as grams") for code in warning_codes]
             scaled = scale_nutrients(food.nutrients, grams)
             nutrient_values.append(scaled)
