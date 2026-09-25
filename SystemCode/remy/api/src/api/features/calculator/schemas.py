@@ -7,7 +7,7 @@ class IngredientRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: str = Field(min_length=1, max_length=200)
     quantity: PositiveFloat
-    unit: Literal["g", "kg", "ml", "tbsp", "pc"]
+    unit: Literal["g", "kg", "ml", "tbsp", "pcs"]
 
     @field_validator("name")
     @classmethod
