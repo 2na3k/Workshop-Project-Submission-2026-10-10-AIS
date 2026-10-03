@@ -275,7 +275,7 @@ transformation redesign remain explicitly out of scope.
     - Covers: AC-5
     - Files: `SystemCode/remy/data-preparation/tests/test_reproducibility_manifest.py`
     - Done when: Two clean builds from identical pinned fixtures compare content checksums for every mart in the checksum contract, not merely row counts.
-- [ ] **T-5** Write failing checker tests for reference success, divergent-mart diagnostics, missing-source diagnostics, and version/mart completeness failures.
+- [x] **T-5** Write failing checker tests for reference success, divergent-mart diagnostics, missing-source diagnostics, and version/mart completeness failures.
     - Type: test
     - Covers: AC-6, AC-7, AC-8
     - Files: `SystemCode/remy/data-preparation/tests/test_reproducibility_manifest.py`
