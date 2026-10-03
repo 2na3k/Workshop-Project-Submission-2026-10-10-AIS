@@ -295,7 +295,7 @@ transformation redesign remain explicitly out of scope.
     - Covers: AC-1, AC-2, AC-4, AC-5
     - Files: `SystemCode/remy/data-preparation/scripts/reproducibility_manifest.py`, `SystemCode/remy/data-preparation/models/mart/schema.yml`
     - Done when: A successful build emits one complete manifest only after all declared sources validate, mart rows are canonically serialized and deterministically ordered, build-time metadata is excluded, and manifest versioning is enforced.
-- [ ] **T-9** Implement the expected-checksums artifact and reproducibility checker with independent schema-version validation and deterministic failure diagnostics.
+- [x] **T-9** Implement the expected-checksums artifact and reproducibility checker with independent schema-version validation and deterministic failure diagnostics.
     - Type: impl
     - Covers: AC-6, AC-7, AC-8
     - Files: `SystemCode/remy/data-preparation/reproducibility/expected_checksums.json`, `SystemCode/remy/data-preparation/scripts/check_reproducibility.py`

@@ -131,9 +131,9 @@ def test_reproducibility_checker_reports_success_and_specific_failures(tmp_path:
     manifest = {
         "schema_version": 1,
         "sources": [{"source_identity": source} for source in REQUIRED_SOURCES],
-        "marts": {"node_recipe": {"content_checksum": "abc"}},
+        "marts": {mart: {"content_checksum": "abc"} for mart in REQUIRED_MARTS},
     }
-    expected = {"schema_version": 1, "manifest_schema_version": 1, "marts": {"node_recipe": "abc"}}
+    expected = {"schema_version": 1, "manifest_schema_version": 1, "marts": {mart: "abc" for mart in REQUIRED_MARTS}}
     manifest_path = tmp_path / "manifest.json"
     expected_path = tmp_path / "expected.json"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
