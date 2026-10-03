@@ -280,7 +280,7 @@ transformation redesign remain explicitly out of scope.
     - Covers: AC-6, AC-7, AC-8
     - Files: `SystemCode/remy/data-preparation/tests/test_reproducibility_manifest.py`
     - Done when: The checker returns zero for matching pinned values, returns non-zero and names the divergent mart for a mismatch, and returns non-zero and names the missing source for an incomplete manifest.
-- [ ] **T-6** Write failing dbt contract tests for the exact content-column set of every reproducibility-facing mart.
+- [x] **T-6** Write failing dbt contract tests for the exact content-column set of every reproducibility-facing mart.
     - Type: test
     - Covers: AC-5 and the mart-list/content-column contract edge case
     - Files: `SystemCode/remy/data-preparation/models/mart/schema.yml`, `SystemCode/remy/data-preparation/tests/test_reproducibility_manifest.py`
