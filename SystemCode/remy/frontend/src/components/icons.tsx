@@ -70,3 +70,28 @@ export function Clock({ className }: IconProps) {
     </svg>
   );
 }
+
+export function Calendar({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <rect x="4" y="5.5" width="16" height="14.5" rx="2.5" />
+      <path d="M8 3.5v4M16 3.5v4M4 10h16" />
+    </svg>
+  );
+}
+
+export function Plus({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <path d="M12 5.5v13M5.5 12h13" />
+    </svg>
+  );
+}
+
+export function Close({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <path d="m7 7 10 10M17 7 7 17" />
+    </svg>
+  );
+}

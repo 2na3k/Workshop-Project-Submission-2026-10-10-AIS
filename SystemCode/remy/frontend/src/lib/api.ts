@@ -85,6 +85,13 @@ export const signUp = (credentials: Credentials) =>
 export const signIn = (credentials: Credentials) =>
   request<SessionResponse>("POST", "/auth/signin", credentials);
 
+export const checkUsername = (username: string) =>
+  request<{ username: string; available: boolean; answered_by_filter: boolean }>(
+    "POST",
+    "/auth/available",
+    { username },
+  );
+
 /** Clearing the cookie is a server call - script cannot delete an HttpOnly one. */
 export const logOut = () => request<void>("POST", "/auth/logout");
 

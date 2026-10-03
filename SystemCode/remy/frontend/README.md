@@ -24,20 +24,31 @@ ingredient name and choose its quantity, unit, and number of servings (defaults:
 and plural words are singularized before submission. The normalized name is
 shown beneath the input. Quantity and unit come from their controls, not the name.
 
-Start the calculation service from `SystemCode`:
+## Meal plan
+
+The **Meal plan** page (`/plan`) calls `POST /api/v1/plan`. It prefills diet and
+one nutrient target from the saved preferences, then lets the user set days
+(1–14), meals a day (1–6), servings, allergies, and per-day nutrient targets.
+
+## Connecting to the backends
+
+| Service | Endpoints | How the frontend reaches it |
+| ------- | --------- | --------------------------- |
+| Remy Backend (`remy/backend`) | `/auth/*`, `/me`, `/preferences` | Directly from the browser at `NEXT_PUBLIC_API_URL` (default `http://localhost:8000`), with the session cookie |
+| Remy API (`remy/api`) | `/api/v1/calculate/*`, `/api/v1/plan` | Through a Next.js rewrite of `/api/v1/*` to `REMY_API_URL` (default `http://localhost:8081`) |
+
+The Remy API has no CORS middleware, so the proxy is required. Start it from
+`SystemCode` on the port `REMY_API_URL` points to:
 
 ```bash
-uv run --package remy-api uvicorn api.main:app --reload --port 8001
+uv run --package remy-api uvicorn api.main:app --reload --port 8081
 ```
 
-Next.js proxies `POST /api/v1/calculate/cost-and-nutrition` to
-`http://127.0.0.1:8001`, avoiding cross-origin browser requests. Override this
-server-side destination with `CALCULATOR_API_URL` in `.env.local` when needed,
-then restart the frontend. Auth continues to use `NEXT_PUBLIC_API_URL` on port 8000.
-The calculator requires the calculation service's populated Neo4j database.
+To use another port, set `REMY_API_URL` in `.env.local` and restart the frontend.
+The calculator and planner require the API's populated Neo4j database.
 
-Run `npm test` for normalization and calculator request/error tests (Node 22.18+
-for native TypeScript support), and `npm run lint` for lint checks.
+Run `npm test` for normalization, calculator, and planner request/error tests
+(Node 22.18+ for native TypeScript support), and `npm run lint` for lint checks.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

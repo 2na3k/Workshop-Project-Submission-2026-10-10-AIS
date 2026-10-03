@@ -7,10 +7,11 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   async rewrites() {
-    const calculatorUrl = "http://localhost:8081";
+    const remyApiUrl = process.env.REMY_API_URL ?? "http://localhost:8081";
     return [{
-      source: "/api/v1/calculate/cost-and-nutrition",
-      destination: `${calculatorUrl}/api/v1/calculate/cost-and-nutrition`,    }];
+      source: "/api/v1/:path*",
+      destination: `${remyApiUrl}/api/v1/:path*`,
+    }];
   },
 };
 

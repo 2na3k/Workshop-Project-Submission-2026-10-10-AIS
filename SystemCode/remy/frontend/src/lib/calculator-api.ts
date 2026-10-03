@@ -53,7 +53,7 @@ export async function calculateIngredient(
 
   let response: Response;
   try {
-    // Next.js proxies this exact path to the calculation service on port 8001.
+    // Next.js proxies /api/v1/* to the Remy API (REMY_API_URL in next.config.ts).
     response = await fetch("/api/v1/calculate/cost-and-nutrition", {
       method: "POST",
       credentials: "omit",
