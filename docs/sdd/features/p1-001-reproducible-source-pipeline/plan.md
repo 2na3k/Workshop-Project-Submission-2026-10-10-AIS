@@ -305,7 +305,7 @@ transformation redesign remain explicitly out of scope.
     - Covers: AC-1, AC-6, AC-7, AC-8 and the CI-budget/reference-refresh risks
     - Files: `SystemCode/Makefile`, `SystemCode/remy/data-preparation/README.md`
     - Done when: The normal configured build path and CI path run dbt, emit the manifest, and run the checker in the intended order; failures propagate non-zero; the README documents source metadata, manifest location, checker invocation, and reviewed expected-value refresh.
-- [ ] **T-11** Run the focused reproducibility tests, dbt contract tests, configured lint/typecheck checks, and the reproducible build/check command; record the resulting evidence without changing the approved task wording or order.
+- [x] **T-11** Run the focused reproducibility tests, dbt contract tests, configured lint/typecheck checks, and the reproducible build/check command; record the resulting evidence without changing the approved task wording or order.
     - Type: verification
     - Covers: AC-1 through AC-8 and all listed edge cases
     - Files: `SystemCode/remy/data-preparation/tests/test_reproducibility_manifest.py`, `SystemCode/remy/data-preparation/models/mart/schema.yml`, `SystemCode/Makefile`

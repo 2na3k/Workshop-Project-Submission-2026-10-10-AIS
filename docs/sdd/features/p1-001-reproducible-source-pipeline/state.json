@@ -1,0 +1,66 @@
+{
+  "feature": "p1-001-reproducible-source-pipeline",
+  "stage": "ci-passed",
+  "plan_review_verdict": "APPROVE",
+  "spec_hash": "sha256:0eea3c23977d625d",
+  "plan_hash": "sha256:6c8afc80d351f4f5",
+  "tasks_hash": "sha256:6c9f02b5b0f9d495",
+  "loops": 0,
+  "created": "2026-10-03T10:20:56+08:00",
+  "updated_at": "2026-10-03T14:36:38+08:00",
+  "history": [
+    {
+      "at": "2026-10-03T10:20:56+08:00",
+      "event": "proposed -> specified"
+    },
+    {
+      "at": "2026-10-03T10:20:56+08:00",
+      "event": "specified -> planned"
+    },
+    {
+      "at": "2026-10-03T10:20:56+08:00",
+      "event": "plan-review APPROVE"
+    },
+    {
+      "at": "2026-10-03T10:20:56+08:00",
+      "event": "tasks-approved"
+    },
+    {
+      "at": "2026-10-03T13:19:00+08:00",
+      "event": "ci FAIL"
+    },
+    {
+      "at": "2026-10-03T13:20:00+08:00",
+      "event": "ci FAIL"
+    },
+    {
+      "at": "2026-10-03T13:59:32+08:00",
+      "event": "ci FAIL"
+    },
+    {
+      "at": "2026-10-03T14:02:00+08:00",
+      "event": "ci FAIL"
+    },
+    {
+      "at": "2026-10-03T14:05:31+08:00",
+      "event": "ci FAIL"
+    },
+    {
+      "at": "2026-10-03T14:13:59+08:00",
+      "event": "ci FAIL"
+    },
+    {
+      "at": "2026-10-03T14:19:12+08:00",
+      "event": "ci FAIL"
+    },
+    {
+      "at": "2026-10-03T14:36:38+08:00",
+      "event": "ci PASS"
+    },
+    {
+      "at": "2026-10-03T15:02:38+08:00",
+      "event": "reconciled hashes: recorded spec_hash and plan_hash for the plan-review-approved versions; prior values predated F-2..F-9 revisions"
+    }
+  ],
+  "ci_overall": "PASS"
+}
