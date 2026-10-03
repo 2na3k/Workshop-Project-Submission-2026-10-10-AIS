@@ -260,7 +260,7 @@ transformation redesign remain explicitly out of scope.
     - Covers: CI/build verification prerequisite for AC-6, AC-7, AC-8
     - Files: `AGENTS.md`
     - Done when: The concrete commands are available to the Makefile task, or an explicit upstream blocker is recorded and the dependent task is not started.
-- [ ] **T-2** Write failing tests for source declaration, source checksum recomputation, observation metadata, and fail-closed missing/unreadable source behavior.
+- [x] **T-2** Write failing tests for source declaration, source checksum recomputation, observation metadata, and fail-closed missing/unreadable source behavior.
     - Type: test
     - Covers: AC-2, AC-3, AC-4; edge cases for missing or unreadable source snapshots and missing/invalid capture metadata
     - Files: `SystemCode/remy/data-preparation/tests/test_reproducibility_manifest.py`
