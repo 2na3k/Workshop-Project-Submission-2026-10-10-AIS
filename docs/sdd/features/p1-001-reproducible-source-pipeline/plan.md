@@ -265,7 +265,7 @@ transformation redesign remain explicitly out of scope.
     - Covers: AC-2, AC-3, AC-4; edge cases for missing or unreadable source snapshots and missing/invalid capture metadata
     - Files: `SystemCode/remy/data-preparation/tests/test_reproducibility_manifest.py`
     - Done when: Tests assert exactly three complete source entries, checksum equality and changed-content divergence, preserved capture timestamps, and non-zero failure with no manifest or mart checksums for missing/unreadable inputs.
-- [ ] **T-3** Write a failing clean-build integration test for the required output set.
+- [x] **T-3** Write a failing clean-build integration test for the required output set.
     - Type: test
     - Covers: AC-1
     - Files: `SystemCode/remy/data-preparation/tests/test_reproducibility_manifest.py`
