@@ -16,6 +16,7 @@ import {
   type DietaryCode,
   type NutrientCode,
   type NutrientTarget,
+  type PlanProgress,
   type PlanRequest,
   type PlanResponse,
 } from "@/lib/plan-api";
@@ -57,6 +58,7 @@ export default function PlanBuilder() {
   const [allergies, setAllergies] = useState<AllergenCode[]>([]);
   const [targets, setTargets] = useState<TargetRow[]>([]);
   const [pending, setPending] = useState(false);
+  const [progress, setProgress] = useState<PlanProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<{ response: PlanResponse; servings: number } | null>(null);
   const nextId = useRef(0);
@@ -118,9 +120,11 @@ export default function PlanBuilder() {
 
     setError(null);
     setPlan(null);
+    setProgress(null);
     setPending(true);
     try {
-      setPlan({ response: await generatePlan(request), servings: request.servings });
+      const response = await generatePlan(request, { onProgress: setProgress });
+      setPlan({ response, servings: request.servings });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not build a plan.");
     } finally {
@@ -268,7 +272,7 @@ export default function PlanBuilder() {
 
       {pending && (
         <p role="status" className="mt-4 text-sm text-muted">
-          Picking recipes and balancing your days…
+          {progress ? `${progress.message}… (step ${progress.step} of ${progress.total})` : "Starting…"}
         </p>
       )}
 

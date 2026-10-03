@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
 import {
+  createSseParser,
   describeRelaxation,
   formatIngredient,
   formatNutrient,
@@ -33,18 +34,46 @@ const plan = {
   days: [],
 };
 
-test("plan requests go through the /api/v1 proxy as JSON", async () => {
-  const fetchMock = mock.method(globalThis, "fetch", async () => Response.json(plan));
-  assert.deepEqual(await generatePlan(request), plan);
+const encoder = new TextEncoder();
+const event = (name, data) => `event: ${name}\ndata: ${JSON.stringify(data)}\n\n`;
+const progress = (step, stage, message) => event("progress", { stage, message, step, total: 3 });
+
+function stream(chunks, init = {}) {
+  return new Response(new ReadableStream({
+    start(controller) {
+      for (const chunk of chunks) controller.enqueue(encoder.encode(chunk));
+      controller.close();
+    },
+  }), { headers: { "content-type": "text/event-stream; charset=utf-8" }, ...init });
+}
+
+function splitEvery(text, size) {
+  const parts = [];
+  for (let i = 0; i < text.length; i += size) parts.push(text.slice(i, i + size));
+  return parts;
+}
+
+const fullStream = progress(1, "loading", "Loading recipes") +
+  ": keep-alive\n\n" +
+  progress(2, "selecting", "Choosing recipes that fit") +
+  progress(3, "solving", "Balancing your days") +
+  event("plan", plan);
+
+test("plan requests stream through the /api/v1 proxy and report progress", async () => {
+  const fetchMock = mock.method(globalThis, "fetch", async () => stream(splitEvery(fullStream, 7)));
+  const seen = [];
+  assert.deepEqual(await generatePlan(request, { onProgress: (p) => seen.push(`${p.step}/${p.total} ${p.stage}`) }), plan);
+  assert.deepEqual(seen, ["1/3 loading", "2/3 selecting", "3/3 solving"]);
   const [url, options] = fetchMock.mock.calls[0].arguments;
   assert.equal(url, "/api/v1/plan");
   assert.equal(options.method, "POST");
   assert.equal(options.credentials, "omit");
+  assert.equal(options.headers.Accept, "text/event-stream");
   assert.deepEqual(JSON.parse(options.body), request);
 });
 
 test("empty limit bounds are dropped from the payload", async () => {
-  const fetchMock = mock.method(globalThis, "fetch", async () => Response.json(plan));
+  const fetchMock = mock.method(globalThis, "fetch", async () => stream([event("plan", plan)]));
   await generatePlan({
     horizon_days: 7,
     meals_per_day: 3,
@@ -53,6 +82,18 @@ test("empty limit bounds are dropped from the payload", async () => {
   });
   assert.deepEqual(JSON.parse(fetchMock.mock.calls[0].arguments[1].body).nutrients, [
     { code: "sodium", unit: "mg", limit: { max: 2300 } },
+  ]);
+});
+
+test("the SSE parser handles split chunks, CRLF, comments, and multi-line data", () => {
+  const events = [];
+  const feed = createSseParser((e) => events.push(e));
+  for (const part of ["event: progr", "ess\r\ndata: {\"step\":1}\r\n", "\r\n: keep-alive\n\n", "data: line one\ndata: line two\n\n"]) {
+    feed(part);
+  }
+  assert.deepEqual(events, [
+    { event: "progress", data: '{"step":1}' },
+    { event: "message", data: "line one\nline two" },
   ]);
 });
 
@@ -86,13 +127,8 @@ test("out-of-range plans and incomplete nutrient targets are rejected before a r
   assert.equal(fetchMock.mock.callCount(), 0);
 });
 
-test("API errors use friendly copy for planner failures and the envelope otherwise", async () => {
+test("errors before the stream use the JSON envelope", async () => {
   const fetchMock = mock.method(globalThis, "fetch", async () => Response.json({ error: {
-    code: "PLAN_INFEASIBLE", message: "No feasible plan after all relaxations", details: [],
-  } }, { status: 400 }));
-  await assert.rejects(generatePlan(request), /No plan fits these settings/);
-
-  fetchMock.mock.mockImplementation(async () => Response.json({ error: {
     code: "VALIDATION_ERROR",
     message: "Request validation failed",
     details: [{ field: "meals_per_day", issue: "Input should be less than or equal to 6" }],
@@ -105,15 +141,31 @@ test("API errors use friendly copy for planner failures and the envelope otherwi
   await assert.rejects(generatePlan(request), /Unknown allergen: tree_nut/);
 });
 
-test("offline, timeout, and malformed responses give useful messages", async () => {
-  const fetchMock = mock.method(globalThis, "fetch", async () => { throw new TypeError("fetch failed"); });
-  await assert.rejects(generatePlan(request), /Cannot reach the meal planner/);
-  fetchMock.mock.mockImplementation(async () => { throw new DOMException("Timeout", "TimeoutError"); });
-  await assert.rejects(generatePlan(request), /took too long/);
-  fetchMock.mock.mockImplementation(async () => new Response("Bad gateway", { status: 502 }));
-  await assert.rejects(generatePlan(request), /planner is unavailable/);
-  fetchMock.mock.mockImplementation(async () => Response.json({ status: "success" }));
+test("error events inside the stream use friendly copy for planner failures", async () => {
+  const fetchMock = mock.method(globalThis, "fetch", async () => stream([
+    progress(1, "loading", "Loading recipes"),
+    event("error", { error: { code: "PLAN_INFEASIBLE", message: "No feasible plan after all relaxations", details: [] } }),
+  ]));
+  await assert.rejects(generatePlan(request), /No plan fits these settings/);
+
+  fetchMock.mock.mockImplementation(async () => stream([
+    event("error", { error: { code: "SOMETHING_NEW", message: "Neo4j is warming up", details: [] } }),
+  ]));
+  await assert.rejects(generatePlan(request), /Neo4j is warming up/);
+});
+
+test("a stream that ends early or sends a bad plan is reported", async () => {
+  const fetchMock = mock.method(globalThis, "fetch", async () => stream([progress(1, "loading", "Loading recipes")]));
+  await assert.rejects(generatePlan(request), /stopped before the plan was ready/);
+  fetchMock.mock.mockImplementation(async () => stream([event("plan", { status: "complete" })]));
   await assert.rejects(generatePlan(request), /unexpected response/);
+  fetchMock.mock.mockImplementation(async () => new Response(new ReadableStream({
+    start(controller) {
+      controller.enqueue(encoder.encode(progress(1, "loading", "Loading recipes")));
+      controller.error(new TypeError("network dropped"));
+    },
+  }), { headers: { "content-type": "text/event-stream" } }));
+  await assert.rejects(generatePlan(request), /connection to the meal planner was lost/);
 });
 
 test("nutrient keys from totals and meals map to labels and units", () => {

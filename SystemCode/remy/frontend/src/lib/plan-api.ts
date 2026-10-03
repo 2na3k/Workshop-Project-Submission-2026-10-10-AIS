@@ -132,7 +132,72 @@ function validate(request: PlanRequest) {
   }
 }
 
-export async function generatePlan(request: PlanRequest): Promise<PlanResponse> {
+export type PlanProgress = { stage: string; message: string; step: number; total: number };
+
+export type ServerSentEvent = { event: string; data: string };
+
+export function createSseParser(onEvent: (event: ServerSentEvent) => void) {
+  let buffer = "";
+  return (chunk: string) => {
+    buffer = (buffer + chunk).replace(/\r\n/g, "\n");
+    let boundary = buffer.indexOf("\n\n");
+    while (boundary !== -1) {
+      const block = buffer.slice(0, boundary);
+      buffer = buffer.slice(boundary + 2);
+      let event = "message";
+      const data: string[] = [];
+      for (const line of block.split("\n")) {
+        if (!line || line.startsWith(":")) continue;
+        const colon = line.indexOf(":");
+        const field = colon === -1 ? line : line.slice(0, colon);
+        const value = colon === -1 ? "" : line.slice(colon + 1).replace(/^ /, "");
+        if (field === "event") event = value;
+        if (field === "data") data.push(value);
+      }
+      if (data.length) onEvent({ event, data: data.join("\n") });
+      boundary = buffer.indexOf("\n\n");
+    }
+  };
+}
+
+function errorMessage(payload: unknown, fallback: string) {
+  const error = (payload as { error?: { code?: unknown; message?: unknown; details?: unknown } } | null)?.error;
+  const issues = Array.isArray(error?.details)
+    ? error.details.flatMap((detail) => typeof detail?.issue === "string" ? [detail.issue] : [])
+    : [];
+  return [
+    (typeof error?.code === "string" && FRIENDLY_ERRORS[error.code]) ||
+      (typeof error?.message === "string" ? error.message : fallback),
+    ...issues,
+  ].join(" ");
+}
+
+function isPlan(payload: unknown): payload is PlanResponse {
+  const plan = payload as Partial<PlanResponse> | null;
+  return !!plan && typeof plan.plan_id === "string" && Array.isArray(plan.days) &&
+    Array.isArray(plan.relaxations) && typeof plan.horizon_totals === "object";
+}
+
+function isProgress(payload: unknown): payload is PlanProgress {
+  const progress = payload as Partial<PlanProgress> | null;
+  return !!progress && typeof progress.message === "string" &&
+    typeof progress.step === "number" && typeof progress.total === "number";
+}
+
+const parseJson = (text: string): unknown => {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+};
+
+const UNEXPECTED = "The meal planner returned an unexpected response. Please try again.";
+
+export async function generatePlan(
+  request: PlanRequest,
+  { onProgress }: { onProgress?: (progress: PlanProgress) => void } = {},
+): Promise<PlanResponse> {
   validate(request);
 
   let response: Response;
@@ -140,9 +205,9 @@ export async function generatePlan(request: PlanRequest): Promise<PlanResponse> 
     response = await fetch("/api/v1/plan", {
       method: "POST",
       credentials: "omit",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
       body: JSON.stringify(request),
-      signal: AbortSignal.timeout(60_000),
+      signal: AbortSignal.timeout(90_000),
     });
   } catch (error) {
     if (error instanceof Error && error.name === "TimeoutError") {
@@ -151,25 +216,45 @@ export async function generatePlan(request: PlanRequest): Promise<PlanResponse> 
     throw new Error("Cannot reach the meal planner. Please try again.");
   }
 
-  const payload = await response.json().catch(() => null);
   if (!response.ok) {
-    const code = payload?.error?.code;
-    const message = payload?.error?.message;
-    const details: unknown = payload?.error?.details;
-    const issues = Array.isArray(details)
-      ? details.flatMap((detail) => typeof detail?.issue === "string" ? [detail.issue] : [])
-      : [];
-    throw new Error([
-      (typeof code === "string" && FRIENDLY_ERRORS[code]) ||
-        (typeof message === "string" ? message : "The meal planner is unavailable. Please try again."),
-      ...issues,
-    ].join(" "));
+    const payload = await response.json().catch(() => null);
+    throw new Error(errorMessage(payload, "The meal planner is unavailable. Please try again."));
   }
-  if (!payload || typeof payload.plan_id !== "string" || !Array.isArray(payload.days) ||
-      !Array.isArray(payload.relaxations) || typeof payload.horizon_totals !== "object") {
-    throw new Error("The meal planner returned an unexpected response. Please try again.");
+  if (!response.body || !response.headers.get("content-type")?.includes("text/event-stream")) {
+    throw new Error(UNEXPECTED);
   }
-  return payload as PlanResponse;
+
+  const outcome: { plan?: PlanResponse; error?: string } = {};
+  const feed = createSseParser(({ event, data }) => {
+    const payload = parseJson(data);
+    if (event === "progress" && isProgress(payload)) onProgress?.(payload);
+    if (event === "plan") {
+      if (isPlan(payload)) outcome.plan = payload;
+      else outcome.error = UNEXPECTED;
+    }
+    if (event === "error") outcome.error = errorMessage(payload, "The meal planner ran into a problem. Please try again.");
+  });
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  try {
+    while (!outcome.plan && !outcome.error) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      feed(decoder.decode(value, { stream: true }));
+    }
+  } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      throw new Error("Building the plan took too long. Please try again.");
+    }
+    throw new Error("The connection to the meal planner was lost. Please try again.");
+  } finally {
+    reader.cancel().catch(() => {});
+  }
+
+  if (outcome.error) throw new Error(outcome.error);
+  if (!outcome.plan) throw new Error("The meal planner stopped before the plan was ready. Please try again.");
+  return outcome.plan;
 }
 
 const AMOUNT = new Intl.NumberFormat("en-SG", { maximumFractionDigits: 1 });

@@ -74,12 +74,12 @@ export default function PlanView({ plan, servings }: { plan: PlanResponse; servi
   );
 }
 
-function MealCard({ meal }: { meal: PlanMeal }) {
+export function MealCard({ meal, label }: { meal: PlanMeal; label?: string }) {
   const headline = sortedNutrients(meal.nutrients).filter(([key]) => HEADLINE.has(key));
 
   return (
     <li className="flex flex-col rounded-2xl border border-subtle bg-surface p-4">
-      <p className="text-xs font-semibold text-muted">{meal.slot.replace(/^meal_/, "Meal ")}</p>
+      <p className="text-xs font-semibold text-muted">{label ?? meal.slot.replace(/^meal_/, "Meal ")}</p>
       <h4 className="mt-1 font-bold leading-snug">{meal.title}</h4>
       {headline.length > 0 && (
         <p className="mt-1.5 text-sm text-muted tabular-nums">
