@@ -300,7 +300,7 @@ transformation redesign remain explicitly out of scope.
     - Covers: AC-6, AC-7, AC-8
     - Files: `SystemCode/remy/data-preparation/reproducibility/expected_checksums.json`, `SystemCode/remy/data-preparation/scripts/check_reproducibility.py`
     - Done when: Matching pinned checksums exit zero; any mart mismatch exits non-zero and names that mart; missing source or mart entries and incompatible manifest/expected schema versions exit non-zero with actionable names.
-- [ ] **T-10** Wire the reproducible build and check into the development and CI Make targets using the verified project commands, and document operation and reference-checksum refresh procedures.
+- [x] **T-10** Wire the reproducible build and check into the development and CI Make targets using the verified project commands, and document operation and reference-checksum refresh procedures.
     - Type: impl
     - Covers: AC-1, AC-6, AC-7, AC-8 and the CI-budget/reference-refresh risks
     - Files: `SystemCode/Makefile`, `SystemCode/remy/data-preparation/README.md`

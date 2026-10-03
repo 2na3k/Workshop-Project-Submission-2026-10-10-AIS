@@ -12,7 +12,8 @@ export NEO4J_URI NEO4J_USERNAME NEO4J_PASSWORD NEO4J_DATABASE NEO4J_HTTP NEO4J_U
        AURA_INSTANCEID AURA_INSTANCENAME
 
 .PHONY: help install sync lock check build build-all up up-all down logs \
-        api crawler dbt dbt-all serve-neo4j serve-neo4j-replace frontend-install clean _neo4j-creds
+        api crawler dbt reproducible-manifest reproducibility-check reproducible-build ci \
+        dbt-all serve-neo4j serve-neo4j-replace frontend-install clean _neo4j-creds
 
 help:
 	@printf '%s\n' \
@@ -51,7 +52,25 @@ crawler:
 
 dbt:
 	cd remy/data-preparation && mkdir -p target/$(DBT_TARGET)/staging target/$(DBT_TARGET)/ducklake/data && \
-		DBT_TARGET=$(DBT_TARGET) $(UV) run --package $(DBT_PACKAGE) dbt build --profiles-dir . --exclude tag:serving
+		DBT_TARGET=$(DBT_TARGET) $(UV) run --package $(DBT_PACKAGE) dbt build --profiles-dir . --exclude tag:serving && \
+		$(MAKE) reproducible-manifest DBT_TARGET=$(DBT_TARGET)
+
+reproducible-manifest:
+	cd remy/data-preparation && DBT_TARGET=$(DBT_TARGET) $(UV) run --package $(DBT_PACKAGE) \
+		python scripts/reproducibility_manifest.py \
+		--registry reproducibility/source_registry.json \
+		--database target/$(DBT_TARGET).duckdb \
+		--output target/$(DBT_TARGET)/source_snapshot_manifest.json
+
+reproducibility-check:
+	cd remy/data-preparation && $(UV) run --package $(DBT_PACKAGE) \
+		python scripts/check_reproducibility.py \
+		--manifest target/$(DBT_TARGET)/source_snapshot_manifest.json \
+		--expected reproducibility/expected_checksums.json
+
+reproducible-build: dbt reproducibility-check
+
+ci: reproducible-build
 
 _neo4j-creds:
 	@test -n "$(NEO4J_PASSWORD)" || { echo "Set NEO4J_PASSWORD or add it to .env.$(DBT_TARGET)"; exit 1; }

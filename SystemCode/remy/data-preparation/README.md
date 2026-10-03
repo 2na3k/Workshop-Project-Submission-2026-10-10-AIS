@@ -27,6 +27,29 @@ From `SystemCode`:
 
 The default target is `nonprod`; use `DBT_TARGET=prod make dbt` for production.
 
+## Reproducibility manifest
+
+`reproducibility/source_registry.json` is the declaration boundary for the
+three consumed snapshots: FoodData Central, the recipe dataset, and FairPrice
+listings. Every entry names its landed path, pinned snapshot id, and a JSON
+capture/freeze record containing an ISO-8601 `observation_timestamp`. Missing,
+empty, unreadable, or invalidly timestamped inputs fail closed; the build clock
+and filesystem modification time are never used as fallbacks.
+
+After dbt succeeds, `make dbt` emits
+`target/<target>/source_snapshot_manifest.json`. It contains streamed SHA-256
+source checksums and canonical, deterministically ordered checksums for the
+seven graph marts plus `graph_quality_manifest`. Run
+`DBT_TARGET=nonprod make reproducibility-check` to compare that manifest with
+the reviewed values in `reproducibility/expected_checksums.json`.
+
+To refresh the pinned values after an intentional, reviewed reference build,
+copy the resulting mart `content_checksum` values into
+`expected_checksums.json`, retain its schema versions, and record the reference
+change in the feature close decisions. The normal check never rewrites pinned
+values automatically. `make reproducible-build` runs dbt, manifest generation,
+and the checker in order; `make ci` is the configured CI entry point.
+
 ## Common commands
 
 ```bash
