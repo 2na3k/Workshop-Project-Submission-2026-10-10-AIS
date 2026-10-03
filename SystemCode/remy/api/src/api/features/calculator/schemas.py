@@ -47,8 +47,6 @@ class Nutrients(BaseModel):
     fiber_g: float | None = Field(default=None, description="Fiber in grams.")
     sugar_g: float | None = Field(default=None, description="Sugar in grams.")
     sodium_mg: float | None = Field(default=None, description="Sodium in milligrams.")
-    calcium_mg: float | None = Field(default=None, description="Calcium in milligrams.")
-    iron_mg: float | None = Field(default=None, description="Iron in milligrams.")
 
 
 class MatchedPackage(BaseModel):

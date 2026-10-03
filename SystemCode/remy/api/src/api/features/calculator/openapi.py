@@ -12,12 +12,12 @@ SUCCESS_EXAMPLE = {
         "nutrients": {
             "calories_kcal": 779.0, "protein_g": 66.08, "carbs_g": 67.5,
             "fat_g": 27.67, "fiber_g": 10.0, "sugar_g": 0.0,
-            "sodium_mg": 429.0, "calcium_mg": None, "iron_mg": None,
+            "sodium_mg": 429.0,
         },
         "nutrients_per_serving": {
             "calories_kcal": 389.5, "protein_g": 33.04, "carbs_g": 33.75,
             "fat_g": 13.84, "fiber_g": 5.0, "sugar_g": 0.0,
-            "sodium_mg": 215.0, "calcium_mg": None, "iron_mg": None,
+            "sodium_mg": 215.0,
         },
     },
     "itemized": [
@@ -38,7 +38,7 @@ SUCCESS_EXAMPLE = {
             "nutrients": {
                 "calories_kcal": 429.0, "protein_g": 53.58, "carbs_g": 0.0,
                 "fat_g": 21.42, "fiber_g": 0.0, "sugar_g": 0.0,
-                "sodium_mg": 429.0, "calcium_mg": None, "iron_mg": None,
+                "sodium_mg": 429.0,
             },
             "warnings": [{"code": "PARTIAL_NUTRITION_DATA", "message": "Some nutrient facts are missing"}],
         },
@@ -53,7 +53,7 @@ SUCCESS_EXAMPLE = {
             "nutrients": {
                 "calories_kcal": 350.0, "protein_g": 12.5, "carbs_g": 67.5,
                 "fat_g": 6.25, "fiber_g": 10.0, "sugar_g": 0.0,
-                "sodium_mg": 0.0, "calcium_mg": None, "iron_mg": None,
+                "sodium_mg": 0.0,
             },
             "warnings": [
                 {"code": "MISSING_PACKAGE_DATA", "message": "No usable SGD package was found"},

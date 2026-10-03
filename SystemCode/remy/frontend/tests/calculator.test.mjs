@@ -40,7 +40,7 @@ const request = {
 };
 
 test("calculator submits normalized names and amounts through the calculation proxy", async () => {
-  const nutrients = Object.fromEntries(["calories_kcal", "protein_g", "carbs_g", "fat_g", "fiber_g", "sugar_g", "sodium_mg", "calcium_mg", "iron_mg"].map((key) => [key, null]));
+  const nutrients = Object.fromEntries(["calories_kcal", "protein_g", "carbs_g", "fat_g", "fiber_g", "sugar_g", "sodium_mg"].map((key) => [key, null]));
   const result = { status: "success", servings: 2, summary: { total_consumed_cost_sgd: null, total_retail_package_cost_sgd: null, nutrients, nutrients_per_serving: nutrients }, itemized: [] };
   const fetchMock = mock.method(globalThis, "fetch", async () => Response.json(result));
   assert.deepEqual(await calculateIngredient(request), result);

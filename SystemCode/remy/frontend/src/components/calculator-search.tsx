@@ -12,8 +12,6 @@ const NUTRIENTS: [keyof Nutrients, string, string][] = [
   ["fiber_g", "Fiber", "g"],
   ["sugar_g", "Sugar", "g"],
   ["sodium_mg", "Sodium", "mg"],
-  ["calcium_mg", "Calcium", "mg"],
-  ["iron_mg", "Iron", "mg"],
 ];
 const money = (value: number | null) => value == null ? "Unavailable" : `S$${value.toFixed(2)}`;
 const amount = (value: number | null, unit: string) => value == null ? "Unavailable" : `${value} ${unit}`;

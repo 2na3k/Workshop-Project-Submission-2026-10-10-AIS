@@ -41,5 +41,5 @@ def round_money(value: float | None) -> float | None:
 def round_nutrient(key: str, value: float | None) -> float | None:
     if value is None:
         return None
-    quantum = Decimal("1") if key in {"sodium_mg", "calcium_mg", "iron_mg"} else Decimal("0.01")
+    quantum = Decimal("1") if key == "sodium_mg" else Decimal("0.01")
     return float(Decimal(str(value)).quantize(quantum, rounding=ROUND_HALF_UP))

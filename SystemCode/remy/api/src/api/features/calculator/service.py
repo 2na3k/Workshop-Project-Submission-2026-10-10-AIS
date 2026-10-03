@@ -55,7 +55,7 @@ class CostNutritionService:
                     package_amount_g=selected[0].package_mass_g, package_count=selected[1])
             else:
                 warnings.append(ItemWarning(code="MISSING_PACKAGE_DATA", message="No usable SGD package was found"))
-            if any(getattr(food.nutrients, field) is None for field in food.nutrients.__dict__):
+            if any(getattr(food.nutrients, field) is None for field in Nutrients.model_fields):
                 warnings.append(ItemWarning(code="PARTIAL_NUTRITION_DATA", message="Some nutrient facts are missing"))
             consumed_values.append(item_consumed)
             retail_values.append(item_retail)

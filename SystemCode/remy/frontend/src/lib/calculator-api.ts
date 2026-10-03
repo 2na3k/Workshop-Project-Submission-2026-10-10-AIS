@@ -13,8 +13,6 @@ export type Nutrients = {
   fiber_g: number | null;
   sugar_g: number | null;
   sodium_mg: number | null;
-  calcium_mg: number | null;
-  iron_mg: number | null;
 };
 
 export type CalculationResponse = {
