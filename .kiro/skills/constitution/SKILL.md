@@ -6,19 +6,32 @@ description: Author or amend the project constitution in the SDD flow. Use once 
 # sdd-constitution
 
 ## Inputs
-`proposal.md`, `AGENTS.md`, source material, existing architecture, research. On an amendment, the
-approved `amendments/A-*.md` and the current `constitution.md`.
+`proposal.md`, `AGENTS.md`, source material, existing architecture and stack docs.
+Template: `.sdd/templates/constitution.md`.
+On an amendment: the approved `amendments/A-*.md` and the current `constitution.md`.
 
 ## Procedure
-1. `python .sdd/scripts/sdd.py gate constitution <project>` must pass. Otherwise stop.
-2. Extract the durable constraints implied by the proposal and the existing system.
-3. Group them under categories (stack/architecture, security/data, process…).
-4. Write each as Rule / Why / Check. Drop any rule you cannot check.
-5. Ask the human to approve or amend.
-6. On approval, set `Status: approved`, set `Version`, and on an amendment increment it.
+1. Initial pass: `python .sdd/scripts/sdd.py gate constitution <project>` must pass.
+   Amendment pass: the amendment file must exist, be marked `approved`, and cite
+   its trigger.
+2. Confirm all open questions in `proposal.md` are resolved. A rule that requires
+   an unmade decision is not a rule — route it back to the proposal stage.
+3. Derive categories from the proposal's Behavioral Rules and the project's
+   cross-cutting commitments. Do not use generic categories.
+4. Write each rule as Rule / Why / Check. The Why cites the proposal goal,
+   Resolved Question, or Behavioral Rule. The Check is a CI command, a named
+   reviewer pattern, or a named test fixture. Drop any rule you cannot check.
+5. Aim for 8–15 rules. Number R-1..R-N monotonically across categories.
+6. Ask the human to approve or amend.
+7. On approval: set `Status: approved`, set `Version`. On an amendment: increment
+   `Version`, mark the amendment file `approved`.
 
 ## Do not
 - Encode feature-specific detail.
 - Add a rule the proposal does not imply.
 - Add a rule with no Check.
-- Maintain a changelog inside `constitution.md` — `amendments/` is the changelog.
+- Resolve a conflict between sources by averaging — cite the higher-authority
+  source (proposal > Resolved Questions > Behavioral Rules > design docs >
+  stack docs > API/structure docs).
+- Renumber rules without an amendment.
+- Maintain a changelog inside `constitution.md`.

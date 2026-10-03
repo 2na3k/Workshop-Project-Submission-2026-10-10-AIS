@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SDD Feature State",
+  "type": "object",
+  "required": ["feature", "stage", "loops", "created"],
+  "properties": {
+    "feature": { "type": "string" },
+    "stage": {
+      "type": "string",
+      "enum": ["proposed", "specified", "planned", "plan-approved",
+        "tasks-approved", "implemented", "ci-passed", "reviewed", "closed"]
+    },
+    "loops": { "type": "integer", "minimum": 0 },
+    "created": { "type": "string", "format": "date-time" },
+    "spec_hash": { "type": "string" },
+    "plan_hash": { "type": "string",
+      "description": "plan.md with ## Tasks and ## Revision notes sections removed" },
+    "tasks_hash": { "type": "string",
+      "description": "## Tasks section only, ignoring checkbox state" },
+    "plan_review_verdict": {
+      "type": "string",
+      "enum": ["APPROVE", "APPROVE-WITH-NITS", "REVISE", "REJECT"]
+    },
+    "ci_overall": { "type": "string", "enum": ["PASS", "FAIL", "INCONCLUSIVE"] },
+    "review_verdict": {
+      "type": "string",
+      "enum": ["APPROVE", "REVISE", "REJECT"]
+    },
+    "override": {
+      "type": "object",
+      "properties": {
+        "applies_to": { "type": "string" },
+        "reason": { "type": "string" },
+        "who": { "type": "string" },
+        "when": { "type": "string", "format": "date-time" }
+      }
+    },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "at": { "type": "string", "format": "date-time" },
+          "event": { "type": "string" }
+        }
+      }
+    }
+  }
+}

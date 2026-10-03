@@ -6,17 +6,20 @@ description: Write a feature spec in the SDD flow. Use when a feature is picked 
 # sdd-specify
 
 ## Inputs
-`roadmap.md`, `constitution.md`, `AGENTS.md`, current codebase, target phase. On a loop-back also the
-archived `review.rN.md` (highest N) listing findings routed `spec`.
+`roadmap.md`, `constitution.md`, `AGENTS.md`, current codebase, target phase.
+Template: `.sdd/templates/spec.md`.
+On a loop-back: the archived `review.rN.md` (highest N) listing findings routed `spec`.
 
 ## Procedure
-1. `python .sdd/scripts/sdd.py gate specify <id>` must pass. Otherwise stop.
-2. Summarize the feature; trace to goal and phase/feature id.
-3. Write AC-1..n as Given/When/Then. Each must be independently testable.
-4. List blocking open questions under `## Open questions`.
-5. Clarify with the human; log every answer under `## Clarifications` with answer, date and who.
-   Check off the matching question. Log every clarification, consequential or not.
-6. Flag consequential clarifications for `decisions.md` at close.
+1. `python .sdd/scripts/sdd.py gate specify <id>` must pass.
+2. Fill Summary, Traces to (G-n + phase entry), User-facing behavior.
+3. Write AC-1..AC-N as Given/When/Then. Each must be independently testable.
+4. List edge cases & errors.
+5. Non-goals: at least one bullet.
+6. Open questions: blocking ones only.
+7. Clarify with the human; log every answer under `## Clarifications` with answer,
+   date, who. Check off the matching question. Log every clarification,
+   consequential or not. Flag consequential ones for `decisions.md` at close.
 
 ## Do not
 - Design, name files, or choose data structures.

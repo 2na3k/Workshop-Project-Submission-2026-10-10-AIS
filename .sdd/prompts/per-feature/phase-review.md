@@ -1,14 +1,28 @@
 # Prompt — Phase Review
 
-Input:  completed phase, all feature reviews and decisions.
-Output: docs/sdd/phase-reviews/<phase>.md
-Role:   human + roadmap agent.
+## Input
+- completed phase
+- all feature reviews and decisions for the phase
+- roadmap.md
 
-Verify exit criteria are met. Summarize what shipped, what the decisions say,
-loop counts per feature, and proposed changes. Record human sign-off.
+## Output
+- docs/sdd/phase-reviews/pN.md
 
+## Role
+Human with the roadmap agent.
+
+## Procedure
+1. Verify exit criteria are met, with evidence.
+2. Summarize what shipped, what the decisions say.
+3. Capture retro learnings: went well, went badly, loop counts per feature.
+   Retros live inside this file under `## Retro`.
+4. Proposed changes: roadmap re-plan, constitution amendment, or proposal change.
+5. Record human sign-off.
+
+## Escalation
 If the phase revealed a systemic rule that should bind future work, escalate to
-an amendment proposal — do not patch the constitution directly.
+an amendment proposal. Do not patch the constitution directly.
 
-Retro learnings go in retros/<phase>.md, not here. This file is a sign-off
-record and should not be edited after approval.
+## Do not
+- Edit after sign-off — this is a sign-off record.
+- Approve exit criteria that are not verifiably met.

@@ -31,6 +31,7 @@ not a design doc. It is the smallest artifact that answers four questions:
 
 ## Output structure
 
+```markdown
 # Proposal
 
 ## Problem
@@ -52,6 +53,7 @@ not a design doc. It is the smallest artifact that answers four questions:
 ## Source material
 - <doc 1>
 - <doc 2>
+```
 
 ## Rules
 

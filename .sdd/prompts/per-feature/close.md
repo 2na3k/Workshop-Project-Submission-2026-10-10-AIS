@@ -1,12 +1,27 @@
 # Prompt — Close
 
-Input:  approved implementation, review.md, spec clarifications, state.json.
-Output: decisions.md, CHANGELOG.md, state.json (updated).
+## Input
+- review.md with verdict APPROVE
+- spec.md clarifications
+- plan.md
+- state.json
 
-Write decisions.md: plan deviations, consequential clarifications (with date and
-who), overrides.
-Append a CHANGELOG entry: feature id + name + date, what changed, ACs covered,
-link to decisions.md, breaking changes.
-Update state.json: status `closed`, review_verdict, updated_at.
+## Output
+- docs/sdd/features/<id>/decisions.md
+- append entry to CHANGELOG.md
+- update state.json to stage `closed`
 
-Do not edit spec.md, plan.md, or review.md at close.
+## Procedure
+1. `sdd.py gate close <id>` must pass.
+2. decisions.md: one D-n block per decision (Context, Decision, Alternatives,
+   Affects, Source). Consequential clarifications recorded here. Overrides
+   recorded here. If no deviations, write exactly:
+   `No deviations from plan.`
+3. Append a CHANGELOG entry per templates/changelog-entry.md.
+4. Update state.json: stage `closed`, review_verdict, updated_at. Bump loops
+   if this feature took more than one implementation loop.
+
+## Do not
+- Edit spec.md, plan.md, or review.md at close.
+- Record a clarification in decisions.md that is not also in spec.md.
+- Mark closed without a passing review.

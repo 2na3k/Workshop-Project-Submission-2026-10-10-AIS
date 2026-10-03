@@ -1,12 +1,27 @@
 # Prompt — Amendment
 
-Input:  phase review, retro, or a finding routed to `constitution`.
-Output: docs/sdd/amendments/A-YYYY-MM-DD-<slug>.md (+ updated constitution.md on approval).
-Role:   constitution agent proposes, human approves.
+## Input
+- phase review, retro, or a finding routed to `constitution`
+- current constitution.md
 
-Fill Trigger, Current rule, Proposed change (exact text), Why (with evidence from
-the trigger), Impact.
+## Output
+- docs/sdd/amendments/A-<date>-<slug>.md
+- on approval: edit constitution.md in place, increment Version
 
-On approval: edit constitution.md in place, increment its version, mark the
-amendment `approved`. The amendment file is the record of the change and is never
-deleted. constitution.md keeps no changelog of its own.
+## Role
+Constitution agent proposes; human approves.
+
+## Procedure
+1. Fill Trigger, Current rule(s), Proposed change (exact text including the
+   Check: line), Impact (in-flight and completed features to re-check),
+   Version bump.
+2. Wait for human decision.
+3. On approval: edit constitution.md in place, increment Version, mark the
+   amendment `approved`.
+4. Impacted features are re-checked against the new rule; the check is recorded
+   in the phase review.
+
+## Do not
+- Edit constitution.md without an approved amendment.
+- Delete the amendment file after approval — it is the changelog.
+- Change multiple unrelated rules in one amendment.

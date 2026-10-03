@@ -1,0 +1,19 @@
+{
+  "package": "remy-data-preparation",
+  "checks": [
+    {
+      "name": "test",
+      "command": "uv run --package remy-data-preparation pytest -q remy/data-preparation/tests"
+    },
+    {
+      "name": "lint",
+      "command": "uv run --package remy-data-preparation ruff check remy/data-preparation --select F,E9"
+    },
+    {
+      "name": "typecheck",
+      "command": "uv run --package remy-data-preparation mypy remy/data-preparation --ignore-missing-imports --exclude tests/test_serving_model.py"
+    }
+  ],
+  "retries": 2,
+  "loop_cap": 2
+}
