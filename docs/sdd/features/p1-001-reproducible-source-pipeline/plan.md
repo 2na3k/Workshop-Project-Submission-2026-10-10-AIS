@@ -270,7 +270,7 @@ transformation redesign remain explicitly out of scope.
     - Covers: AC-1
     - Files: `SystemCode/remy/data-preparation/tests/test_reproducibility_manifest.py`
     - Done when: The test invokes the fixture build path and asserts all canonical marts, `graph_quality_manifest`, and one source snapshot manifest are emitted.
-- [ ] **T-4** Write a failing two-clean-build integration test for canonical mart content equality.
+- [x] **T-4** Write a failing two-clean-build integration test for canonical mart content equality.
     - Type: test
     - Covers: AC-5
     - Files: `SystemCode/remy/data-preparation/tests/test_reproducibility_manifest.py`
