@@ -290,7 +290,7 @@ transformation redesign remain explicitly out of scope.
     - Covers: AC-2, AC-3, AC-4; missing, empty, unreadable, and invalid-metadata edge cases
     - Files: `SystemCode/remy/data-preparation/reproducibility/source_registry.json`, `SystemCode/remy/data-preparation/scripts/reproducibility_manifest.py`
     - Done when: Exactly the three declared sources are resolved relative to the data-preparation project, all required inputs are validated before output, checksums are recomputable from source content, and observation timestamps never fall back to build time.
-- [ ] **T-8** Implement manifest assembly after dbt materialization, including schema version, source entries, mart entries, row counts, and the authoritative mart/content-column contract.
+- [x] **T-8** Implement manifest assembly after dbt materialization, including schema version, source entries, mart entries, row counts, and the authoritative mart/content-column contract.
     - Type: impl
     - Covers: AC-1, AC-2, AC-4, AC-5
     - Files: `SystemCode/remy/data-preparation/scripts/reproducibility_manifest.py`, `SystemCode/remy/data-preparation/models/mart/schema.yml`
