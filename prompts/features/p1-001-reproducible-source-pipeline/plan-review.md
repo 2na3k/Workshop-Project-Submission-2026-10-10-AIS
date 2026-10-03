@@ -7,6 +7,7 @@
 - AGENTS.md
 
 ## Output
+- template: [plan-review.md](../../../.sdd/templates/plan-review.md)
 - docs/sdd/features/<id>/plan-review.md
 
 ## Role

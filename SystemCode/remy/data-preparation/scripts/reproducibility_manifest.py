@@ -22,6 +22,16 @@ REQUIRED_MARTS = (
     "edge_has_component",
     "graph_quality_manifest",
 )
+MART_ORDER_KEYS: dict[str, tuple[str, ...]] = {
+    "node_recipe": ("recipe_id",),
+    "node_food_concept": ("canonical_key",),
+    "node_food": ("fdc_id",),
+    "node_component": ("component_id",),
+    "edge_requires": ("recipe_id", "occurrence_id"),
+    "edge_fulfills": ("candidate_key",),
+    "edge_has_component": ("id",),
+    "graph_quality_manifest": ("entity_type", "entity"),
+}
 MANIFEST_SCHEMA_VERSION = 1
 CONTRACT_VERSION = 1
 MART_CONTENT_COLUMNS: dict[str, tuple[str, ...]] = {
@@ -152,6 +162,30 @@ MART_CONTENT_COLUMNS: dict[str, tuple[str, ...]] = {
     ),
 }
 
+from typing import TypedDict
+
+
+class SourceEntry(TypedDict):
+    source_identity: str
+    snapshot_id: str
+    content_checksum: str
+    observation_timestamp: str
+    paths: list[str]
+
+
+class MartEntry(TypedDict):
+    row_count: int
+    content_checksum: str
+    content_columns: list[str]
+    contract_version: int
+
+
+class Manifest(TypedDict):
+    schema_version: int
+    contract_version: int
+    sources: list[SourceEntry]
+    marts: dict[str, MartEntry]
+
 
 def _canonical(value: Any) -> Any:
     if value is None:
@@ -173,20 +207,18 @@ def _canonical(value: Any) -> Any:
 
 
 def compute_file_group_checksum(
-    paths: Iterable[Path], chunk_size: int = 1024 * 1024, path_root: Path | None = None
+        paths: Iterable[Path], chunk_size: int = 1024 * 1024,
 ) -> str:
     digest = hashlib.sha256()
     for path in sorted(
-        (Path(path).resolve() for path in paths), key=lambda item: item.as_posix()
+            (Path(path).resolve() for path in paths), key=lambda item: item.as_posix()
     ):
         if not path.is_file() or not os.access(path, os.R_OK):
             raise ValueError(f"source snapshot is missing or unreadable: {path}")
         size = path.stat().st_size
         if size == 0:
             raise ValueError(f"source snapshot is empty: {path}")
-        name = (
-            path.relative_to(path_root).as_posix() if path_root else path.name
-        ).encode("utf-8")
+        name = path.name.encode("utf-8")
         digest.update(len(name).to_bytes(8, "big"))
         digest.update(name)
         digest.update(size.to_bytes(8, "big"))
@@ -195,9 +227,8 @@ def compute_file_group_checksum(
                 digest.update(chunk)
     return digest.hexdigest()
 
-
 def compute_rows_checksum(
-    rows: Iterable[Mapping[str, Any]], columns: Sequence[str], order_by: Sequence[str]
+        rows: Iterable[Mapping[str, Any]], columns: Sequence[str], order_by: Sequence[str]
 ) -> str:
     canonical_rows = [
         {column: _canonical(row.get(column)) for column in columns} for row in rows
@@ -227,13 +258,13 @@ def _read_json(path: Path) -> dict[str, Any]:
     return value
 
 
-def load_source_entries(registry_path: Path) -> list[dict[str, Any]]:
+def load_source_entries(registry_path: Path) -> list[SourceEntry]:
     registry_path = Path(registry_path).resolve()
     registry = _read_json(registry_path)
     raw_entries = registry.get("sources")
     if not isinstance(raw_entries, list):
         raise TypeError("source registry must contain a sources list")
-    found: dict[str, dict[str, Any]] = {}
+    found: dict[str, SourceEntry] = {}
     for raw in raw_entries:
         if not isinstance(raw, dict) or not raw.get("source_identity"):
             raise ValueError("every source registry entry needs source_identity")
@@ -247,9 +278,7 @@ def load_source_entries(registry_path: Path) -> list[dict[str, Any]]:
             Path(path) if Path(path).is_absolute() else registry_path.parent / path
             for path in paths
         ]
-        checksum = compute_file_group_checksum(
-            resolved_paths, path_root=registry_path.parent
-        )
+        checksum = compute_file_group_checksum(resolved_paths)
         metadata_value = raw.get("metadata_path")
         if not metadata_value:
             raise ValueError(f"source has no capture metadata path: {identity}")
@@ -260,9 +289,9 @@ def load_source_entries(registry_path: Path) -> list[dict[str, Any]]:
         )
         metadata = _read_json(metadata_path)
         timestamp = (
-            metadata.get("observation_timestamp")
-            or metadata.get("captured_at")
-            or metadata.get("fetched_at")
+                metadata.get("observation_timestamp")
+                or metadata.get("captured_at")
+                or metadata.get("fetched_at")
         )
         if not isinstance(timestamp, str) or not timestamp.strip():
             raise ValueError(
@@ -277,13 +306,13 @@ def load_source_entries(registry_path: Path) -> list[dict[str, Any]]:
         snapshot_id = raw.get("snapshot_id")
         if not isinstance(snapshot_id, str) or not snapshot_id.strip():
             raise ValueError(f"source has no snapshot id: {identity}")
-        found[identity] = {
-            "source_identity": identity,
-            "snapshot_id": snapshot_id,
-            "declared_paths": [str(path) for path in resolved_paths],
-            "content_checksum": checksum,
-            "observation_timestamp": timestamp,
-        }
+        found[identity] = SourceEntry(
+            source_identity=identity,
+            snapshot_id=snapshot_id,
+            paths=[str(path) for path in resolved_paths],
+            content_checksum=checksum,
+            observation_timestamp=timestamp,
+        )
     missing = [item for item in REQUIRED_SOURCES if item not in found]
     extra = sorted(set(found) - set(REQUIRED_SOURCES))
     if missing or extra or len(found) != len(REQUIRED_SOURCES):
@@ -293,7 +322,7 @@ def load_source_entries(registry_path: Path) -> list[dict[str, Any]]:
     return [found[item] for item in REQUIRED_SOURCES]
 
 
-def compute_mart_entries(database_path: Path) -> dict[str, dict[str, Any]]:
+def compute_mart_entries(database_path: Path) -> dict[str, MartEntry]:
     try:
         from importlib import import_module
 
@@ -302,7 +331,7 @@ def compute_mart_entries(database_path: Path) -> dict[str, dict[str, Any]]:
         raise ValueError("duckdb is required to compute mart checksums") from exc
     connection = duckdb.connect(str(database_path), read_only=True)
     try:
-        entries: dict[str, dict[str, Any]] = {}
+        entries: dict[str, MartEntry] = {}
         for mart in REQUIRED_MARTS:
             columns = MART_CONTENT_COLUMNS[mart]
             quoted = ", ".join(f'"{column}"' for column in columns)
@@ -310,28 +339,28 @@ def compute_mart_entries(database_path: Path) -> dict[str, dict[str, Any]]:
                 rows = [
                     dict(zip(columns, row))
                     for row in connection.execute(
-                        f'select {quoted} from lake.mart."{mart}"'
+                        f'select {quoted} from lake.main_mart."{mart}"'
                     ).fetchall()
                 ]
             except Exception as exc:
                 raise ValueError(f"cannot read required mart: {mart}") from exc
-            entries[mart] = {
-                "row_count": len(rows),
-                "content_checksum": compute_rows_checksum(rows, columns, columns[:1]),
-                "content_columns": list(columns),
-                "contract_version": CONTRACT_VERSION,
-            }
+            entries[mart] = MartEntry(
+                row_count=len(rows),
+                content_checksum=compute_rows_checksum(rows, columns, MART_ORDER_KEYS[mart]),
+                content_columns=list(columns),
+                contract_version=CONTRACT_VERSION,
+            )
         return entries
     finally:
         connection.close()
 
 
 def build_manifest(
-    registry_path: Path, database_path: Path, output_path: Path
-) -> dict[str, Any]:
+        registry_path: Path, database_path: Path, output_path: Path
+) -> Manifest:
     sources = load_source_entries(registry_path)
     marts = compute_mart_entries(database_path)
-    manifest = {
+    manifest: Manifest = {
         "schema_version": MANIFEST_SCHEMA_VERSION,
         "contract_version": CONTRACT_VERSION,
         "sources": sources,

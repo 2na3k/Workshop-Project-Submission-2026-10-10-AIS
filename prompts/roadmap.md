@@ -1,12 +1,14 @@
 # Prompt — Roadmap
 
 ## Input
-- proposal.md (goals, non-goals, success measures)
-- constitution.md
-- AGENTS.md
-- existing project state
+- [AGENTS.md](../AGENTS.md)
+- [constitution.md](../docs/sdd/constitution.md)
+- existing project state: [state.schema.json](../docs/state.schema.json)
+- [proposal.md](../docs/sdd/proposal.md)
+- source material: [final_proposal_1_v2.md](../final_proposal_1_v2.md)
 
 ## Output
+- Template: [roadmap.md](../.sdd/templates/roadmap.md)
 - docs/sdd/roadmap.md — roadmap and phases in one file
 - append to docs/sdd/roadmap.md `## Re-plan log` for every change
 

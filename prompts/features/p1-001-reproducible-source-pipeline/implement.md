@@ -1,11 +1,17 @@
 # Prompt — Implement
 
+Implement for feature **p1-001-reproducible-source-pipeline**
+
+`<id>`: `p1-001-reproducible-source-pipeline`
+
 ## Input
-- [AGENTS.md](../../../../SystemCode/AGENTS.md)
-- [spec.md](spec.md)
-- [plan.md](plan.md)
-- [constitution.md](../../constitution.md)
-- codebase, tests
+- [AGENTS.md](../../../AGENTS.md)
+- [spec.md](../../../docs/sdd/features/p1-001-reproducible-source-pipeline/spec.md)
+- [plan.md](../../../docs/sdd/features/p1-001-reproducible-source-pipeline/plan.md)
+- [constitution.md](../../../docs/sdd/constitution.md)
+- current codebase: [SystemCode](../../../SystemCode)
+- [neo4j_db_design.md](../../../SystemCode/docs/neo4j_db_design.md)
+- [system_design_v3.md](../../../SystemCode/docs/system_design_v3.md)
 - on a loop-back: archived review.rN.md (highest N) with findings routed to `implement`
 
 ## Output
@@ -13,7 +19,7 @@
 - plan.md checkbox state only
 
 ## Procedure
-1. `sdd.py gate implement <id>` must pass (or the feature stage is `implement`).
+1. `sdd.py gate implement <id>` must pass.
 2. Create or switch to branch `feat/<id>`.
 3. Work Tasks in order. For each task: do exactly what it says, write the failing
    test first where the task says so, run the relevant tests, check the box in

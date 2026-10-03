@@ -108,3 +108,10 @@ frontend-install:
 
 clean:
 	rm -rf .venv
+
+ci: reproducible-build check
+
+check:
+	cd remy/data-preparation && uv run --package remy-data-preparation pytest -q tests
+	cd remy/data-preparation && uv run --package remy-data-preparation ruff check . --select F,E9
+	cd remy/data-preparation && uv run --package remy-data-preparation mypy . --ignore-missing-imports

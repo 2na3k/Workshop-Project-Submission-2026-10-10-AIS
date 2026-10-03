@@ -11,3 +11,10 @@ dependencies = [
 
 [tool.uv]
 package = false
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.10"]
+
+[tool.mypy]
+mypy_path = "scripts"
+files = ["scripts", "tests"]

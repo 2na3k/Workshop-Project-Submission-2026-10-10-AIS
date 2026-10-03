@@ -251,7 +251,11 @@ transformation redesign remain explicitly out of scope.
 - F-9 → Named the manifest-target scope decision in Approach: the manifest step
   runs in both dev and CI targets, with a fallback to on-demand in dev if the
   step proves too slow.
-
+- F-10 → Plan fix: `make ci` did not run the test/lint/typecheck command set
+  recorded in `sdd.json`; the two CI definitions were conflated. The Makefile
+  `ci` target now runs both `reproducible-build` and a new `check` target.
+  `AGENTS.md` tooling block now names the concrete p1-001 values alongside the
+  template.
 
 ## Tasks
 <!-- Added after plan review APPROVE. Tasks are hashed into state.json and are frozen for this implementation loop. Do not edit without a recorded loop-back. -->
