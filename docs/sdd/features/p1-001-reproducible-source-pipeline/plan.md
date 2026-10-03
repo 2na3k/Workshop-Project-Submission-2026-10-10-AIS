@@ -285,7 +285,7 @@ transformation redesign remain explicitly out of scope.
     - Covers: AC-5 and the mart-list/content-column contract edge case
     - Files: `SystemCode/remy/data-preparation/models/mart/schema.yml`, `SystemCode/remy/data-preparation/tests/test_reproducibility_manifest.py`
     - Done when: A silent mart column addition, rename, or omission is detected by the contract test, and the test covers all seven node/edge marts plus `graph_quality_manifest`.
-- [ ] **T-7** Implement the versioned source registry and streaming source snapshot hashing with deterministic multi-file framing and required capture/freeze metadata validation.
+- [x] **T-7** Implement the versioned source registry and streaming source snapshot hashing with deterministic multi-file framing and required capture/freeze metadata validation.
     - Type: impl
     - Covers: AC-2, AC-3, AC-4; missing, empty, unreadable, and invalid-metadata edge cases
     - Files: `SystemCode/remy/data-preparation/reproducibility/source_registry.json`, `SystemCode/remy/data-preparation/scripts/reproducibility_manifest.py`
