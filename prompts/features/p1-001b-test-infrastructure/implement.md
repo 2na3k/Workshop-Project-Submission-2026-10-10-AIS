@@ -1,25 +1,25 @@
 # Prompt — Implement
 
-Implement for feature **p1-002-provenance-graph-model**
+Implement for feature **p1-001b-test-infrastructure**
 
-`<id>`: `p1-002-provenance-graph-model`
+`<id>`: `p1-001b-test-infrastructure`
 
 ## Input
 - [AGENTS.md](../../../AGENTS.md)
-- [spec.md](../../../docs/sdd/features/p1-002-provenance-graph-model/spec.md)
-- [plan.md](../../../docs/sdd/features/p1-002-provenance-graph-model/plan.md)
+- [spec.md](../../../docs/sdd/features/p1-001b-test-infrastructure/spec.md)
+- [plan.md](../../../docs/sdd/features/p1-001b-test-infrastructure/plan.md)
 - [constitution.md](../../../docs/sdd/constitution.md)
 - current codebase: [SystemCode](../../../SystemCode)
 - [neo4j_db_design.md](../../../SystemCode/docs/neo4j_db_design.md)
 - [system_design_v3.md](../../../SystemCode/docs/system_design_v3.md)
 - on a loop-back: archived review.rN.md (highest N) with findings routed to `implement`
 - Neo4j instance credentials (for local development, use `.env.test` file; for CI, set environment variables):
-  - NEO4J_URI=neo4j+s://2014ed95.databases.neo4j.io
-  - NEO4J_USERNAME=2014ed95
-  - NEO4J_PASSWORD=zmmyGQX-pP2CRvy0EHEn_xtjmNU5NGfBuhz8667aNNg
-  - NEO4J_DATABASE=2014ed95
-  - AURA_INSTANCEID=2014ed95
-  - AURA_INSTANCENAME=sdd-kit-test
+  - NEO4J_URI=
+  - NEO4J_USERNAME=
+  - NEO4J_PASSWORD=
+  - NEO4J_DATABASE=
+  - AURA_INSTANCEID=
+  - AURA_INSTANCENAME=
 
 ## Output
 - src/…, tests/…

@@ -1,11 +1,11 @@
 # Prompt — Plan
 
-Plan for feature **p1-001-reproducible-source-pipeline**
+Plan for feature **p1-002-provenance-graph-model**
 
-`<id>`: `p1-001-reproducible-source-pipeline`
+`<id>`: `p1-002-provenance-graph-model`
 
 ## Input
-- [spec.md](../../../docs/sdd/features/p1-001-reproducible-source-pipeline/spec.md)
+- [spec.md](../../../docs/sdd/features/p1-002-provenance-graph-model/spec.md)
 - [constitution.md](../../../docs/sdd/constitution.md)
 - [AGENTS.md](../../../AGENTS.md)
 - [neo4j_db_design.md](../../../SystemCode/docs/neo4j_db_design.md)
@@ -15,7 +15,7 @@ Plan for feature **p1-001-reproducible-source-pipeline**
   with findings routed to `plan`
 
 ## Output
-- template: [plan.md](../../../.sdd/templates/plan.md)
+- MUST follow template: [plan.md](../../../.sdd/templates/plan.md)
 - docs/sdd/features/<id>/plan.md
 - do NOT write `## Tasks` until plan review approves
 

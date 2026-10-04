@@ -12,7 +12,7 @@ Spec for feature **p1-001-reproducible-source-pipeline**
 - on a loop-back: the archived review.rN.md (highest N) with findings routed to `spec`
 
 ## Output
-- Template: [spec.md](../../../.sdd/templates/spec.md)
+- MUST follow template: [spec.md](../../../.sdd/templates/spec.md)
 - docs/sdd/features/p1-001-reproducible-source-pipeline/spec.md
 - on clarify: update spec.md in place, log every answer in `## Clarifications`
 
