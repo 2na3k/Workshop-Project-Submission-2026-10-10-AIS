@@ -1,7 +1,10 @@
 import importlib.util
+import json
 import os
 from pathlib import Path
 from unittest.mock import patch
+
+import pytest
 
 
 path = Path(__file__).parents[1] / "models/serving/recipe_graph_to_neo4j.py"
@@ -192,3 +195,266 @@ with patch.dict(os.environ, environment(), clear=True):
         assert "allocation failed: Food" in str(error)
     else:
         raise AssertionError("individual manifest allocation failure was accepted")
+
+
+# ---------------------------------------------------------------------------
+# p1-002 admission fixtures (AC-1, AC-2, AC-10)
+#
+# These tests drive the serving model with the p1-001b `fake_driver` fixture so
+# the orchestration and admission semantics can be proved without a live Neo4j.
+# ---------------------------------------------------------------------------
+
+FDC_SNAPSHOT = "usda-fooddata-central-2026-09-01"
+RECIPE_SNAPSHOT = "josephrmartinez-recipe-dataset-2026-09-01"
+FAIRPRICE_SNAPSHOT = "fairprice-listings-2026-09-02"
+CHECKSUM = "0" * 64
+
+MART_ROWS = {
+    "node_recipe": 1,
+    "node_food_concept": 1,
+    "node_food": 1,
+    "node_component": 1,
+    "edge_requires": 1,
+    "edge_fulfills": 1,
+    "edge_has_component": 1,
+    "graph_quality_manifest": 9,
+}
+
+QUALITY_COLUMNS = ["entity_type", "entity", "row_count", "allocation", "within_allocation"]
+
+QUALITY_ROWS = [
+    ("node", "Recipe", 1, 14000, True),
+    ("node", "FoodConcept", 1, 35000, True),
+    ("node", "Food", 1, 32000, True),
+    ("node", "Component", 1, 3200, True),
+    ("relationship", "REQUIRES", 1, 155000, True),
+    ("relationship", "FULFILLS", 1, 50000, True),
+    ("relationship", "HAS_COMPONENT", 1, 3200, True),
+    ("node", "TOTAL_NODE", 4, 84200, True),
+    ("relationship", "TOTAL_RELATIONSHIP", 3, 208200, True),
+]
+
+REQUIRES_COLUMNS = [
+    "recipe_id",
+    "occurrence_id",
+    "normalized_name",
+    "source",
+    "normalization_version",
+    "mapping_confidence",
+    "observed_at",
+    "freshness_status",
+]
+FULFILLS_COLUMNS = [
+    "candidate_key",
+    "food_key",
+    "canonical_key",
+    "source",
+    "source_snapshot_id",
+    "mapping_version",
+    "mapping_confidence",
+    "observed_at",
+    "freshness_status",
+]
+
+DEFAULT_RELATIONS = {
+    "node_recipe": (["recipe_id", "title"], [("r1", "Carrot Soup")]),
+    "node_food_concept": (["canonical_key", "name"], [("carrot", "Carrot")]),
+    "node_food": (["food_key", "description"], [("f1", "White Beans")]),
+    "node_component": (["component_id", "name"], [("c1", "Protein")]),
+    "edge_requires": (
+        REQUIRES_COLUMNS,
+        [("r1", "o1", "carrot", "josephrmartinez/recipe-dataset",
+          "recipe-food-v4", 0.93, "2026-09-01T00:00:00+00:00", "snapshot")],
+    ),
+    "edge_fulfills": (
+        FULFILLS_COLUMNS,
+        [("k1", "f1", "carrot", "fooddata_central", FDC_SNAPSHOT,
+          "recipe_food_to_dbt:v4", 0.88, "2026-09-02T00:00:00+00:00", "snapshot")],
+    ),
+    "edge_has_component": (["id", "food_key", "component_id"], [("h1", "f1", "c1")]),
+}
+
+
+def accepted_manifest(**changes):
+    """Return a source snapshot manifest matching p1-001's generated contract."""
+    document = {
+        "schema_version": 1,
+        "contract_version": 1,
+        "sources": [
+            {"source_identity": "FoodData Central", "snapshot_id": FDC_SNAPSHOT,
+             "content_checksum": CHECKSUM, "observation_timestamp": "2026-09-01T00:00:00+00:00",
+             "paths": ["seeds/fdc/food.csv"]},
+            {"source_identity": "recipe dataset", "snapshot_id": RECIPE_SNAPSHOT,
+             "content_checksum": CHECKSUM, "observation_timestamp": "2026-09-01T00:00:00+00:00",
+             "paths": ["seeds/13k-recipe/13k-recipes.csv"]},
+            {"source_identity": "FairPrice listings", "snapshot_id": FAIRPRICE_SNAPSHOT,
+             "content_checksum": CHECKSUM, "observation_timestamp": "2026-09-02T00:00:00+00:00",
+             "paths": ["seeds/fairprice/listings.csv"]},
+        ],
+        "marts": {
+            mart: {"row_count": row_count, "content_checksum": CHECKSUM,
+                   "content_columns": ["placeholder"], "contract_version": 1}
+            for mart, row_count in MART_ROWS.items()
+        },
+    }
+    document.update(changes)
+    return document
+
+
+def write_manifest(tmp_path, document):
+    path = tmp_path / "source_snapshot_manifest.json"
+    text = document if isinstance(document, str) else json.dumps(document)
+    path.write_text(text, encoding="utf-8")
+    return str(path)
+
+
+class ProjectionDbt:
+    """dbt stand-in supplying the canonical mart relations for admission tests."""
+
+    def __init__(self, relations=None):
+        self.relations = dict(DEFAULT_RELATIONS)
+        self.relations.update(relations or {})
+
+    def config(self, **_):
+        pass
+
+    def ref(self, name):
+        if name == "graph_quality_manifest":
+            return Relation(QUALITY_COLUMNS, list(QUALITY_ROWS))
+        columns, rows = self.relations[name]
+        return Relation(columns, list(rows))
+
+
+def payload_rows(driver, marker):
+    """Return every row parameter passed to a load statement containing `marker`."""
+    rows = []
+    for statement, parameters in driver.records:
+        if marker in statement and "rows" in parameters:
+            rows.extend(parameters["rows"])
+    return rows
+
+
+def run_model(driver, manifest=None, dbt=None):
+    """Run the serving model against the fake driver."""
+    values = dict(environment(replace=True))
+    if manifest is not None:
+        values["NEO4J_SOURCE_MANIFEST"] = manifest
+
+    def connect(*_args, **_kwargs):
+        return driver
+
+    with (
+        patch.dict(os.environ, values, clear=True),
+        patch.object(serving.GraphDatabase, "driver", side_effect=connect),
+    ):
+        serving.model(dbt or ProjectionDbt(), Session())
+
+
+def test_accepted_manifest_loads_canonical_graph(fake_driver, tmp_path):
+    manifest = write_manifest(tmp_path, accepted_manifest())
+    run_model(fake_driver, manifest=manifest)
+
+    assert fake_driver.transaction is not None
+    assert fake_driver.transaction.committed is True
+    assert fake_driver.transaction.rolled_back is False
+
+    statements = "\n".join(statement for statement, _ in fake_driver.records)
+    for entity in ("Recipe", "FoodConcept", "Food", "Component", "REQUIRES", "FULFILLS", "HAS_COMPONENT"):
+        assert entity in statements
+
+    requires = payload_rows(fake_driver, ":REQUIRES")
+    assert requires, "no REQUIRES payload was loaded"
+    for row in requires:
+        assert row["source_snapshot_id"] == RECIPE_SNAPSHOT
+        assert row["source"] == "josephrmartinez/recipe-dataset"
+        assert row["normalization_version"] == "recipe-food-v4"
+        assert row["mapping_confidence"] == 0.93
+        assert row["observed_at"] == "2026-09-01T00:00:00+00:00"
+
+    fulfills = payload_rows(fake_driver, ":FULFILLS")
+    assert fulfills, "no FULFILLS payload was loaded"
+    for row in fulfills:
+        assert row["source_snapshot_id"] == FDC_SNAPSHOT
+        assert row["mapping_confidence"] == 0.88
+        assert row["observed_at"] == "2026-09-02T00:00:00+00:00"
+
+
+MANIFEST_FAILURES = [
+    pytest.param(None, "source snapshot manifest", id="absent"),
+    pytest.param("missing-file", "source snapshot manifest", id="not-found"),
+    pytest.param("raw", "malformed", id="malformed"),
+    pytest.param({"schema_version": 99}, "schema", id="schema-version"),
+    pytest.param({"sources": []}, "source", id="missing-sources"),
+    pytest.param(
+        {"sources": [
+            {"source_identity": "FoodData Central", "snapshot_id": FDC_SNAPSHOT,
+             "content_checksum": CHECKSUM, "observation_timestamp": "2026-09-01T00:00:00+00:00",
+             "paths": ["seeds/fdc/food.csv"]},
+            {"source_identity": "recipe dataset", "snapshot_id": "   ",
+             "content_checksum": CHECKSUM, "observation_timestamp": "2026-09-01T00:00:00+00:00",
+             "paths": ["seeds/13k-recipe/13k-recipes.csv"]},
+            {"source_identity": "FairPrice listings", "snapshot_id": FAIRPRICE_SNAPSHOT,
+             "content_checksum": CHECKSUM, "observation_timestamp": "2026-09-02T00:00:00+00:00",
+             "paths": ["seeds/fairprice/listings.csv"]},
+        ]},
+        "snapshot",
+        id="blank-snapshot-id",
+    ),
+    pytest.param({"marts": {"node_recipe": MART_ROWS["node_recipe"]}}, "mart", id="mart-coverage"),
+]
+
+
+@pytest.mark.parametrize("manifest,expected", MANIFEST_FAILURES)
+def test_missing_or_failed_manifest_preserves_graph(fake_driver, tmp_path, manifest, expected):
+    if manifest is None:
+        path = None
+    elif manifest == "missing-file":
+        path = str(tmp_path / "does-not-exist.json")
+    elif manifest == "raw":
+        path = write_manifest(tmp_path, "{not json")
+    else:
+        document = accepted_manifest()
+        document.update(manifest)
+        path = write_manifest(tmp_path, document)
+
+    with pytest.raises(ValueError) as error:
+        run_model(fake_driver, manifest=path)
+
+    assert expected in str(error.value).lower()
+    assert fake_driver.records == []
+    assert fake_driver.transaction is None
+
+
+def test_failed_allocation_or_integrity_rolls_back(fake_driver, tmp_path):
+    manifest = write_manifest(tmp_path, accepted_manifest())
+
+    failed_allocation = Relation(
+        QUALITY_COLUMNS,
+        [row[:2] + (32001, 32000, False) if row[1] == "Food" else row for row in QUALITY_ROWS],
+    )
+
+    class AllocationDbt(ProjectionDbt):
+        def ref(self, name):
+            if name == "graph_quality_manifest":
+                return failed_allocation
+            return super().ref(name)
+
+    with pytest.raises(ValueError) as error:
+        run_model(fake_driver, manifest=manifest, dbt=AllocationDbt())
+    assert "allocation" in str(error.value).lower()
+    assert fake_driver.records == []
+    assert fake_driver.transaction is None
+
+    dangling = (
+        REQUIRES_COLUMNS,
+        [("r1", "o1", "courgette", "josephrmartinez/recipe-dataset",
+          "recipe-food-v4", 0.93, "2026-09-01T00:00:00+00:00", "snapshot")],
+    )
+    with pytest.raises(ValueError) as error:
+        run_model(fake_driver, manifest=manifest, dbt=ProjectionDbt({"edge_requires": dangling}))
+
+    assert "REQUIRES" in str(error.value)
+    assert "dangling" in str(error.value).lower()
+    assert fake_driver.transaction is not None
+    assert fake_driver.transaction.rolled_back is True
+    assert fake_driver.transaction.committed is False
