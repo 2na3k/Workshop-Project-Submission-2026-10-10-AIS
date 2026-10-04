@@ -286,7 +286,7 @@ creating one.
     - Files: `SystemCode/remy/data-preparation/tests/test_fake_driver_smoke.py`
     - Done when: `test_serving_model_runs_through_fake` and `test_fake_records_statements` fail because the fixture does not exist yet.
 
-- [ ] **T-4** Implement the fake driver fixture
+- [x] **T-4** Implement the fake driver fixture
     - Type: impl
     - Covers: AC-1
     - Files: `SystemCode/remy/data-preparation/tests/conftest.py`
