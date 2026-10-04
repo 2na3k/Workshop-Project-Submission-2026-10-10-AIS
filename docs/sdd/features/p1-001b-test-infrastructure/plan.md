@@ -328,7 +328,7 @@ creating one.
     - Files: `SystemCode/remy/data-preparation/README.md`
     - Done when: the README covers both fixtures, the `integration` marker, the three env vars, the dedicated-instance requirement, the local-skip / CI-fail distinction, and notes that locally exporting `CI=1` turns skips into failures.
 
-- [ ] **T-11** Run the focused tests and `sdd.py ci`
+- [x] **T-11** Run the focused tests and `sdd.py ci`
     - Type: verification
     - Covers: AC-1 through AC-5
     - Done when: unit tests pass; integration tests pass when the instance is configured (or skip locally when it is not); `sdd.py ci p1-001b-test-infrastructure` produces PASS evidence.
