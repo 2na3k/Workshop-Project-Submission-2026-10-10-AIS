@@ -50,6 +50,38 @@ change in the feature close decisions. The normal check never rewrites pinned
 values automatically. `make reproducible-build` runs dbt, manifest generation,
 and the checker in order; `make ci` is the configured CI entry point.
 
+## Manifest input and fail-closed refresh (p1-002, AC-1, AC-15)
+
+The serving model (`models/serving/recipe_graph_to_neo4j.py`) requires an
+**accepted source snapshot manifest** before opening a Neo4j session. Pass it
+explicitly via the environment:
+
+```bash
+NEO4J_SOURCE_MANIFEST=target/nonprod/source_snapshot_manifest.json \
+  make serve-neo4j DBT_TARGET=nonprod
+```
+
+The `Makefile` (`serve-neo4j` target) passes this path automatically when
+`reproducible-manifest` has produced it. If the manifest is missing, malformed,
+or reports a failed quality/allocation result, the loader exits non-zero
+before any graph mutation (`fail-closed`, R-15). The manifest's `sources`
+section must list all three required identities (`FoodData Central`,
+`recipe dataset`, `FairPrice listings`) with non-empty `snapshot_id` and
+`content_checksum`, and its `marts` section must declare deterministic
+`row_count` values that match the quality result.
+
+Run the full verification locally:
+
+```bash
+make ci DBT_TARGET=nonprod
+```
+
+This runs `reproducible-build` (dbt + manifest + checker) followed by the
+Python test layer (`tests/test_serving_model.py`, `tests/graph/test_edge_provenance.py`).
+The dbt singular test (`tests/mart_edge_provenance.sql`) executes under
+`dbt build`; its execution is blocked by p1-001 O-1 (missing seeds) and is
+recorded as deferred in the feature plan.
+
 ## Common commands
 
 ```bash

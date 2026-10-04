@@ -135,6 +135,36 @@ SET e += row, e.projection_owner = $owner
 
 EDGE_IDENTITIES = {"REQUIRES": "occurrence_id", "FULFILLS": "candidate_key"}
 
+# Canonical property allowlists (constitution R-1, AC-6). Legacy aliases
+# (e.g. `confidence`) are rejected rather than silently supported.
+# Reviewer nit 3: single-valued Neo4j properties mean "conflicting values"
+# reduces to identity duplication, which AC-9 covers.
+CANONICAL_NODE_PROPERTIES = {
+    "Recipe": {"recipe_id", "title", "projection_owner"},
+    "FoodConcept": {"canonical_key", "name", "projection_owner"},
+    "Food": {"food_key", "description", "projection_owner"},
+    "Component": {"component_id", "name", "projection_owner"},
+}
+CANONICAL_EDGE_PROPERTIES = {
+    "REQUIRES": {
+        "recipe_id", "occurrence_id", "normalized_name",  # endpoint + identity
+        "projection_owner",
+        "source", "source_snapshot_id", "normalization_version",
+        "mapping_confidence", "observed_at", "freshness_status",
+    },
+    "FULFILLS": {
+        "candidate_key", "food_key", "canonical_key",  # identity + endpoints
+        "projection_owner",
+        "source", "source_snapshot_id", "mapping_version",
+        "mapping_confidence", "observed_at", "freshness_status",
+    },
+    "HAS_COMPONENT": {
+        "id", "food_key", "component_id",
+        "source_snapshot_id",  # carried by loader from manifest
+        "projection_owner",
+    },
+}
+
 EDGE_LOADS = (
     ("REQUIRES", "REQUIRES", "edge_requires", EDGE_STATEMENTS["REQUIRES"]),
     ("FULFILLS", "FULFILLS", "edge_fulfills", EDGE_STATEMENTS["FULFILLS"]),
@@ -409,6 +439,17 @@ def _assert_edge_provenance(relationship, row):
                 ) from error
 
 
+def _filter_canonical(row, allowed_set):
+    """Reject non-canonical properties (R-1, AC-6). Legacy aliases fail."""
+    extra = set(row.keys()) - allowed_set
+    if extra:
+        raise ValueError(
+            f"graph refresh refused: non-canonical properties {sorted(extra)}; "
+            f"canonical vocabulary is {sorted(allowed_set)} (reviewer nit 3)"
+        )
+    return {k: v for k, v in row.items() if k in allowed_set}
+
+
 def load_edges(session, relationship, rows, owner=OWNER):
     """Validate then run the canonical load statement for one linking type.
 
@@ -496,14 +537,18 @@ def model(dbt, session):
             relation = dbt.ref(mart)
             loaded = 0
             if relationship is None:
+                allowed = CANONICAL_NODE_PROPERTIES.get(entity, set())
                 for payload in _rows(relation, batch_size):
-                    tx_run(statement, rows=payload, owner=OWNER)
-                    loaded += len(payload)
+                    filtered = [_filter_canonical(row, allowed) for row in payload]
+                    tx_run(statement, rows=filtered, owner=OWNER)
+                    loaded += len(filtered)
             else:
+                allowed = CANONICAL_EDGE_PROPERTIES.get(relationship, set())
                 payloads = _stamp_provenance(relation, relationship, accepted["sources"], batch_size)
                 for payload in payloads:
-                    load_edges(transaction, relationship, payload, OWNER)
-                    loaded += len(payload)
+                    filtered = [_filter_canonical(row, allowed) for row in payload]
+                    load_edges(transaction, relationship, filtered, OWNER)
+                    loaded += len(filtered)
             counts.append((entity, loaded))
         transaction.commit()
     except Exception:
