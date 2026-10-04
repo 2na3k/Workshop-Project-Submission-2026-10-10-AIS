@@ -274,7 +274,7 @@ creating one.
     - Files: (read-only)
     - Done when: the CI workflow file name is confirmed and named in a follow-up comment; `.env.test` presence in `.gitignore` is confirmed (present → no change; absent → `.gitignore` is a T-8 deliverable); the existing `[dependency-groups] dev` in `pyproject.toml` is confirmed to contain `pytest`, `ruff`, `mypy` and the change is additive.
 
-- [ ] **T-2** Add `python-dotenv>=1,<2` to the existing dev group and register the `integration` marker
+- [x] **T-2** Add `python-dotenv>=1,<2` to the existing dev group and register the `integration` marker
     - Type: impl
     - Covers: prerequisite for AC-4, AC-5
     - Files: `SystemCode/remy/data-preparation/pyproject.toml`

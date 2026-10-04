@@ -1442,6 +1442,7 @@ dependencies = [
 dev = [
     { name = "mypy" },
     { name = "pytest" },
+    { name = "python-dotenv" },
     { name = "ruff" },
 ]
 
@@ -1456,6 +1457,7 @@ requires-dist = [
 dev = [
     { name = "mypy", specifier = ">=1.10" },
     { name = "pytest", specifier = ">=8" },
+    { name = "python-dotenv", specifier = ">=1,<2" },
     { name = "ruff", specifier = ">=0.6" },
 ]
 

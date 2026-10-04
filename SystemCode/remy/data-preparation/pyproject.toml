@@ -13,7 +13,12 @@ dependencies = [
 package = false
 
 [dependency-groups]
-dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.10"]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.10", "python-dotenv>=1,<2"]
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: tests that require a live Neo4j instance (skipped locally when NEO4J_TEST_URI is not configured; fails in CI when unconfigured)",
+]
 
 [tool.mypy]
 mypy_path = "scripts"
