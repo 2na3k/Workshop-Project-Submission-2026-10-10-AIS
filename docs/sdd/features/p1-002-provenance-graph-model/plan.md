@@ -239,7 +239,7 @@ split.
     - Files: `SystemCode/remy/data-preparation/models/serving/recipe_graph_to_neo4j.py`, `SystemCode/remy/data-preparation/models/serving/schema.yml`
     - Done when: T-1 passes; preflight validates manifest schema, source identities, quality result, deterministic totals, and mart coverage before creating a driver/session; failure paths name the missing dimension and do not write.
 
-- [ ] **T-3** Write failing real-Neo4j provenance tests (AC-3, AC-4, AC-5, AC-8)
+- [x] **T-3** Write failing real-Neo4j provenance tests (AC-3, AC-4, AC-5, AC-8)
     - Type: test
     - Covers: AC-3, AC-4, AC-5, AC-8
     - Files: `SystemCode/remy/data-preparation/tests/graph/test_edge_provenance.py`
