@@ -63,3 +63,17 @@
 - Acceptance criteria: AC-1 .. AC-5
 - Decisions: docs/sdd/features/p1-001b-test-infrastructure/decisions.md
 - Breaking: none
+
+### p1-002-provenance-graph-model - Provenance-preserving canonical graph model (2026-10-05)
+
+- Added/Changed/Fixed:
+  - Canonical edge vocabulary (`REQUIRES`, `FULFILLS`) with provenance properties (source, source snapshot, mapping confidence, mapping/normalization version, freshness/observation timestamp) emitted in `edge_requires.sql` and `edge_fulfills.sql`.
+  - Fail-closed manifest admission preflight in serving model (`recipe_graph_to_neo4j.py`): validates p1-001 source/quality manifest, schema, accepted allocation/referential-integrity, deterministic totals, and mart coverage before creating Neo4j driver/session.
+  - Atomic ownership-scoped refresh preserved; rollback on any load/post-load validation error.
+  - Schema conformance demonstration enforcing canonical property allowlist (R-1); legacy aliases rejected.
+  - Real-Neo4j provenance write/read tests (AC-3, AC-4, AC-8) and idempotence proof (AC-9) verified; fake-driver admission/rollback tests (AC-1, AC-2, AC-10) verified.
+  - dbt singular test (`tests/mart_edge_provenance.sql`) for provenance and dangling endpoint rejection (AC-5, AC-7) written; execution deferred by p1-001 O-1 (documented deviation D-1, not an implementation deviation).
+  - Makefile `serve-neo4j` target passes manifest path; README documents manifest input and fail-closed refresh.
+- Acceptance criteria: AC-1 .. AC-10
+- Decisions: docs/sdd/features/p1-002-provenance-graph-model/decisions.md
+- Breaking: none

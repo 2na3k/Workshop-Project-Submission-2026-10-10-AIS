@@ -458,4 +458,3 @@ def test_failed_allocation_or_integrity_rolls_back(fake_driver, tmp_path):
     assert fake_driver.transaction is not None
     assert fake_driver.transaction.rolled_back is True
     assert fake_driver.transaction.committed is False
-

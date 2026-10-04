@@ -23,6 +23,8 @@ def test_repeated_accepted_load_is_content_identical(neo4j_driver):
         "freshness_status": "snapshot",
     }]
     session = neo4j_driver.session()
+    session.run("CREATE (:Recipe {recipe_id: 'r1'})")
+    session.run("CREATE (:FoodConcept {canonical_key: 'carrot'})")
     serving.load_edges(session, "REQUIRES", payload, owner="remy_recipe_graph")
     # Second load with identical identity: MERGE prevents duplication.
     serving.load_edges(session, "REQUIRES", payload, owner="remy_recipe_graph")

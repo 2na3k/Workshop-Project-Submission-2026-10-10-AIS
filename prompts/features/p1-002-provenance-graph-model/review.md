@@ -1,15 +1,15 @@
 # Prompt — Review
 
-Review for feature **p1-001b-test-infrastructure**
+Review for feature **p1-002-provenance-graph-model**
 
-`<id>`: `p1-001b-test-infrastructure`
+`<id>`: `p1-002-provenance-graph-model`
 
 ## Input
-- [spec.md](../../../docs/sdd/features/p1-001b-test-infrastructure/spec.md)
-- [plan.md](../../../docs/sdd/features/p1-001b-test-infrastructure/plan.md)
-- [ci-results.md](../../../docs/sdd/features/p1-001b-test-infrastructure/ci-results.md)
-- git diff (runs in powershell): `git diff feat/p1-001-reproducible-source-pipeline...
-feat/p1-001b-test-infrastructure -- SystemCode/`
+- [spec.md](../../../docs/sdd/features/p1-002-provenance-graph-model/spec.md)
+- [plan.md](../../../docs/sdd/features/p1-002-provenance-graph-model/plan.md)
+- [ci-results.md](../../../docs/sdd/features/p1-002-provenance-graph-model/ci-results.md)
+- git diff (runs in powershell): `git diff feat/p1-001b-test-infrastructure...
+feat/p1-002-provenance-graph-model -- SystemCode/`
 - [AGENTS.md](../../../AGENTS.md)
 - [constitution.md](../../../docs/sdd/constitution.md)
 

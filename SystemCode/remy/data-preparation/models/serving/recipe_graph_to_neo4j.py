@@ -385,7 +385,7 @@ def _stamp_provenance(relation, relationship, sources, batch_size):
     cannot state, so a record that leaves them blank is completed here and a record
     that supplies them keeps its own evidence.
     """
-    required = EDGE_PROVENANCE.get(relationship, ("source_snapshot_id",))
+    required = EDGE_PROVENANCE.get(relationship, ())
     for payload in _rows(relation, batch_size):
         for row in payload:
             evidence = sources[_source_identity(relationship, row)]
@@ -396,6 +396,9 @@ def _stamp_provenance(relation, relationship, sources, batch_size):
                     f"{existing!r} which is not the accepted {evidence['snapshot_id']!r}"
                 )
             row["source_snapshot_id"] = evidence["snapshot_id"]
+            # AC-5 / R-4: reject, never repair (F-2).
+            if required:
+                _assert_edge_provenance(relationship, row)
             # AC-5 / R-4: missing provenance is NOT synthesized. A blank
             # observed_at or freshness_status means the record is incomplete
             # and must be rejected by _assert_edge_provenance, not repaired.

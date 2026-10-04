@@ -1,13 +1,14 @@
 {
   "feature": "p1-002-provenance-graph-model",
-  "stage": "ci-passed",
-  "loops": 1,
+  "stage": "closed",
+  "loops": 2,
   "plan_review_verdict": "APPROVE",
+  "review_verdict": "APPROVE",
   "created": "2026-10-04T10:24:07+08:00",
   "spec_hash": "sha256:fe825daff3d512f4",
   "plan_hash": "sha256:cd4e340307d983eb",
-  "tasks_hash": "sha256:f26ba2e7e3506411",
-  "updated_at": "2026-10-04T23:17:31+08:00",
+  "tasks_hash": "sha256:f66b60495251ac36",
+  "updated_at": "2026-10-05T00:04:35+08:00",
   "history": [
     {
       "at": "2026-10-04T10:24:07+08:00",
@@ -44,7 +45,27 @@
     {
       "at": "2026-10-04T23:17:31+08:00",
       "event": "ci FAIL"
+    },
+    {
+      "at": "2026-10-04T23:31:28+08:00",
+      "event": "ci FAIL"
+    },
+    {
+      "at": "2026-10-04T23:38:27+08:00",
+      "event": "ci PASS"
+    },
+    {
+      "at": "2026-10-04T23:43:18+08:00",
+      "event": "ci PASS"
+    },
+    {
+      "at": "2026-10-05T00:00:00+08:00",
+      "event": "reviewed -> closed"
+    },
+    {
+      "at": "2026-10-05T00:04:35+08:00",
+      "event": "closed -> closed"
     }
   ],
-  "ci_overall": "FAIL"
+  "ci_overall": "PASS"
 }

@@ -1,14 +1,14 @@
 # Prompt — Close
 
-Close for feature **p1-001b-test-infrastructure**
+Close for feature **p1-002-provenance-graph-model**
 
-`<id>`: `p1-001b-test-infrastructure`
+`<id>`: `p1-002-provenance-graph-model`
 
 ## Input
-- [review.md](../../../docs/sdd/features/p1-001b-test-infrastructure/review.md)
-- [spec.md](../../../docs/sdd/features/p1-001b-test-infrastructure/spec.md)
-- [plan.md](../../../docs/sdd/features/p1-001b-test-infrastructure/plan.md)
-- [state.json](../../../docs/sdd/features/p1-001b-test-infrastructure/state.json)
+- [review.md](../../../docs/sdd/features/p1-002-provenance-graph-model/review.md)
+- [spec.md](../../../docs/sdd/features/p1-002-provenance-graph-model/spec.md)
+- [plan.md](../../../docs/sdd/features/p1-002-provenance-graph-model/plan.md)
+- [state.json](../../../docs/sdd/features/p1-002-provenance-graph-model/state.json)
 - [CHANGELOG.md](../../../docs/sdd/CHANGELOG.md)
 - [AGENTS.md](../../../AGENTS.md)
 

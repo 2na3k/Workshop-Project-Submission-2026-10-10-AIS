@@ -200,3 +200,17 @@ def test_write_read_provenance_matches_input(neo4j_driver) -> None:
                 value=case[identity],
             ).single()
             assert endpoint is not None and endpoint["canonical_key"] == "carrot"
+
+def test_populated_link_with_missing_provenance_is_rejected(fake_driver):
+    # A populated REQUIRES row missing `observed_at` must raise, not default-fill.
+    row = {
+        "recipe_id": "r1", "occurrence_id": "o1", "normalized_name": "carrot",
+        "source": "josephrmartinez/recipe-dataset",
+        "source_snapshot_id": "recipe-dataset-v1",
+        "normalization_version": "recipe-food-v4",
+        "mapping_confidence": 0.93,
+        # observed_at intentionally missing
+        "freshness_status": "snapshot",
+    }
+    with pytest.raises(ValueError, match="observed_at"):
+        serving.load_edges(fake_driver.session(), "REQUIRES", [row])
