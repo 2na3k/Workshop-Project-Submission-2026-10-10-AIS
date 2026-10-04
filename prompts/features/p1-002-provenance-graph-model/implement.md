@@ -1,25 +1,24 @@
 # Prompt — Implement
 
-Implement for feature **p1-001b-test-infrastructure**
+Implement for feature **p1-002-provenance-graph-model**
 
-`<id>`: `p1-001b-test-infrastructure`
+`<id>`: `p1-002-provenance-graph-model`
 
 ## Input
 - [AGENTS.md](../../../AGENTS.md)
-- [spec.md](../../../docs/sdd/features/p1-001b-test-infrastructure/spec.md)
-- [plan.md](../../../docs/sdd/features/p1-001b-test-infrastructure/plan.md)
+- [spec.md](../../../docs/sdd/features/p1-002-provenance-graph-model/spec.md)
+- [plan.md](../../../docs/sdd/features/p1-002-provenance-graph-model/plan.md)
 - [constitution.md](../../../docs/sdd/constitution.md)
 - current codebase: [SystemCode](../../../SystemCode)
 - [neo4j_db_design.md](../../../SystemCode/docs/neo4j_db_design.md)
 - [system_design_v3.md](../../../SystemCode/docs/system_design_v3.md)
 - on a loop-back: archived review.rN.md (highest N) with findings routed to `implement`
-- Neo4j instance credentials (for local development, use `.env.test` file; for CI, set environment variables):
-  - NEO4J_URI=
-  - NEO4J_USERNAME=
-  - NEO4J_PASSWORD=
-  - NEO4J_DATABASE=
-  - AURA_INSTANCEID=
-  - AURA_INSTANCENAME=
+- Integration tests connect to a cloud Neo4j instance via p1-001b's
+  `neo4j_driver` fixture, which reads `NEO4J_TEST_URI`,
+  `NEO4J_TEST_USERNAME`, and `NEO4J_TEST_PASSWORD` from the environment or a
+  gitignored `.env.test`. The implement agent does not need to read or handle
+  these values. Locally, integration tests skip when the variables are absent;
+  under CI, they fail (per p1-001b's D-2).
 
 ## Output
 - src/…, tests/…

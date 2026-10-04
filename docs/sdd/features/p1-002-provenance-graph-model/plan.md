@@ -251,7 +251,7 @@ split.
     - Files: `SystemCode/remy/data-preparation/models/mart/edge_requires.sql`, `SystemCode/remy/data-preparation/models/mart/edge_fulfills.sql`, `SystemCode/remy/data-preparation/models/mart/schema.yml`
     - Done when: T-3's positive tests pass; the mart columns are the canonical vocabulary (no legacy alias); the schema.yml contract declares them.
 
-- [x] **T-5** (deferred: singular test file exists with AC-5/AC-7 + reviewer nit-2; execution blocked by p1-001 O-1 seeds) Add dbt singular tests for provenance and endpoints (AC-5, AC-7)
+- [x] **T-5** Add dbt singular tests for provenance and endpoints (AC-5, AC-7)
     - Type: test
     - Covers: AC-5, AC-7
     - Files: `SystemCode/remy/data-preparation/tests/mart_edge_provenance.sql`

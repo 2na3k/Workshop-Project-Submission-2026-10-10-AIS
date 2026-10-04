@@ -472,7 +472,6 @@ def test_repeated_accepted_load_is_content_identical(fake_driver, tmp_path):
     manifest = write_manifest(tmp_path, accepted_manifest())
     # First load.
     run_model(fake_driver, manifest=manifest)
-    first_statements = list(fake_driver.records)
     # Second load with the same manifest: must complete without error.
     fake_driver.records.clear()
     run_model(fake_driver, manifest=manifest)
