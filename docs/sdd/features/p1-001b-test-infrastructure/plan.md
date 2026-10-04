@@ -316,7 +316,7 @@ creating one.
     - Files: `SystemCode/remy/data-preparation/.env.test.example`, `SystemCode/.gitignore`
     - Done when: the example file exists with the three placeholder variables and a header comment; `.env.test` is gitignored.
 
-- [ ] **T-9** Wire the CI workflow
+- [x] **T-9** Wire the CI workflow
     - Type: impl
     - Covers: AC-5
     - Files: the confirmed CI workflow file
