@@ -268,7 +268,7 @@ creating one.
 
 ## Tasks
 
-- [ ] **T-1** Verify the CI workflow file, `.gitignore`, and existing dev group
+- [x] **T-1** Verify the CI workflow file, `.gitignore`, and existing dev group
     - Type: prerequisite
     - Covers: plan's "Verification before tasks" items
     - Files: (read-only)
