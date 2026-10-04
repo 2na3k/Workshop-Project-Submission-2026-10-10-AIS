@@ -29,8 +29,8 @@ test"; where nothing exists, it is "new".
 | Feature                                    | Status  | Depends on                                                                                                      | Shares contract with                                                                                              | Contract                                                                                                                             |
 |--------------------------------------------|---------|-----------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
 | p1-001-reproducible-source-pipeline        | done    | —                                                                                                               | p1-002-provenance-graph-model, p1-003-coverage-quality-reporting                                                  | Source snapshot manifest and quality-gate result                                                                                     |
-| p1-001b-test-infrastructure                | new     | p1-001-reproducible-source-pipeline                                                                             | p1-002-provenance-graph-model                                                                                     | Fake driver fixture, Neo4j integration fixture, and CI service definition for graph tests                                            |
-| p1-002-provenance-graph-model              | partial | p1-001-reproducible-source-pipeline                                                                             | p1-001-reproducible-source-pipeline, p1-003-coverage-quality-reporting                                            | Canonical graph schema and `REQUIRES`/`FULFILLS` provenance contract                                                                 |
+| p1-001b-test-infrastructure                | done    | p1-001-reproducible-source-pipeline                                                                             | p1-002-provenance-graph-model                                                                                     | Fake driver fixture and cloud Neo4j integration fixture for graph tests                                                              |
+| p1-002-provenance-graph-model              | partial | p1-001-reproducible-source-pipeline, p1-001b-test-infrastructure                                                | p1-001-reproducible-source-pipeline, p1-001b-test-infrastructure, p1-003-coverage-quality-reporting              | Canonical graph schema and `REQUIRES`/`FULFILLS` provenance contract                                                                 |
 | p1-003-coverage-quality-reporting          | new     | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                              | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                                | Coverage dimensions and graph quality manifest                                                                                       |
 | p2-001-constraint-evidence-filtering       | partial | p1-002-provenance-graph-model                                                                                   | p2-002-cost-nutrition-calculation, p2-003-feasible-meal-plan-solving                                              | Candidate evaluation outcome and distinct evidence-absent/present-exclusion causes                                                   |
 | p2-002-cost-nutrition-calculation          | partial | p1-002-provenance-graph-model                                                                                   | p2-001-constraint-evidence-filtering, p2-003-feasible-meal-plan-solving                                           | Portion nutrient and consumed/package cost result contract                                                                           |
@@ -51,8 +51,8 @@ requirements, normalized food concepts, nutrition profiles, products, and dated
 retail offers. Graph links retain the provenance needed by downstream reasoning
 and the graph can be refreshed only from an accepted quality manifest.
 
-Existing pipeline and graph code is present. This phase makes that code **provable**: it adds the
-source snapshot manifest, the quality gate that blocks
+Existing pipeline and graph code is present. This phase makes that code
+**provable**: it adds the source snapshot manifest, the quality gate that blocks
 refresh on a failed manifest, the schema-conformance test, the edge-provenance
 test, and the coverage report. Where existing code violates a constitutional
 rule (R-1, R-4, R-15), this phase fixes it.
@@ -70,35 +70,39 @@ rule (R-1, R-4, R-15), this phase fixes it.
   reproducibility checker wired into the Makefile and CI. One loop-back (review
   findings F-1..F-11 resolved; F-3 deferred under override O-1). Follow-up:
   restore the data-preparation seeds and pin the real reference checksums (see
-  `docs/sdd/features/p1-001-reproducible-source-pipeline/decisions.md` O-1). (serves G-7)
-- **p1-001b-test-infrastructure** *(new)* — Set up the graph test infrastructure
-  that p1-002 through p1-003 depend on: a fake driver/session/transaction
-  fixture for orchestration tests, a Neo4j integration fixture (testcontainers
-  or a CI service) for real write/read tests, the corresponding dev dependency
-  in `pyproject.toml`, and the CI configuration to provision Neo4j. No
-  production code changes. (enables G-4, G-7 for downstream features)
-- **p1-002-provenance-graph-model** *(partial)* — Existing graph load. Remaining
-  work: ensure every populated `REQUIRES` and `FULFILLS` edge carries the
-  properties R-4 requires; add the schema-conformance test (R-1: single canonical
-  property names) and the edge-provenance test; wire the loader so it refuses to
-  run unless the manifest passed. **Prerequisite:** p1-001's O-1 follow-up (restore seeds so the
-  pipeline builds) — without a working pipeline, this
-  feature cannot demonstrate its exit criteria against real data. (serves G-4, G-7)
+  `docs/sdd/features/p1-001-reproducible-source-pipeline/decisions.md` O-1).
+  (serves G-7)
+- **p1-001b-test-infrastructure** *(done, 2026-10-04)* — Graph test
+  infrastructure: a fake driver/session/transaction fixture for orchestration
+  tests that must not touch a live Neo4j, and a cloud Neo4j integration fixture
+  (dedicated instance configured via `.env.test` or CI secrets) for real
+  write/read tests. The integration fixture skips locally when unconfigured and
+  fails under CI, so a skipped integration test in CI is a CI failure. CI
+  workflow added. No production code changes. (enables G-4, G-7 for downstream
+  features)
+- **p1-002-provenance-graph-model** *(partial)* — Existing graph load.
+  Remaining work: ensure every populated `REQUIRES` and `FULFILLS` edge carries
+  the properties R-4 requires; add the schema-conformance test (R-1: single
+  canonical property names) and the edge-provenance test; wire the loader so it
+  refuses to run unless the manifest passed. **Prerequisite:** p1-001's O-1
+  follow-up (restore seeds so the pipeline builds) — without a working pipeline,
+  this feature cannot demonstrate its exit criteria against real data. Test
+  infrastructure is now provided by p1-001b. (serves G-4, G-7)
 - **p1-003-coverage-quality-reporting** *(new)* — Publish separate nutrition,
   price, unit-conversion, dietary-evidence, and whole-recipe completeness
   measures, regenerated on every build. (serves G-5)
 
 ### Exit criteria
 
-- A clean rebuild from the declared source snapshots produces the canonical marts
-  and a quality manifest with deterministic entity and relationship counts. *Demonstrated by a CI
-  reproducibility test, not asserted.*
+- A clean rebuild from the declared source snapshots produces the canonical
+  marts and a quality manifest with deterministic entity and relationship
+  counts. *Demonstrated by a CI reproducibility test, not asserted.*
 - The quality gate rejects dangling `REQUIRES` or `FULFILLS` references and
   prevents graph refresh when the manifest is not accepted. *Demonstrated by a
   failing-manifest fixture that shows the loader exiting non-zero.*
 - Schema-conformance and edge-provenance checks pass for the canonical property
-  names and for every populated `REQUIRES` and `FULFILLS` linking record. *Demonstrated by the two
-  named tests; for any rule the existing code violates,
+  names and for every populated `REQUIRES` and `FULFILLS` linking record.
+  *Demonstrated by the two named tests; for any rule the existing code violates,
   the test fails first and the fix lands with the test.*
 - The coverage report exposes separate measurements for nutrition, price
   availability, package-unit conversion, dietary evidence, and overall recipe
@@ -107,7 +111,8 @@ rule (R-1, R-4, R-15), this phase fixes it.
   passing test or CI command demonstrating that the code satisfies its exit
   criteria. "The code exists" is not evidence. Graph test infrastructure
   (p1-001b) is a prerequisite for the graph conformance demonstrations in
-  p1-002 and p1-003; those features cannot close without it.
+  p1-002 and p1-003; those features cannot close without it. *Satisfied: p1-001b
+  closed 2026-10-04.*
 - No unresolved blocking findings. *p1-001's F-3 is deferred under override O-1
   and does not block phase exit, provided the O-1 follow-up is tracked and lands
   before p1-003 closes.*
@@ -116,11 +121,11 @@ rule (R-1, R-4, R-15), this phase fixes it.
 
 - The existing pipeline may not preserve source provenance in a form that can be
   turned into a manifest without rework. If so, the rework is in scope for
-  p1-001 and the effort is larger than the "partial" status implies. *Realized: p1-001 surfaced that
-  the pipeline had never been built end to end
+  p1-001 and the effort is larger than the "partial" status implies.
+  *Realized: p1-001 surfaced that the pipeline had never been built end to end
   in this repo state; the seed dependency (O-1) blocks the reproducible build.*
-- The existing graph may accept more than one property name for a concept (legacy naming from before
-  the constitution). R-1 makes this a violation and
+- The existing graph may accept more than one property name for a concept
+  (legacy naming from before the constitution). R-1 makes this a violation and
   the fix is part of p1-002 — this may affect the deployed schema and require a
   migration.
 - Coverage measurement may reveal gaps that were previously invisible. Gaps are
@@ -128,12 +133,16 @@ rule (R-1, R-4, R-15), this phase fixes it.
 - Retail crawling is constrained by the absence of a public API and price
   snapshots become stale; the accepted snapshot policy and freshness metadata
   must remain explicit.
+- The integration tests depend on a configured cloud Neo4j instance
+  (`NEO4J_TEST_URI`). If the instance is idle-paused, unreachable, or the
+  credentials are wrong, CI fails (per p1-001b's D-2). The instance must remain
+  available for the phase to keep passing.
 
 ### Phase p1 progress
 
 - p1-001: closed 2026-10-03, 1 implementation loop. Follow-up O-1 tracked.
-- p1-001b: not started.
-- p1-002: not started.
+- p1-001b: closed 2026-10-04, 0 loops.
+- p1-002: specified, plan pending.
 - p1-003: not started.
 
 ## Phase p2 - deterministic constraint evaluation and plan solving
@@ -187,3 +196,12 @@ Status: planned
   `testcontainers` dependency exist. The plan assumed they did. Splitting the
   infrastructure into a small preceding feature keeps p1-002's scope to the
   provenance graph model and makes the dependency explicit.
+
+- 2026-10-04 — Marked `p1-001b-test-infrastructure` as done, 0 loops. Updated
+  the feature description to reflect the cloud Neo4j fixture (which replaced
+  the originally planned testcontainers approach after the Docker-unavailable
+  constraint surfaced). Added `p1-001b` as a dependency of p1-002 in the
+  feature table. Marked the p1 exit criteria's conformance clause as satisfied.
+  Added a risk about the integration tests' dependency on the configured cloud
+  instance. Reason: p1-001b closed on 2026-10-04 with no loop-back; the roadmap
+  needs to reflect that p1-002's test infrastructure is now in place.
