@@ -233,7 +233,7 @@ split.
     - Files: `SystemCode/remy/data-preparation/tests/test_serving_model.py`
     - Done when: `test_accepted_manifest_loads_canonical_graph`, `test_missing_or_failed_manifest_preserves_graph`, and `test_failed_allocation_or_integrity_rolls_back` are written and fail because the preflight and admission logic do not exist yet.
 
-- [ ] **T-2** Implement manifest admission preflight in the serving model (AC-1, AC-2, AC-10)
+- [x] **T-2** Implement manifest admission preflight in the serving model (AC-1, AC-2, AC-10)
     - Type: impl
     - Covers: AC-1, AC-2, AC-10
     - Files: `SystemCode/remy/data-preparation/models/serving/recipe_graph_to_neo4j.py`, `SystemCode/remy/data-preparation/models/serving/schema.yml`

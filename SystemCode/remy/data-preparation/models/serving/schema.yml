@@ -2,7 +2,20 @@ version: 2
 
 models:
   - name: recipe_graph_to_neo4j
-    description: "Capacity-gated, ownership-scoped synchronization of the eight node and eight relationship marts."
+    description: >
+      Admission-gated, capacity-gated, ownership-scoped synchronization of the
+      canonical node and relationship marts. Admission is decided here, not in
+      the manifest: the model reads the p1-001 source snapshot manifest named by
+      NEO4J_SOURCE_MANIFEST together with graph_quality_manifest and rejects the
+      build before opening a Neo4j session unless the manifest schema and
+      contract version are supported, every required source carries a non-blank
+      source_identity, snapshot_id and content_checksum, each canonical entity
+      has an accepted quality result whose row_count equals the manifest's mart
+      coverage, and the TOTAL_NODE / TOTAL_RELATIONSHIP totals equal the sum of
+      the deterministic entity counts. Populated REQUIRES and FULFILLS records
+      are additionally checked for resolvable endpoints and stamped with the
+      accepted source snapshot, so a linking record cannot publish without
+      snapshot provenance.
     columns:
       - name: entity
         description: "Neo4j node label or relationship type loaded."

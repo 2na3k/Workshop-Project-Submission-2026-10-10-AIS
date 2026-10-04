@@ -1,6 +1,7 @@
 import importlib.util
 import json
 import os
+import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -9,8 +10,8 @@ import pytest
 
 path = Path(__file__).parents[1] / "models/serving/recipe_graph_to_neo4j.py"
 spec = importlib.util.spec_from_file_location("recipe_graph_to_neo4j", path)
+assert spec is not None and spec.loader is not None
 serving = importlib.util.module_from_spec(spec)
-assert spec.loader
 spec.loader.exec_module(serving)
 
 
@@ -91,25 +92,12 @@ class Relation:
         return [row for _, row in zip(range(size), self.rows)]
 
 
-class Dbt:
-    def config(self, **_):
-        pass
-
-    def ref(self, name):
-        if name == "graph_quality_manifest":
-            return Relation(
-                ["entity", "row_count", "allocation", "within_allocation"],
-                [("TOTAL_NODE", 8, 84200, True), ("TOTAL_RELATIONSHIP", 8, 208200, True)],
-            )
-        return Relation(["id"], [(1,)])
-
-
 class Session:
     def sql(self, query):
         return query
 
 
-def environment(replace=False):
+def environment(replace=False, manifest=None):
     values = {
         "NEO4J_URI": "neo4j+s://example.databases.neo4j.io",
         "NEO4J_USERNAME": "user",
@@ -118,90 +106,18 @@ def environment(replace=False):
     }
     if replace:
         values["NEO4J_REPLACE"] = "true"
+    if manifest is not None:
+        values["NEO4J_SOURCE_MANIFEST"] = manifest
     return values
-
-
-requests = []
-with patch.dict(os.environ, environment(), clear=True):
-    try:
-        serving.model(Dbt(), Session())
-    except ValueError as error:
-        assert "NEO4J_REPLACE=true is required" in str(error)
-    else:
-        raise AssertionError("append-only synchronization was accepted")
-assert not requests
-
-requests.clear()
-replacement = Neo4jSession(nodes=179990, relationships=359990)
-with (
-    patch.dict(os.environ, environment(replace=True), clear=True),
-    patch.object(serving.GraphDatabase, "driver", return_value=Driver(replacement)) as connect,
-):
-    result = serving.model(Dbt(), Session())
-connect.assert_called_once_with("neo4j+s://example.databases.neo4j.io", auth=("user", "secret"))
-assert replacement.transaction.committed and not replacement.transaction.rolled_back
-assert any("DELETE r" in statement for statement, _ in requests)
-statements = "\n".join(statement for statement, _ in requests)
-assert "projection_owner" in statements
-assert "Product" in statements and "Offer" in statements and "Allergen" in statements and "Diet" in statements
-assert "candidate_key" in statements
-assert "FULFILLS" in result and "HAS_COMPONENT" in result
-assert "PRODUCT_FULFILLS" not in result and "DIET_STATUS" not in result
-
-requests.clear()
-failing = Neo4jSession(fail_on_load=True)
-with (
-    patch.dict(os.environ, environment(replace=True), clear=True),
-    patch.object(serving.GraphDatabase, "driver", return_value=Driver(failing)),
-):
-    try:
-        serving.model(Dbt(), Session())
-    except RuntimeError as error:
-        assert "injected load failure" in str(error)
-    else:
-        raise AssertionError("injected load failure was not raised")
-assert failing.transaction.rolled_back and not failing.transaction.committed
-
-requests.clear()
-over_capacity = Neo4jSession(nodes=180000)
-with (
-    patch.dict(os.environ, environment(replace=True), clear=True),
-    patch.object(serving.GraphDatabase, "driver", return_value=Driver(over_capacity)),
-):
-    try:
-        serving.model(Dbt(), Session())
-    except ValueError as error:
-        assert "capacity gate failed" in str(error)
-    else:
-        raise AssertionError("capacity gate accepted an over-cap load")
-assert over_capacity.transaction.rolled_back
-
-
-class BadManifestDbt(Dbt):
-    def ref(self, name):
-        if name == "graph_quality_manifest":
-            return Relation(
-                ["entity", "row_count", "allocation", "within_allocation"],
-                [("Food", 32001, 32000, False), ("TOTAL_NODE", 32001, 84200, True),
-                 ("TOTAL_RELATIONSHIP", 0, 208200, True)],
-            )
-        return super().ref(name)
-
-
-with patch.dict(os.environ, environment(), clear=True):
-    try:
-        serving.model(BadManifestDbt(), Session())
-    except ValueError as error:
-        assert "allocation failed: Food" in str(error)
-    else:
-        raise AssertionError("individual manifest allocation failure was accepted")
 
 
 # ---------------------------------------------------------------------------
 # p1-002 admission fixtures (AC-1, AC-2, AC-10)
 #
-# These tests drive the serving model with the p1-001b `fake_driver` fixture so
-# the orchestration and admission semantics can be proved without a live Neo4j.
+# These fixtures drive the serving model with the p1-001b `fake_driver` fixture
+# so the orchestration and admission semantics can be proved without a live
+# Neo4j. `graph_quality_manifest` and the source snapshot manifest agree here,
+# which is what an accepted build looks like.
 # ---------------------------------------------------------------------------
 
 FDC_SNAPSHOT = "usda-fooddata-central-2026-09-01"
@@ -301,15 +217,15 @@ def accepted_manifest(**changes):
     return document
 
 
-def write_manifest(tmp_path, document):
-    path = tmp_path / "source_snapshot_manifest.json"
+def write_manifest(directory, document):
+    manifest_path = Path(directory) / "source_snapshot_manifest.json"
     text = document if isinstance(document, str) else json.dumps(document)
-    path.write_text(text, encoding="utf-8")
-    return str(path)
+    manifest_path.write_text(text, encoding="utf-8")
+    return str(manifest_path)
 
 
 class ProjectionDbt:
-    """dbt stand-in supplying the canonical mart relations for admission tests."""
+    """dbt stand-in supplying the canonical mart relations for an accepted build."""
 
     def __init__(self, relations=None):
         self.relations = dict(DEFAULT_RELATIONS)
@@ -336,9 +252,7 @@ def payload_rows(driver, marker):
 
 def run_model(driver, manifest=None, dbt=None):
     """Run the serving model against the fake driver."""
-    values = dict(environment(replace=True))
-    if manifest is not None:
-        values["NEO4J_SOURCE_MANIFEST"] = manifest
+    values = environment(replace=True, manifest=manifest)
 
     def connect(*_args, **_kwargs):
         return driver
@@ -348,6 +262,93 @@ def run_model(driver, manifest=None, dbt=None):
         patch.object(serving.GraphDatabase, "driver", side_effect=connect),
     ):
         serving.model(dbt or ProjectionDbt(), Session())
+
+
+# ---------------------------------------------------------------------------
+# p1-001 serving behaviour, retained under the p1-002 admission gate.
+# ---------------------------------------------------------------------------
+
+requests: list[tuple[str, dict[str, object]]] = []
+with patch.dict(os.environ, environment(), clear=True):
+    try:
+        serving.model(ProjectionDbt(), Session())
+    except ValueError as error:
+        assert "NEO4J_REPLACE=true is required" in str(error)
+    else:
+        raise AssertionError("append-only synchronization was accepted")
+assert not requests
+
+MANIFEST_PATH = write_manifest(tempfile.mkdtemp(prefix="remy-serving-"), accepted_manifest())
+
+requests.clear()
+replacement = Neo4jSession(nodes=179990, relationships=359990)
+with (
+    patch.dict(os.environ, environment(replace=True, manifest=MANIFEST_PATH), clear=True),
+    patch.object(serving.GraphDatabase, "driver", return_value=Driver(replacement)) as connect,
+):
+    result = serving.model(ProjectionDbt(), Session())
+connect.assert_called_once_with("neo4j+s://example.databases.neo4j.io", auth=("user", "secret"))
+assert replacement.transaction.committed and not replacement.transaction.rolled_back
+assert any("DELETE r" in statement for statement, _ in requests)
+statements = "\n".join(statement for statement, _ in requests)
+assert "projection_owner" in statements
+assert "Product" in statements and "Offer" in statements and "Allergen" in statements and "Diet" in statements
+assert "candidate_key" in statements
+assert "FULFILLS" in result and "HAS_COMPONENT" in result
+assert "PRODUCT_FULFILLS" not in result and "DIET_STATUS" not in result
+
+requests.clear()
+failing = Neo4jSession(fail_on_load=True)
+with (
+    patch.dict(os.environ, environment(replace=True, manifest=MANIFEST_PATH), clear=True),
+    patch.object(serving.GraphDatabase, "driver", return_value=Driver(failing)),
+):
+    try:
+        serving.model(ProjectionDbt(), Session())
+    except RuntimeError as error:
+        assert "injected load failure" in str(error)
+    else:
+        raise AssertionError("injected load failure was not raised")
+assert failing.transaction.rolled_back and not failing.transaction.committed
+
+requests.clear()
+over_capacity = Neo4jSession(nodes=180000)
+with (
+    patch.dict(os.environ, environment(replace=True, manifest=MANIFEST_PATH), clear=True),
+    patch.object(serving.GraphDatabase, "driver", return_value=Driver(over_capacity)),
+):
+    try:
+        serving.model(ProjectionDbt(), Session())
+    except ValueError as error:
+        assert "capacity gate failed" in str(error)
+    else:
+        raise AssertionError("capacity gate accepted an over-cap load")
+assert over_capacity.transaction.rolled_back
+
+
+class BadManifestDbt(ProjectionDbt):
+    def ref(self, name):
+        if name == "graph_quality_manifest":
+            return Relation(
+                ["entity", "row_count", "allocation", "within_allocation"],
+                [("Food", 32001, 32000, False), ("TOTAL_NODE", 32001, 84200, True),
+                 ("TOTAL_RELATIONSHIP", 0, 208200, True)],
+            )
+        return super().ref(name)
+
+
+with patch.dict(os.environ, environment(replace=True, manifest=MANIFEST_PATH), clear=True):
+    try:
+        serving.model(BadManifestDbt(), Session())
+    except ValueError as error:
+        assert "allocation failed: Food" in str(error)
+    else:
+        raise AssertionError("individual manifest allocation failure was accepted")
+
+
+# ---------------------------------------------------------------------------
+# p1-002 admission tests
+# ---------------------------------------------------------------------------
 
 
 def test_accepted_manifest_loads_canonical_graph(fake_driver, tmp_path):
@@ -407,18 +408,18 @@ MANIFEST_FAILURES = [
 @pytest.mark.parametrize("manifest,expected", MANIFEST_FAILURES)
 def test_missing_or_failed_manifest_preserves_graph(fake_driver, tmp_path, manifest, expected):
     if manifest is None:
-        path = None
+        manifest_path = None
     elif manifest == "missing-file":
-        path = str(tmp_path / "does-not-exist.json")
+        manifest_path = str(tmp_path / "does-not-exist.json")
     elif manifest == "raw":
-        path = write_manifest(tmp_path, "{not json")
+        manifest_path = write_manifest(tmp_path, "{not json")
     else:
         document = accepted_manifest()
         document.update(manifest)
-        path = write_manifest(tmp_path, document)
+        manifest_path = write_manifest(tmp_path, document)
 
     with pytest.raises(ValueError) as error:
-        run_model(fake_driver, manifest=path)
+        run_model(fake_driver, manifest=manifest_path)
 
     assert expected in str(error.value).lower()
     assert fake_driver.records == []
@@ -452,7 +453,6 @@ def test_failed_allocation_or_integrity_rolls_back(fake_driver, tmp_path):
     )
     with pytest.raises(ValueError) as error:
         run_model(fake_driver, manifest=manifest, dbt=ProjectionDbt({"edge_requires": dangling}))
-
     assert "REQUIRES" in str(error.value)
     assert "dangling" in str(error.value).lower()
     assert fake_driver.transaction is not None
