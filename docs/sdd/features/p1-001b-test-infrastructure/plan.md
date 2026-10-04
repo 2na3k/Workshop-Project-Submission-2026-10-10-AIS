@@ -280,7 +280,7 @@ creating one.
     - Files: `SystemCode/remy/data-preparation/pyproject.toml`
     - Done when: `uv sync --all-packages` resolves; `uv run --package remy-data-preparation pytest --markers` lists `integration`; the existing dev entries are unchanged.
 
-- [ ] **T-3** Write failing tests for the fake driver fixture (AC-1)
+- [x] **T-3** Write failing tests for the fake driver fixture (AC-1)
     - Type: test
     - Covers: AC-1
     - Files: `SystemCode/remy/data-preparation/tests/test_fake_driver_smoke.py`
