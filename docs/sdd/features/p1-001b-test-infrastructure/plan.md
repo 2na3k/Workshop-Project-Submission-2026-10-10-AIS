@@ -304,7 +304,7 @@ creating one.
     - Files: `SystemCode/remy/data-preparation/tests/graph/test_fixture_smoke.py`
     - Done when: `test_write_read_through_fixture` and `test_second_test_sees_clean_state` are written and fail because the fixture does not exist yet.
 
-- [ ] **T-7** Implement the cloud Neo4j integration fixture
+- [x] **T-7** Implement the cloud Neo4j integration fixture
     - Type: impl
     - Covers: AC-2, AC-3, AC-5 (the fixture's local-skip / CI-fail branch)
     - Files: `SystemCode/remy/data-preparation/tests/graph/conftest.py`
