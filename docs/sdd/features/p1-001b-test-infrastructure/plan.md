@@ -310,7 +310,7 @@ creating one.
     - Files: `SystemCode/remy/data-preparation/tests/graph/conftest.py`
     - Done when: T-6 passes when the instance is configured; the fixture skips locally when unconfigured and fails under `CI=true`; an empty-string variable is treated as missing; the failure message names the URI but not the password.
 
-- [ ] **T-8** Add `.env.test.example` and update `.gitignore`
+- [x] **T-8** Add `.env.test.example` and update `.gitignore`
     - Type: impl
     - Covers: prerequisite for local runs and for the CI documentation
     - Files: `SystemCode/remy/data-preparation/.env.test.example`, `SystemCode/.gitignore`

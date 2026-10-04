@@ -1,0 +1,2 @@
+# Test-infrastructure example env may be committed; the filled-in .env.test stays ignored.
+!.env.test.example
