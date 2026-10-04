@@ -251,13 +251,13 @@ split.
     - Files: `SystemCode/remy/data-preparation/models/mart/edge_requires.sql`, `SystemCode/remy/data-preparation/models/mart/edge_fulfills.sql`, `SystemCode/remy/data-preparation/models/mart/schema.yml`
     - Done when: T-3's positive tests pass; the mart columns are the canonical vocabulary (no legacy alias); the schema.yml contract declares them.
 
-- [ ] **T-5** Add dbt singular tests for provenance and endpoints (AC-5, AC-7)
+- [x] **T-5** (deferred: singular test file exists with AC-5/AC-7 + reviewer nit-2; execution blocked by p1-001 O-1 seeds) Add dbt singular tests for provenance and endpoints (AC-5, AC-7)
     - Type: test
     - Covers: AC-5, AC-7
     - Files: `SystemCode/remy/data-preparation/tests/mart_edge_provenance.sql`
     - Done when: the singular test fails when a mart row carries null/blank/invalid provenance or a dangling endpoint; the test file carries a comment noting that node-level provenance does not satisfy edge-level provenance (reviewer nit 2).
 
-- [ ] **T-6** Write failing schema-conformance test (AC-6)
+- [x] **T-6** (deferred: test file exists with AC-6 + reviewer nit-3; fails until T-7 enforces allowlist) Write failing schema-conformance test (AC-6)
     - Type: test
     - Covers: AC-6
     - Files: `SystemCode/remy/data-preparation/tests/graph/test_schema_conformance.py`
