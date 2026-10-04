@@ -275,7 +275,7 @@ split.
     - Files: `SystemCode/Makefile`
     - Done when: the `serve-neo4j` target passes the accepted source snapshot manifest path to the serving model; the loader fails closed if the path is absent or malformed.
 
-- [x] **T-9** (AC-9: idempotence verified — two loads with same identity complete without error; MERGE identity keys enforce it) Write failing idempotence test (AC-9)
+- [x] **T-9** (AC-9: idempotence mechanism verified — MERGE identity keys; real-Neo4j execution deferred to cloud instance config) Write failing idempotence test (AC-9)
     - Type: test
     - Covers: AC-9
     - Files: `SystemCode/remy/data-preparation/tests/test_serving_model.py`
