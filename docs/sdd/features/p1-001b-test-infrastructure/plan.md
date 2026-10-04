@@ -298,7 +298,7 @@ creating one.
     - Files: `SystemCode/remy/data-preparation/tests/test_fake_driver_smoke.py` (or a sibling)
     - Done when: the test asserts the `integration` marker is registered via `pytestconfig.getini("markers")` and fails until T-2 lands.
 
-- [ ] **T-6** Write failing tests for the cloud Neo4j integration fixture (AC-2, AC-3)
+- [x] **T-6** Write failing tests for the cloud Neo4j integration fixture (AC-2, AC-3)
     - Type: test
     - Covers: AC-2, AC-3
     - Files: `SystemCode/remy/data-preparation/tests/graph/test_fixture_smoke.py`
