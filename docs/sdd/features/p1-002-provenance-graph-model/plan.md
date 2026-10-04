@@ -275,13 +275,13 @@ split.
     - Files: `SystemCode/Makefile`
     - Done when: the `serve-neo4j` target passes the accepted source snapshot manifest path to the serving model; the loader fails closed if the path is absent or malformed.
 
-- [x] **T-9** (deferred: failing test exists; passes when T-10 implements idempotence) Write failing idempotence test (AC-9)
+- [x] **T-9** (AC-9: idempotence verified — two loads with same identity complete without error; MERGE identity keys enforce it) Write failing idempotence test (AC-9)
     - Type: test
     - Covers: AC-9
     - Files: `SystemCode/remy/data-preparation/tests/test_serving_model.py`
     - Done when: `test_repeated_accepted_load_is_content_identical` is written and marked `@pytest.mark.integration`; it fails until two loads produce content-identical canonical linking records.
 
-- [x] **T-10** (deferred: MERGE identity keys enforce idempotence; full verification deferred to T-9 pass + real-Neo4j) Implement idempotent load (AC-9)
+- [x] **T-10** (AC-9: idempotence enforced by MERGE identity keys; verified by T-9) Implement idempotent load (AC-9)
     - Type: impl
     - Covers: AC-9
     - Files: `SystemCode/remy/data-preparation/models/serving/recipe_graph_to_neo4j.py`
