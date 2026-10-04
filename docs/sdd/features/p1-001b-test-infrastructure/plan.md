@@ -322,7 +322,7 @@ creating one.
     - Files: the confirmed CI workflow file
     - Done when: the workflow runs `pytest -m "not integration"` first, then `pytest -m integration` with `NEO4J_TEST_URI`, `NEO4J_TEST_USERNAME`, `NEO4J_TEST_PASSWORD` from secrets and `CI=true`; a missing secret causes the integration step to fail.
 
-- [ ] **T-10** Document the fixtures, marker, env vars, and skip-vs-fail behavior
+- [x] **T-10** Document the fixtures, marker, env vars, and skip-vs-fail behavior
     - Type: impl
     - Covers: AC-4, AC-5
     - Files: `SystemCode/remy/data-preparation/README.md`

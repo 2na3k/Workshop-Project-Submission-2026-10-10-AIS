@@ -66,3 +66,55 @@ uv run --package remy-data-preparation \
   python remy/data-preparation/scripts/recipe_estimate.py 882 \
   --assumed-servings 2 --requested-portions 1 --halal-mode off
 ```
+
+## Testing
+
+The test suite lives under `tests/` and uses pytest. It has two layers.
+
+### Fake driver (`fake_driver`)
+
+`tests/conftest.py` provides a `fake_driver` fixture that emulates the
+Neo4j driver/session/result surface the serving model
+(`models/serving/recipe_graph_to_neo4j.py`) uses. It records every
+`run(cypher, **params)` as an ordered `(cypher, params)` list, so tests can
+assert on the statements the model issues without a live database. These tests
+run anywhere and are the default.
+
+### Cloud Neo4j integration (`neo4j_driver`)
+
+`tests/graph/` holds integration tests marked `@pytest.mark.integration`. They
+connect to a **dedicated** cloud Neo4j test instance. The `neo4j_driver`
+fixture builds a driver, runs `MATCH (n) DETACH DELETE n` before each test, and
+closes the driver afterwards.
+
+> The instance must be dedicated to testing: the fixture wipes the whole
+> database between tests. Never point these at the development / production
+> Neo4j configured in `.env.nonprod`.
+
+The fixture reads three variables — `NEO4J_TEST_URI`, `NEO4J_TEST_USERNAME`,
+`NEO4J_TEST_PASSWORD` — from the process environment first, then from a
+gitignored `.env.test` file at the **repository root** (the directory holding
+`.git`, which the fixture resolves with `git rev-parse --show-toplevel`).
+Copy the example there and fill in the dedicated test credentials:
+
+```bash
+# from the repository root
+cp SystemCode/remy/data-preparation/.env.test.example .env.test
+```
+
+#### Skip versus fail
+
+- **Local run, instance not configured:** the integration tests **skip**. Run
+  the unit layer only with:
+
+  ```bash
+  uv run --package remy-data-preparation pytest -q tests -m "not integration"
+  ```
+
+- **CI run (`CI=1`/`true`/`yes`), instance not configured:** the integration
+  tests **fail** rather than skip, so a missing `NEO4J_TEST_*` secret cannot
+  turn the job silently green. The `.github/workflows/data-preparation.yml`
+  job runs `pytest -m "not integration"` first, then `pytest -m integration`
+  with `CI=true` and the three variables injected from repository secrets.
+- **Locally exporting `CI=1`** turns the skips into failures, which is how the
+  CI behaviour can be reproduced before pushing.
