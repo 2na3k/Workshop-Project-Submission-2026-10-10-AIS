@@ -292,7 +292,7 @@ creating one.
     - Files: `SystemCode/remy/data-preparation/tests/conftest.py`
     - Done when: T-3 passes; the fixture records each `run(cypher, **params)` in order; the serving model can be driven end-to-end through the fake without `AttributeError`.
 
-- [ ] **T-5** Write a failing test for the marker registration (AC-4)
+- [x] **T-5** Write a failing test for the marker registration (AC-4)
     - Type: test
     - Covers: AC-4
     - Files: `SystemCode/remy/data-preparation/tests/test_fake_driver_smoke.py` (or a sibling)

@@ -12,6 +12,9 @@ import os
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
+
 _PACKAGE_ROOT = Path(__file__).parents[1]
 _spec = importlib.util.spec_from_file_location(
     "recipe_graph_to_neo4j_fake_smoke",
@@ -109,3 +112,17 @@ def test_fake_records_statements(fake_driver) -> None:
         "MATCH (n) RETURN count(n) AS nodes",
         "MERGE (n:Recipe {recipe_id: $id})",
     ]
+
+
+def test_integration_marker_registered(pytestconfig: pytest.Config) -> None:
+    """AC-4: the ``integration`` marker is registered (see pyproject.toml).
+
+    The plan expects this assertion to fail until the marker is registered in
+    ``pyproject.toml``; T-2 landed that registration, so it is green here. The
+    ``-m "not integration"`` filter behavior itself is exercised at the CI level
+    (Design section 4), not by invoking pytest as a subprocess.
+    """
+    markers = pytestconfig.getini("markers")
+    assert any(
+        line.split(":", 1)[0].strip() == "integration" for line in markers
+    ), f"'integration' marker not registered; found: {markers}"
