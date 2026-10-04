@@ -1,3 +1,3 @@
 select *
 from {{ ref('edge_fulfills') }}
-where confidence < 0 or confidence > 1
+where mapping_confidence < 0 or mapping_confidence > 1

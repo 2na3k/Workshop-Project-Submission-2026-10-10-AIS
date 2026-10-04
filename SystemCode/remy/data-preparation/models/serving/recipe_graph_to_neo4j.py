@@ -9,6 +9,7 @@ rejected refresh cannot mutate the published graph.
 
 import json
 import os
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -47,10 +48,21 @@ ENTITY_MART = {label: mart for label, mart, _ in NODES} | {
     "HAS_COMPONENT": "edge_has_component",
 }
 # Each linking record is stamped with the snapshot of the source that produced it.
+# A record's own ``source`` value selects the identity when it names one; this is
+# the relationship default for records whose source the mart does not restate.
 LINK_SOURCE = {
     "REQUIRES": "recipe dataset",
     "FULFILLS": "FoodData Central",
     "HAS_COMPONENT": "FoodData Central",
+}
+# The canonical ``source`` values the marts emit, mapped to the source identity
+# the accepted source snapshot manifest uses for them. A fulfillment record can
+# come from the nutrition source or from retail listings, so its snapshot must be
+# resolved per record rather than per relationship.
+SOURCE_IDENTITY = {
+    "josephrmartinez/recipe-dataset": "recipe dataset",
+    "fooddata_central": "FoodData Central",
+    "fairprice": "FairPrice listings",
 }
 # (relationship, mart, start label, start key column, end label, end key column)
 EDGES = (
@@ -58,6 +70,35 @@ EDGES = (
     ("FULFILLS", "edge_fulfills", "Food", "food_key", "FoodConcept", "canonical_key"),
     ("HAS_COMPONENT", "edge_has_component", "Food", "food_key", "Component", "component_id"),
 )
+
+# Canonical edge provenance vocabulary (constitution R-4, plan Design section 1):
+# one spelling per concept, declared here and in the mart contracts, with no
+# legacy alias kept as a second name for the same fact. ``source`` and the
+# mapping/normalization version plus ``mapping_confidence`` are the mart's own
+# evidence; ``source_snapshot_id``, ``observed_at`` and, for requirement links,
+# ``freshness_status`` are the accepted snapshot's facts, which only the manifest
+# can state. The specification scopes this vocabulary to REQUIRES and FULFILLS;
+# HAS_COMPONENT is the existing support relation and keeps the source/snapshot
+# evidence it already carries, so it is deliberately absent from the contract and
+# is loaded without the edge-provenance gate.
+EDGE_PROVENANCE = {
+    "REQUIRES": (
+        "source",
+        "source_snapshot_id",
+        "normalization_version",
+        "mapping_confidence",
+        "observed_at",
+        "freshness_status",
+    ),
+    "FULFILLS": (
+        "source",
+        "source_snapshot_id",
+        "mapping_version",
+        "mapping_confidence",
+        "observed_at",
+        "freshness_status",
+    ),
+}
 
 NODE_STATEMENTS = {
     label: (
@@ -68,28 +109,36 @@ NODE_STATEMENTS = {
     for label, _, key in NODES
 }
 
-EDGE_LOADS = (
-    ("REQUIRES", "REQUIRES", "edge_requires", """
+EDGE_STATEMENTS = {
+    "REQUIRES": """
 UNWIND $rows AS row
 MATCH (a:Recipe {recipe_id: row.recipe_id})
 MATCH (b:FoodConcept {canonical_key: row.normalized_name})
 MERGE (a)-[e:REQUIRES {occurrence_id: row.occurrence_id}]->(b)
 SET e += row, e.projection_owner = $owner
-"""),
-    ("FOOD_FULFILLS", "FULFILLS", "edge_fulfills", """
+""",
+    "FULFILLS": """
 UNWIND $rows AS row
 MATCH (a:Food {food_key: row.food_key})
 MATCH (b:FoodConcept {canonical_key: row.canonical_key})
 MERGE (a)-[e:FULFILLS {candidate_key: row.candidate_key}]->(b)
 SET e += row, e.projection_owner = $owner
-"""),
-    ("HAS_COMPONENT", "HAS_COMPONENT", "edge_has_component", """
+""",
+    "HAS_COMPONENT": """
 UNWIND $rows AS row
 MATCH (a:Food {food_key: row.food_key})
 MATCH (b:Component {component_id: row.component_id})
 MERGE (a)-[e:HAS_COMPONENT {id: row.id}]->(b)
 SET e += row, e.projection_owner = $owner
-"""),
+""",
+}
+
+EDGE_IDENTITIES = {"REQUIRES": "occurrence_id", "FULFILLS": "candidate_key"}
+
+EDGE_LOADS = (
+    ("REQUIRES", "REQUIRES", "edge_requires", EDGE_STATEMENTS["REQUIRES"]),
+    ("FULFILLS", "FULFILLS", "edge_fulfills", EDGE_STATEMENTS["FULFILLS"]),
+    ("HAS_COMPONENT", "HAS_COMPONENT", "edge_has_component", EDGE_STATEMENTS["HAS_COMPONENT"]),
 )
 
 
@@ -149,7 +198,7 @@ def _read_source_manifest():
             f"admission failed: source snapshot manifest lists no sources, "
             f"expected exactly {REQUIRED_SOURCES}"
         )
-    snapshots: dict[str, str] = {}
+    snapshots: dict[str, dict[str, str]] = {}
     for entry in raw_sources:
         if not isinstance(entry, dict):
             raise ValueError("admission failed: every source snapshot manifest entry must be an object")
@@ -166,7 +215,19 @@ def _read_source_manifest():
         checksum = entry.get("content_checksum")
         if not isinstance(checksum, str) or not checksum.strip():
             raise ValueError(f"admission failed: source {identity} has a blank content_checksum")
-        snapshots[identity] = snapshot_id
+        # Linking records carry this timestamp as their observation evidence, so
+        # an absent or unparseable value cannot be admitted: the manifest states
+        # the facts, this model decides whether they satisfy acceptance.
+        observed_at = entry.get("observation_timestamp")
+        if not isinstance(observed_at, str) or not observed_at.strip():
+            raise ValueError(f"admission failed: source {identity} has a blank observation_timestamp")
+        try:
+            datetime.fromisoformat(observed_at)
+        except ValueError as error:
+            raise ValueError(
+                f"admission failed: source {identity} has an invalid observation_timestamp: {observed_at!r}"
+            ) from error
+        snapshots[identity] = {"snapshot_id": snapshot_id, "observation_timestamp": observed_at}
     missing_sources = [item for item in REQUIRED_SOURCES if item not in snapshots]
     if missing_sources:
         raise ValueError(
@@ -270,22 +331,96 @@ def _assert_referential_integrity(dbt, keys, batch_size):
                 )
 
 
-def _stamp_provenance(relation, relationship, snapshot_id, batch_size):
-    """Attach the accepted source snapshot to every linking record.
+def _source_identity(relationship, row):
+    """The manifest source identity a linking record's own source evidence names."""
+    source = row.get("source")
+    if source in (None, ""):
+        return LINK_SOURCE[relationship]
+    identity = SOURCE_IDENTITY.get(str(source))
+    if identity is None:
+        raise ValueError(
+            f"graph refresh refused: {relationship} record names source {source!r}, "
+            f"which the accepted source snapshot manifest does not identify"
+        )
+    return identity
+
+
+def _stamp_provenance(relation, relationship, sources, batch_size):
+    """Attach the accepted snapshot evidence to every linking record.
 
     A row that already carries a snapshot must agree with the accepted manifest;
-    an unagreed snapshot means the row cannot be associated with this build.
+    an unagreed snapshot means the row cannot be associated with this build. The
+    observation time is the accepted snapshot's own observation, and a requirement
+    link's freshness basis is that snapshot: both are manifest facts the mart
+    cannot state, so a record that leaves them blank is completed here and a record
+    that supplies them keeps its own evidence.
     """
+    required = EDGE_PROVENANCE.get(relationship, ("source_snapshot_id",))
     for payload in _rows(relation, batch_size):
         for row in payload:
+            evidence = sources[_source_identity(relationship, row)]
             existing = row.get("source_snapshot_id")
-            if existing not in (None, "") and existing != snapshot_id:
+            if existing not in (None, "") and existing != evidence["snapshot_id"]:
                 raise ValueError(
                     f"graph refresh refused: {relationship} record carries source snapshot "
-                    f"{existing!r} which is not the accepted {snapshot_id!r}"
+                    f"{existing!r} which is not the accepted {evidence['snapshot_id']!r}"
                 )
-            row["source_snapshot_id"] = snapshot_id
+            row["source_snapshot_id"] = evidence["snapshot_id"]
+            if "observed_at" in required and row.get("observed_at") in (None, ""):
+                row["observed_at"] = evidence["observation_timestamp"]
+            if "freshness_status" in required and row.get("freshness_status") in (None, ""):
+                row["freshness_status"] = "snapshot"
         yield payload
+
+
+def _assert_edge_provenance(relationship, row):
+    """Refuse a populated linking record that lacks usable provenance evidence.
+
+    Node-level provenance does not satisfy edge-level provenance, and a missing
+    value is never defaulted here: defaulting confidence or freshness would make
+    an unresolved link look authoritative. A linking type outside the contract
+    (``HAS_COMPONENT``) has no declared vocabulary to enforce.
+    """
+    for name in EDGE_PROVENANCE.get(relationship, ()):
+        value = row.get(name)
+        if value is None or (isinstance(value, str) and not value.strip()):
+            raise ValueError(
+                f"graph refresh refused: {relationship} record "
+                f"{row.get(EDGE_IDENTITIES[relationship])!r} has no {name} provenance"
+            )
+        if name.endswith("confidence"):
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0.0 <= float(value) <= 1.0:
+                raise ValueError(
+                    f"graph refresh refused: {relationship} record "
+                    f"{row.get(EDGE_IDENTITIES[relationship])!r} has invalid {name} {value!r}"
+                )
+        elif name == "observed_at":
+            if not isinstance(value, str):
+                raise ValueError(
+                    f"graph refresh refused: {relationship} record "
+                    f"{row.get(EDGE_IDENTITIES[relationship])!r} has a non-ISO {name} {value!r}"
+                )
+            try:
+                datetime.fromisoformat(value)
+            except ValueError as error:
+                raise ValueError(
+                    f"graph refresh refused: {relationship} record "
+                    f"{row.get(EDGE_IDENTITIES[relationship])!r} has an invalid {name} {value!r}"
+                ) from error
+
+
+def load_edges(session, relationship, rows, owner=OWNER):
+    """Validate then run the canonical load statement for one linking type.
+
+    This is the serving model's own write path: the statement text comes from
+    ``EDGE_STATEMENTS``, built from the same ``EDGE_LOADS`` the refresh uses, so
+    what a provenance test writes is what a build writes. Every record in the
+    batch is validated before any statement runs, so a refused record cannot
+    leave a partially written batch behind it.
+    """
+    for row in rows:
+        _assert_edge_provenance(relationship, row)
+    return session.run(EDGE_STATEMENTS[relationship], rows=rows, owner=owner)
 
 
 def model(dbt, session):
@@ -361,13 +496,14 @@ def model(dbt, session):
             relation = dbt.ref(mart)
             loaded = 0
             if relationship is None:
-                payloads = _rows(relation, batch_size)
+                for payload in _rows(relation, batch_size):
+                    tx_run(statement, rows=payload, owner=OWNER)
+                    loaded += len(payload)
             else:
-                snapshot_id = accepted["sources"][LINK_SOURCE[relationship]]
-                payloads = _stamp_provenance(relation, relationship, snapshot_id, batch_size)
-            for payload in payloads:
-                tx_run(statement, rows=payload, owner=OWNER)
-                loaded += len(payload)
+                payloads = _stamp_provenance(relation, relationship, accepted["sources"], batch_size)
+                for payload in payloads:
+                    load_edges(transaction, relationship, payload, OWNER)
+                    loaded += len(payload)
             counts.append((entity, loaded))
         transaction.commit()
     except Exception:

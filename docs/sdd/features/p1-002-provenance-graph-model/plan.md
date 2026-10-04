@@ -245,7 +245,7 @@ split.
     - Files: `SystemCode/remy/data-preparation/tests/graph/test_edge_provenance.py`
     - Done when: `test_requires_provenance_is_preserved`, `test_fulfills_provenance_is_preserved`, `test_missing_provenance_fails`, and `test_write_read_provenance_matches_input` are written and marked `@pytest.mark.integration`; each fails when the edge provenance is not emitted.
 
-- [ ] **T-4** Emit canonical provenance on `edge_requires` and `edge_fulfills` (AC-3, AC-4)
+- [x] **T-4** Emit canonical provenance on `edge_requires` and `edge_fulfills` (AC-3, AC-4)
     - Type: impl
     - Covers: AC-3, AC-4
     - Files: `SystemCode/remy/data-preparation/models/mart/edge_requires.sql`, `SystemCode/remy/data-preparation/models/mart/edge_fulfills.sql`, `SystemCode/remy/data-preparation/models/mart/schema.yml`

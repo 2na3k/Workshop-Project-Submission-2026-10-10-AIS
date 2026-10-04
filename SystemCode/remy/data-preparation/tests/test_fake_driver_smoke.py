@@ -58,14 +58,25 @@ _QUALITY_ROWS = [
     ("node", "TOTAL_NODE", 4, 84200, True),
     ("relationship", "TOTAL_RELATIONSHIP", 3, 208200, True),
 ]
-# (key column, rows) per canonical mart, with linking endpoints that resolve.
+# (key column, rows) per canonical mart, with linking endpoints that resolve and
+# the canonical edge provenance the serving contract requires (R-4). The accepted
+# snapshot id, observation time and requirement freshness basis are applied by the
+# loader from the manifest, so they are not fixture columns here.
 _RELATIONS: dict[str, tuple[list[str], list[tuple[object, ...]]]] = {
     "node_recipe": (["recipe_id"], [("r1",)]),
     "node_food_concept": (["canonical_key"], [("carrot",)]),
     "node_food": (["food_key"], [("f1",)]),
     "node_component": (["component_id"], [("c1",)]),
-    "edge_requires": (["recipe_id", "occurrence_id", "normalized_name"], [("r1", "o1", "carrot")]),
-    "edge_fulfills": (["candidate_key", "food_key", "canonical_key"], [("k1", "f1", "carrot")]),
+    "edge_requires": (
+        ["recipe_id", "occurrence_id", "normalized_name", "source",
+         "normalization_version", "mapping_confidence"],
+        [("r1", "o1", "carrot", "josephrmartinez/recipe-dataset", "recipe-food-v4", 1.0)],
+    ),
+    "edge_fulfills": (
+        ["candidate_key", "food_key", "canonical_key", "source", "mapping_version",
+         "mapping_confidence"],
+        [("k1", "f1", "carrot", "fooddata_central", "recipe_food_to_dbt:v4", 1.0)],
+    ),
     "edge_has_component": (["id", "food_key", "component_id"], [("h1", "f1", "c1")]),
 }
 

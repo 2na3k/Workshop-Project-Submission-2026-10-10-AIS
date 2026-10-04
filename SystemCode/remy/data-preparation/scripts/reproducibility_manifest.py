@@ -94,6 +94,8 @@ MART_CONTENT_COLUMNS: dict[str, tuple[str, ...]] = {
         "choice_group",
         "optional",
         "preparation",
+        "normalization_version",
+        "mapping_confidence",
         "source",
     ),
     "edge_fulfills": (
@@ -102,6 +104,7 @@ MART_CONTENT_COLUMNS: dict[str, tuple[str, ...]] = {
         "canonical_key",
         "kind",
         "approval_status",
+        "mapping_confidence",
         "mapping_version",
         "price_ref",
         "price_match_status",

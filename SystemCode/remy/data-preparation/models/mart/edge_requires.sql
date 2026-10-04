@@ -27,6 +27,7 @@ with source_rows as (
     select
         *,
         {{ recipe_ascii_fraction('effective_text') }} as ascii_text,
+        {{ recipe_normalize('effective_text', false) }} as normalization_base,
         {{ recipe_normalize('effective_text') }} as normalized_name
     from effective
 ), extracted as (
@@ -80,6 +81,13 @@ select
     case when regexp_matches(lower(effective_text), '\bor\b') then concat(cast(recipe_id as varchar), ':choice:', cast(position - 1 as varchar)) else null end as choice_group,
     regexp_matches(lower(effective_text), '\boptional\b') as optional,
     nullif(regexp_extract(effective_text, '(?i)\b(chopped|diced|sliced|minced|peeled|seeded|grated|crushed|drained|rinsed|halved|beaten|melted|torn)\b', 1), '') as preparation,
+    -- Canonical requirement-link provenance (constitution R-4). The version is
+    -- the normalization the accepted pipeline applies, the same vocabulary
+    -- node_food_concept declares; the confidence is evidence, not a default: an
+    -- occurrence that only reaches its concept through the approved alias table
+    -- is less certain than one whose normalized text matches directly.
+    'recipe-food-v4' as normalization_version,
+    case when normalization_base <> normalized_name then 0.95 else 1.0 end as mapping_confidence,
     'josephrmartinez/recipe-dataset' as source
 from parsed
 where normalized_name is not null and normalized_name <> ''
