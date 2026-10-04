@@ -69,13 +69,17 @@ _RELATIONS: dict[str, tuple[list[str], list[tuple[object, ...]]]] = {
     "node_component": (["component_id"], [("c1",)]),
     "edge_requires": (
         ["recipe_id", "occurrence_id", "normalized_name", "source",
-         "normalization_version", "mapping_confidence"],
-        [("r1", "o1", "carrot", "josephrmartinez/recipe-dataset", "recipe-food-v4", 1.0)],
+         "normalization_version", "mapping_confidence",
+         "observed_at", "freshness_status"],
+        [("r1", "o1", "carrot", "josephrmartinez/recipe-dataset",
+          "recipe-food-v4", 1.0,
+          "2026-09-01T00:00:00+00:00", "snapshot")],
     ),
     "edge_fulfills": (
         ["candidate_key", "food_key", "canonical_key", "source", "mapping_version",
-         "mapping_confidence"],
-        [("k1", "f1", "carrot", "fooddata_central", "recipe_food_to_dbt:v4", 1.0)],
+         "mapping_confidence", "observed_at", "freshness_status"],
+        [("k1", "f1", "carrot", "fooddata_central", "recipe_food_to_dbt:v4", 1.0,
+          "2026-09-02T00:00:00+00:00", "snapshot")],
     ),
     "edge_has_component": (["id", "food_key", "component_id"], [("h1", "f1", "c1")]),
 }

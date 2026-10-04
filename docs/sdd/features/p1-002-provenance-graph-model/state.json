@@ -1,13 +1,13 @@
 {
   "feature": "p1-002-provenance-graph-model",
-  "stage": "implemented",
-  "loops": 0,
+  "stage": "ci-passed",
+  "loops": 1,
   "plan_review_verdict": "APPROVE",
   "created": "2026-10-04T10:24:07+08:00",
   "spec_hash": "sha256:fe825daff3d512f4",
   "plan_hash": "sha256:cd4e340307d983eb",
   "tasks_hash": "sha256:f26ba2e7e3506411",
-  "updated_at": "2026-10-04T22:26:23+08:00",
+  "updated_at": "2026-10-04T23:17:31+08:00",
   "history": [
     {
       "at": "2026-10-04T10:24:07+08:00",
@@ -32,7 +32,19 @@
     {
       "at": "2026-10-04T22:26:23+08:00",
       "event": "ci-passed -> implemented"
+    },
+    {
+      "at": "2026-10-04T23:00:06+08:00",
+      "event": "loop 1/2 (fail)"
+    },
+    {
+      "at": "2026-10-04T23:05:49+08:00",
+      "event": "ci FAIL"
+    },
+    {
+      "at": "2026-10-04T23:17:31+08:00",
+      "event": "ci FAIL"
     }
   ],
-  "ci_overall": "PASS"
+  "ci_overall": "FAIL"
 }
