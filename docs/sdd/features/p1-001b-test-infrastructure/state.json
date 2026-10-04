@@ -1,0 +1,21 @@
+{
+  "feature": "p1-002-provenance-graph-model",
+  "stage": "tasks-approved",
+  "loops": 0,
+  "created": "2026-10-04T10:24:07+08:00",
+  "spec_hash": "sha256:91655e4a1663bab3",
+  "plan_hash": "sha256:01d12e68f71c3525",
+  "tasks_hash": "sha256:dffb659bd85ebb50",
+  "plan_review_verdict": "APPROVE",
+  "updated_at": "2026-10-04T10:24:07+08:00",
+  "history": [
+    {
+      "at": "2026-10-04T10:24:07+08:00",
+      "event": "proposed -> specified"
+    },
+    {
+      "at": "2026-10-04T10:24:07+08:00",
+      "event": "specified -> planned"
+    }
+  ]
+}
