@@ -36,7 +36,7 @@ with invalid_requires as (
     union all
     select 'edge_requires', recipe_id, occurrence_id, 'missing_or_blank_version'
     from {{ ref('edge_requires') }}
-    where mapping_version is null or trim(mapping_version) = ''
+    where normalization_version is null or trim(normalization_version) = ''
 
     union all
     select 'edge_requires', recipe_id, occurrence_id, 'missing_or_blank_confidence'
@@ -51,8 +51,8 @@ with invalid_requires as (
     union all
     select 'edge_requires', recipe_id, occurrence_id, 'missing_or_invalid_timestamp'
     from {{ ref('edge_requires') }}
-    where observation_timestamp is null
-       or try_cast(observation_timestamp as timestamp) is null
+    where observed_at is null
+       or try_cast(observed_at as timestamp) is null
 ),
 
      invalid_fulfills as (
@@ -87,8 +87,8 @@ with invalid_requires as (
          union all
          select 'edge_fulfills', candidate_key, food_key, 'missing_or_invalid_timestamp'
          from {{ ref('edge_fulfills') }}
-         where observation_timestamp is null
-            or try_cast(observation_timestamp as timestamp) is null
+         where observed_at is null
+            or try_cast(observed_at as timestamp) is null
      ),
 
      dangling_requires as (

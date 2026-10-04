@@ -396,10 +396,9 @@ def _stamp_provenance(relation, relationship, sources, batch_size):
                     f"{existing!r} which is not the accepted {evidence['snapshot_id']!r}"
                 )
             row["source_snapshot_id"] = evidence["snapshot_id"]
-            if "observed_at" in required and row.get("observed_at") in (None, ""):
-                row["observed_at"] = evidence["observation_timestamp"]
-            if "freshness_status" in required and row.get("freshness_status") in (None, ""):
-                row["freshness_status"] = "snapshot"
+            # AC-5 / R-4: missing provenance is NOT synthesized. A blank
+            # observed_at or freshness_status means the record is incomplete
+            # and must be rejected by _assert_edge_provenance, not repaired.
         yield payload
 
 

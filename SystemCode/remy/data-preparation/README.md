@@ -50,7 +50,7 @@ change in the feature close decisions. The normal check never rewrites pinned
 values automatically. `make reproducible-build` runs dbt, manifest generation,
 and the checker in order; `make ci` is the configured CI entry point.
 
-## Manifest input and fail-closed refresh (p1-002, AC-1, AC-15)
+## Manifest input and fail-closed refresh (p1-002, AC-1 through AC-10)
 
 The serving model (`models/serving/recipe_graph_to_neo4j.py`) requires an
 **accepted source snapshot manifest** before opening a Neo4j session. Pass it
