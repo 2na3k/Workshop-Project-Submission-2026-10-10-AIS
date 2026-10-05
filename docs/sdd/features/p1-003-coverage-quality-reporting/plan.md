@@ -243,7 +243,7 @@ evidence, not a reason to split the feature.
 
 ## Tasks
 
-- [ ] **T-1** Verify predicate values and the manifest-version compatibility before writing code
+- [x] **T-1** Verify predicate values and the manifest-version compatibility before writing code
     - Type: prerequisite
     - Covers: plan Risks "predicate values must match" and "manifest contract" bullets
     - Files: (read-only)
