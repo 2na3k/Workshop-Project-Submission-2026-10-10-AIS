@@ -84,10 +84,24 @@
   - Added canonical coverage quality report mart (`SystemCode/remy/data-preparation/models/mart/coverage_quality_report.sql`) exposing exactly five named dimensions: `nutrition_coverage`, `price_availability`, `package_unit_conversion_coverage`, `dietary_evidence_coverage`, and `whole_recipe_completeness`.
   - Added schema contract for coverage quality report declaring exact dimension allowlist, count and bounded percentage rules, and reproducibility content columns (`models/mart/schema.yml`).
   - Added dbt singular test (`tests/coverage_quality_report.sql`) validating metrics, distinct dimensions, and population denominator bounds against canonical `edge_requires` and `node_recipe` populations (execution deferred under p1-001 O-1).
-  - Added comprehensive unit and contract tests (`tests/test_coverage_quality_report.py`) covering all five dimensions, cross-dimension independence, zero-population handling, determinism across runs, observation-timestamp stability, fail-closed validation, and build association integrity.
-  - Extended reproducibility manifest contract (`scripts/reproducibility_manifest.py`) to include `coverage_quality_report` in `REQUIRED_MARTS` with content checksum and content columns, bumping `MANIFEST_SCHEMA_VERSION` from 1 to 2; updated serving model (`recipe_graph_to_neo4j.py`) accepted version constant to 2 for continuous graph admission compatibility.
+  - Added comprehensive unit and contract tests (`tests/test_coverage_quality_report.py`) covering all five dimensions, cross-dimension independence, zero-population handling, determinism across runs, observation-timestamp stability, fail-closed validation, and build association integrity.\n  - Extended reproducibility manifest contract (`scripts/reproducibility_manifest.py`) to include `coverage_quality_report` in `REQUIRED_MARTS` with content checksum and content columns, bumping `MANIFEST_SCHEMA_VERSION` from 1 to 2; updated serving model (`recipe_graph_to_neo4j.py`) accepted version constant to 2 for continuous graph admission compatibility.
   - Declared coverage quality report as build-quality metadata in serving schema (`models/serving/schema.yml`), confirming it is not projected into graph store as nodes or edges.
   - Added `coverage-report` target and build association wiring to `SystemCode/Makefile`, and documented the five dimensions, predicate values, empty-population behavior, and build association in `remy/data-preparation/README.md`.
 - Acceptance criteria: AC-1 .. AC-13
 - Decisions: docs/sdd/features/p1-003-coverage-quality-reporting/decisions.md
+- Breaking: none
+
+### p2-001-constraint-evidence-filtering - Constraint evidence filtering (2026-10-05)
+
+- Added/Changed/Fixed:
+  - Added explicit per-constraint candidate evaluation in `SystemCode/remy/api/src/api/features/plan/filtering.py` enforcing constitutional reasoning-safety rules (R-5 through R-10).
+  - Implemented distinct top-level drop causes (`evidence-absent` vs `present-evidence-excludes`) with fixed cause precedence (`present-evidence-excludes` precedes `evidence-absent`) and ingredient-scoped warnings for mild allergens (`IngredientWarning`).
+  - Added conservative default handling: undeclared/unknown dietary and allergen evidence drops as `evidence-absent`, omitted request allergen severity defaults to `severe`, and offers older than 24 hours are excluded with inclusive 24-hour boundary.
+  - Added input validation in `filter_candidates` rejecting unknown allergens, unsupported dietary codes, and untracked nutrients as input errors rather than candidate drops.
+  - Added candidate outcome models (`CandidateOutcome`, `ConstraintEvaluation`, `IngredientWarning`, `FilterResult`) in `models.py` carrying constraint-level evaluation history, drop causes, and unmapped requirement counts.
+  - Extended repository candidate hydration in `repository.py` to project freshness, package unit compatibility, and dietary/allergen evidence from canonical `FULFILLS` edges.
+  - Updated `PlanService.generate` in `service.py` to propagate filtered outcomes.
+  - Added comprehensive test suites: dietary domain rules (`tests/features/dietary/test_domain_rules.py`), calculator domain extensions for nutrition, cost, and conversion (`tests/features/calculator/`), filtering contract and edge cases (`tests/features/plan/test_filtering.py`), and repository-to-service integration tests (`tests/features/plan/test_service_integration.py`).
+- Acceptance criteria: AC-1 .. AC-16
+- Decisions: docs/sdd/features/p2-001-constraint-evidence-filtering/decisions.md
 - Breaking: none
