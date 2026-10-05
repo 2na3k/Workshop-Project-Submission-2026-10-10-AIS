@@ -52,6 +52,11 @@ WITH r, collect({
   halal_status: best.halal_status,
   halal_evidence_kind: best.halal_evidence_kind,
   halal_freshness_status: best.halal_freshness_status,
+  freshness_status: best.freshness_status,
+  observed_at: best.observed_at,
+  package_mass_g: best.package_mass_g,
+  price_basis: best.price_basis,
+  cost_basis_compatible: best.cost_basis_compatible,
   allergen_evidence_kinds: best.allergen_evidence_kinds,
   potential_allergens: best.potential_allergens,
   may_allergic: best.may_allergic,
@@ -112,6 +117,12 @@ def _build_ingredient(x: dict) -> Ingredient:
     ing.halal_status = x.get("halal_status")
     ing.halal_evidence_kind = x.get("halal_evidence_kind")
     ing.halal_freshness_status = x.get("halal_freshness_status")
+    ing.freshness_status = x.get("freshness_status")
+    ing.offer_observed_at = x.get("observed_at")
+    ing.package_mass_g = x.get("package_mass_g")
+    ing.package_unit_basis = x.get("price_basis")
+    ing.cost_basis_compatible = x.get("cost_basis_compatible")
+    ing.vegan_status = x.get("vegan_status")
     ing.vegetarian_status = x.get("vegetarian_status")
     ing.vegetarian_evidence_kind = x.get("vegetarian_evidence_kind")
     ing.vegetarian_concerns = x.get("vegetarian_concerns")

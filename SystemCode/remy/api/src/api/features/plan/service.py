@@ -20,12 +20,9 @@ class PlanService:
                 raise UnknownNutrient(f"Unknown nutrient: {n.code}")
             if n.limit and n.limit.min is not None and n.limit.max is not None and n.limit.min > n.limit.max: raise InvalidNutrientRange(
                 "min cannot exceed max")
-        recipes = rank_candidates(
-            filter_candidates(
-                self.repository.fetch_candidates(), request
-            ),
-            request
-        )
+        filtered = filter_candidates(self.repository.fetch_candidates(), request)
+        self.last_filter_result = filtered
+        recipes = rank_candidates(filtered, request)
         days, relaxations = solve_v2(recipes, request)
         response_days = []
         for d, meals in enumerate(days, 1):
