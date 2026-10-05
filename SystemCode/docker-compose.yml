@@ -88,24 +88,6 @@ services:
       timeout: 5s
       retries: 5
 
-  data-crawler:
-    profiles: [jobs]
-    build:
-      context: .
-      dockerfile: remy/data-crawler/Dockerfile
-    environment:
-      PYTHONUNBUFFERED: "1"
-    restart: "no"
-
-  data-preparation:
-    profiles: [jobs]
-    build:
-      context: .
-      dockerfile: remy/data-preparation/Dockerfile
-    environment:
-      PYTHONUNBUFFERED: "1"
-    restart: "no"
-
   neo4j:
     profiles: [neo4j]
     image: neo4j:5-community
