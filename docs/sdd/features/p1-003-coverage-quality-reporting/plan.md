@@ -285,7 +285,7 @@ evidence, not a reason to split the feature.
     - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`, `SystemCode/remy/data-preparation/tests/test_reproducibility_manifest.py`
     - Done when: the determinism test compares all five comparison points (counts, denominators, percentages, dimension identities, build association); the association test ties the report to the manifest's source snapshot and mart checksums; the vocabulary test asserts exactly five dimensions and names the association fields.
 
-- [ ] **T-8** Implement the manifest contract extension and version compatibility (AC-9, AC-10, AC-13)
+- [x] **T-8** Implement the manifest contract extension and version compatibility (AC-9, AC-10, AC-13)
     - Type: impl
     - Covers: AC-9, AC-10, AC-13
     - Files: `SystemCode/remy/data-preparation/scripts/reproducibility_manifest.py`, `SystemCode/remy/data-preparation/models/serving/recipe_graph_to_neo4j.py`, `SystemCode/remy/data-preparation/models/mart/schema.yml`

@@ -21,6 +21,7 @@ REQUIRED_MARTS = (
     "edge_fulfills",
     "edge_has_component",
     "graph_quality_manifest",
+    "coverage_quality_report",
 )
 MART_ORDER_KEYS: dict[str, tuple[str, ...]] = {
     "node_recipe": ("recipe_id",),
@@ -31,8 +32,9 @@ MART_ORDER_KEYS: dict[str, tuple[str, ...]] = {
     "edge_fulfills": ("candidate_key",),
     "edge_has_component": ("id",),
     "graph_quality_manifest": ("entity_type", "entity"),
+    "coverage_quality_report": ("dimension",),
 }
-MANIFEST_SCHEMA_VERSION = 1
+MANIFEST_SCHEMA_VERSION = 2
 CONTRACT_VERSION = 1
 MART_CONTENT_COLUMNS: dict[str, tuple[str, ...]] = {
     "node_recipe": (
@@ -162,6 +164,16 @@ MART_CONTENT_COLUMNS: dict[str, tuple[str, ...]] = {
         "within_allocation",
         "strict_planning_ready",
         "capability_reason",
+    ),
+    "coverage_quality_report": (
+        "dimension",
+        "covered_count",
+        "denominator",
+        "percentage",
+        "population_status",
+        "source_snapshot_id",
+        "mart_content_checksum",
+        "build_id",
     ),
 }
 

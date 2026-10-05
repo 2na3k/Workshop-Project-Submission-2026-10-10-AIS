@@ -46,6 +46,7 @@ _MART_ROWS = {
     "edge_fulfills": 1,
     "edge_has_component": 1,
     "graph_quality_manifest": 9,
+    "coverage_quality_report": 5,
 }
 _QUALITY_ROWS = [
     ("node", "Recipe", 1, 14000, True),
@@ -98,7 +99,7 @@ def _serving_env(manifest: str) -> dict[str, str]:
 
 def _accepted_manifest(directory: Path) -> str:
     document = {
-        "schema_version": 1,
+        "schema_version": 2,
         "contract_version": 1,
         "sources": [
             {"source_identity": identity, "snapshot_id": snapshot,

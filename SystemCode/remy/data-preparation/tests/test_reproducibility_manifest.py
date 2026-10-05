@@ -56,7 +56,7 @@ def write_registry(
             )
     registry = tmp_path / "registry.json"
     registry.write_text(
-        json.dumps({"schema_version": 1, "sources": entries}), encoding="utf-8"
+        json.dumps({"schema_version": 2, "sources": entries}), encoding="utf-8"
     )
     return registry, source_dir
 
@@ -199,13 +199,13 @@ def test_reproducibility_checker_reports_success_and_specific_failures(
     tmp_path: Path,
 ) -> None:
     manifest: dict[str, Any] = {
-        "schema_version": 1,
+        "schema_version": 2,
         "sources": [{"source_identity": source} for source in REQUIRED_SOURCES],
         "marts": {mart: {"content_checksum": "abc"} for mart in REQUIRED_MARTS},
     }
     expected: dict[str, Any] = {
-        "schema_version": 1,
-        "manifest_schema_version": 1,
+        "schema_version": 2,
+        "manifest_schema_version": 2,
         "marts": {mart: "abc" for mart in REQUIRED_MARTS},
     }
     manifest_path = tmp_path / "manifest.json"

@@ -18,7 +18,7 @@ from neo4j import GraphDatabase
 
 OWNER = "remy_recipe_graph"
 MANIFEST_ENV = "NEO4J_SOURCE_MANIFEST"
-MANIFEST_SCHEMA_VERSION = 1
+MANIFEST_SCHEMA_VERSION = 2
 CONTRACT_VERSION = 1
 REQUIRED_SOURCES = ("FoodData Central", "recipe dataset", "FairPrice listings")
 REQUIRED_MARTS = (
@@ -30,6 +30,7 @@ REQUIRED_MARTS = (
     "edge_fulfills",
     "edge_has_component",
     "graph_quality_manifest",
+    "coverage_quality_report",
 )
 
 NODES = (

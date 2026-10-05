@@ -134,6 +134,7 @@ MART_ROWS = {
     "edge_fulfills": 1,
     "edge_has_component": 1,
     "graph_quality_manifest": 9,
+    "coverage_quality_report": 5,
 }
 
 QUALITY_COLUMNS = ["entity_type", "entity", "row_count", "allocation", "within_allocation"]
@@ -194,7 +195,7 @@ DEFAULT_RELATIONS = {
 def accepted_manifest(**changes):
     """Return a source snapshot manifest matching p1-001's generated contract."""
     document = {
-        "schema_version": 1,
+        "schema_version": 2,
         "contract_version": 1,
         "sources": [
             {"source_identity": "FoodData Central", "snapshot_id": FDC_SNAPSHOT,
