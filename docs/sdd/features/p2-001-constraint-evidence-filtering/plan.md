@@ -218,37 +218,37 @@ or p3 response/explanation design.
 
 ## Tasks
 
-- [ ] **T-1** Write failing fixture tests for the dietary rules (R-5/R-6/R-7)
+- [x] **T-1** Write failing fixture tests for the dietary rules (R-5/R-6/R-7)
     - Type: test
     - Covers: AC-1, AC-2, AC-3, AC-4, AC-4b, AC-5, AC-6, AC-13
     - Files: `SystemCode/remy/api/tests/features/dietary/test_domain_rules.py`
     - Done when: each test in the AC-1..AC-6, AC-4b, AC-13 rows is written, exercises the real rule function, and fails for the reason the row describes (not an import error).
 
-- [ ] **T-2** Write failing fixture tests for the calculator rules (R-8/R-9/R-10)
+- [x] **T-2** Write failing fixture tests for the calculator rules (R-8/R-9/R-10)
     - Type: test
     - Covers: AC-7, AC-7b, AC-8, AC-9
     - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_nutrition.py`, `.../test_domain_cost.py`, `.../test_domain_conversion.py`
     - Done when: the four calculator-domain tests are written, exercise the real rule functions, and fail for the reasons their rows describe.
 
-- [ ] **T-3** Write failing tests for the filtering outcome contract and edge cases
+- [x] **T-3** Write failing tests for the filtering outcome contract and edge cases
     - Type: test
     - Covers: AC-10, AC-11, AC-12, AC-14, AC-15, AC-16
     - Files: `SystemCode/remy/api/tests/features/plan/test_filtering.py`
     - Done when: the six filtering tests are written; each fails because the current filtering path doesn't produce the outcome the test expects (silent retention, missing causes, no input-error distinction, no empty-candidate-set handling).
 
-- [ ] **T-4** Write the failing integration tests
+- [x] **T-4** Write the failing integration tests
     - Type: test
     - Covers: the three Integration per interface rows
     - Files: `SystemCode/remy/api/tests/features/plan/test_service_integration.py`
     - Done when: the three integration tests are written, run the real repository/filter/service with a controlled driver, and fail because the real path doesn't yet propagate evidence or causes as the plan specifies.
 
-- [ ] **T-5** Implement explicit per-constraint evaluation in the filtering path
+- [x] **T-5** Implement explicit per-constraint evaluation in the filtering path
     - Type: impl
     - Covers: AC-1..AC-6, AC-7, AC-7b, AC-8, AC-9, AC-10, AC-11, AC-12, AC-13, AC-14, AC-15
     - Files: `.../plan/filtering.py`, `.../plan/models.py`
     - Done when: T-1, T-2, T-3 pass; the filtering path produces per-constraint outcomes plus a top-level cause; absent evidence never passes; the precedence and severity-default rules apply; unsupported codes reject before evaluation; empty candidate sets report as unmapped.
 
-- [ ] **T-6** Implement repository hydration and service propagation
+- [x] **T-6** Implement repository hydration and service propagation
     - Type: impl
     - Covers: AC-7, AC-8, AC-9, the three Integration per interface rows
     - Files: `.../plan/repository.py`, `.../plan/service.py`
