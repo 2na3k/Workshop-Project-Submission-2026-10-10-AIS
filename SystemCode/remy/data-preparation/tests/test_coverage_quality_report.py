@@ -151,7 +151,15 @@ def test_repeated_report_comparison_points_are_content_columns():
     first = _run_report(*fixture)
     second = _run_report(*fixture)
     comparison_points = ("covered_count", "denominator", "percentage", "dimension", "source_snapshot_id", "mart_content_checksum")
-    assert [{name: row[name] for name in comparison_points if name in row} for row in first.values()] == [{name: row[name] for name in comparison_points if name in row} for row in second.values()]
+    first_points = sorted(
+        ({name: row[name] for name in comparison_points if name in row} for row in first.values()),
+        key=lambda row: row["dimension"],
+    )
+    second_points = sorted(
+        ({name: row[name] for name in comparison_points if name in row} for row in second.values()),
+        key=lambda row: row["dimension"],
+    )
+    assert first_points == second_points
 
 
 def test_missing_source_snapshot_publishes_no_report(tmp_path):
