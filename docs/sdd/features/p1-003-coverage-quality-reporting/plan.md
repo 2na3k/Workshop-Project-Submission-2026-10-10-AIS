@@ -309,7 +309,7 @@ evidence, not a reason to split the feature.
     - Files: `SystemCode/remy/data-preparation/models/serving/schema.yml`
     - Done when: the serving schema declares that the coverage report is consumed as build-quality metadata and is not projected as graph nodes or edges.
 
-- [ ] **T-12** Document the report in the README
+- [x] **T-12** Document the report in the README
     - Type: impl
     - Covers: the spec's User-facing behavior section
     - Files: `SystemCode/remy/data-preparation/README.md`

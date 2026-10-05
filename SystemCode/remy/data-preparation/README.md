@@ -38,8 +38,9 @@ and filesystem modification time are never used as fallbacks.
 
 After dbt succeeds, `make dbt` emits
 `target/<target>/source_snapshot_manifest.json`. It contains streamed SHA-256
-source checksums and canonical, deterministically ordered checksums for the
-seven graph marts plus `graph_quality_manifest`. Run
+source checksums and canonical, deterministically ordered checksums for all
+canonical marts, including `coverage_quality_report` and
+`graph_quality_manifest`. Run
 `DBT_TARGET=nonprod make reproducibility-check` to compare that manifest with
 the reviewed values in `reproducibility/expected_checksums.json`.
 
@@ -49,6 +50,35 @@ copy the resulting mart `content_checksum` values into
 change in the feature close decisions. The normal check never rewrites pinned
 values automatically. `make reproducible-build` runs dbt, manifest generation,
 and the checker in order; `make ci` is the configured CI entry point.
+
+## Coverage quality report (p1-003)
+
+Every accepted dbt build produces one `coverage_quality_report` with exactly
+five dimensions: `nutrition_coverage`, `price_availability`,
+`package_unit_conversion_coverage`, `dietary_evidence_coverage`, and
+`whole_recipe_completeness`. Each row has a covered count, denominator,
+bounded percentage (or a null percentage with `population_status` set to
+`no_population`), and source snapshot/build and mart checksum association.
+
+The predicates are the canonical mart values: nutrition uses
+`nutrition_status = 'validated'` from `node_food`; price uses
+`price_status = 'estimated'` from `int_price_fulfillment_candidates` through
+`edge_fulfills`; conversion requires `cost_basis_compatible = true`; and
+dietary evidence requires halal `certified`, `retailer_claim`, or
+`ingredient_screen_pass`, or vegetarian `retailer_claim` or
+`ingredient_screen_pass`, as used by `graph_quality_manifest`. Null, blank,
+unknown, unavailable, stale, or incompatible evidence remains uncovered.
+
+Requirement dimensions count each canonical requirement at most once. A
+recipe is complete only when every requirement has all four requirement-level
+capabilities. Empty populations are typed `no_population` results rather than
+fabricated 100% coverage. The report is descriptive build-quality metadata;
+it does not impose a minimum threshold or decide user constraints.
+
+Regenerate it with `make dbt` followed by
+`python remy/data-preparation/scripts/reproducibility_manifest.py` (or
+`make reproducible-build`). Changed source or canonical mart content always
+regenerates the report and its manifest checksum.
 
 ## Manifest input and fail-closed refresh (p1-002, AC-1 through AC-10)
 
