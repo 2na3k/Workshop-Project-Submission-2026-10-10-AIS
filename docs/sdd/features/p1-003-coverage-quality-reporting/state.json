@@ -1,8 +1,9 @@
 {
-  "stage": "tasks-approved",
+  "stage": "ci-passed",
   "spec_hash": "sha256:01de1b62ca92d03f",
-  "plan_hash": "sha256:a06743e6b8292fe6",
-  "tasks_hash": "sha256:e73cb6babc273b67",
+  "plan_hash": "sha256:f32ddd37c9ed3f73",
+  "tasks_hash": "sha256:f70c15da4fc8d140",
+  "plan_review_verdict": "APPROVE",
   "history": [
     {
       "at": "2026-10-05T08:56:07+08:00",
@@ -11,7 +12,65 @@
     {
       "at": "2026-10-05T08:56:07+08:00",
       "event": "specified -> tasks-approved"
+    },
+    {
+      "at": "2026-10-05T11:09:45+08:00",
+      "event": "ci FAIL"
+    },
+    {
+      "at": "2026-10-05T11:11:04+08:00",
+      "event": "ci PASS"
+    },
+    {
+      "at": "2026-10-05T11:17:03+08:00",
+      "event": "ci PASS"
+    },
+    {
+      "at": "2026-10-05T11:17:55+08:00",
+      "event": "ci-passed -> implemented"
+    },
+    {
+      "at": "2026-10-05T11:31:19+08:00",
+      "event": "ci PASS"
+    },
+    {
+      "at": "2026-10-05T11:31:59+08:00",
+      "event": "ci-passed -> implemented"
+    },
+    {
+      "at": "2026-10-05T14:08:33+08:00",
+      "event": "loop 1/2 (fail)"
+    },
+    {
+      "at": "2026-10-05T14:16:07+08:00",
+      "event": "ci PASS"
+    },
+    {
+      "at": "2026-10-05T14:16:22+08:00",
+      "event": "ci-passed -> implemented"
+    },
+    {
+      "at": "2026-10-05T14:20:01+08:00",
+      "event": "ci PASS"
+    },
+    {
+      "at": "2026-10-05T14:42:26+08:00",
+      "event": "loop 2/2 (fail)"
+    },
+    {
+      "at": "2026-10-05T15:11:27+08:00",
+      "event": "ci PASS"
+    },
+    {
+      "at": "2026-10-05T15:15:08+08:00",
+      "event": "ci PASS"
+    },
+    {
+      "at": "2026-10-05T15:16:24+08:00",
+      "event": "loop 3/2 (fail)"
     }
   ],
-  "updated_at": "2026-10-05T08:56:07+08:00"
+  "updated_at": "2026-10-05T15:16:24+08:00",
+  "ci_overall": "PASS",
+  "loops": 3
 }

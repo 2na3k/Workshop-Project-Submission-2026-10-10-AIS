@@ -23,6 +23,12 @@ REQUIRED_MARTS = (
     "graph_quality_manifest",
     "coverage_quality_report",
 )
+REPORT_INPUT_MARTS = (
+    "edge_requires",
+    "node_recipe",
+    "node_food",
+    "edge_fulfills",
+)
 MART_ORDER_KEYS: dict[str, tuple[str, ...]] = {
     "node_recipe": ("recipe_id",),
     "node_food_concept": ("canonical_key",),
@@ -195,11 +201,17 @@ class MartEntry(TypedDict):
     contract_version: int
 
 
+class Association(TypedDict):
+    source_snapshot_id: str
+    mart_content_checksum: str
+    build_id: str
+
 class Manifest(TypedDict):
     schema_version: int
     contract_version: int
     sources: list[SourceEntry]
     marts: dict[str, MartEntry]
+    association: Association
 
 
 def _canonical(value: Any) -> Any:
@@ -391,11 +403,28 @@ def build_manifest(
             or set(MART_CONTENT_COLUMNS[mart]) - set(entry.get("content_columns", []))
         ):
             raise ValueError(f"canonical mart is invalid or uncomputable: {mart}")
+
+    source_snapshot_id = ",".join(
+        f"{entry['source_identity']}:{entry['snapshot_id']}"
+        for entry in sorted(sources, key=lambda item: item["source_identity"])
+    )
+    mart_content_checksum = hashlib.sha256(
+        "".join(
+            f"{mart}:{marts[mart]['content_checksum']}"
+            for mart in REPORT_INPUT_MARTS
+        ).encode("utf-8")
+    ).hexdigest()
+    build_id = hashlib.sha256(source_snapshot_id.encode("utf-8")).hexdigest()[:16]
     manifest: Manifest = {
         "schema_version": MANIFEST_SCHEMA_VERSION,
         "contract_version": CONTRACT_VERSION,
         "sources": sources,
         "marts": marts,
+        "association": {
+            "source_snapshot_id": source_snapshot_id,
+            "mart_content_checksum": mart_content_checksum,
+            "build_id": build_id,
+        },
     }
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(

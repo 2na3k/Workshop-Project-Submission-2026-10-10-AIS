@@ -128,6 +128,9 @@ feature: p1-003-coverage-quality-reporting
   build association, and regeneration command/output.
 - `SystemCode/Makefile` — keep report generation/checking in the existing dbt,
   reproducibility-manifest, and CI sequence.
+- `SystemCode/Makefile` — add a target that reads the p1-001 manifest and
+  passes `REMY_SOURCE_SNAPSHOT_ID`, `REMY_MART_CONTENT_CHECKSUM`, and
+  `REMY_BUILD_ID` to the dbt run that builds the coverage report.
 
 ## Constitution alignment
 
@@ -240,6 +243,11 @@ evidence, not a reason to split the feature.
   'retailer_claim', 'ingredient_screen_pass')`, `vegetarian_status IN
   ('retailer_claim', 'ingredient_screen_pass')`). Applied to Design §3, the
   AC-2/AC-3/AC-5 test rows, and the Risks section.
+- F-8 → Plan-level fix for review round 2 F-1: added T-14 and the Makefile
+  Files-to-touch entry, plus the deterministic `REMY_BUILD_ID` requirement.
+  Round-1 F-1 routed to plan; this revision closes it.
+- F-9 → Added T-15 through T-19 for round-2 findings F-2, F-3 and the
+  carry-over nits N-1, N-2.
 
 ## Tasks
 
@@ -320,3 +328,55 @@ evidence, not a reason to split the feature.
     - Covers: AC-1 through AC-13
     - Files: (all above)
     - Done when: `sdd.py ci` reports OVERALL PASS; the dbt singular test compiles and its execution is either completed by `make ci` or documented as blocked by the p1-001 O-1 seed dependency; the report's real-mart demonstration is recorded as O-1-deferred; no fabricated checksum is introduced.
+
+- [ ] **T-14** Wire the build association producer
+    - Type: impl
+    - Covers: AC-1, AC-10, AC-13
+    - Files: `SystemCode/Makefile`, `SystemCode/remy/data-preparation/models/mart/coverage_quality_report.sql`
+    - Done when: a Make target reads the p1-001 source snapshot manifest and
+      passes `REMY_SOURCE_SNAPSHOT_ID` (from `sources`), `REMY_MART_CONTENT_CHECKSUM`
+      (from the input marts' checksums), and a deterministic `REMY_BUILD_ID` to
+      the dbt build that produces the report; the report's `source_snapshot_id`,
+      `mart_content_checksum`, and `build_id` columns are non-null after a
+      fixture-backed run; a Python test executes the report with the env vars
+      set and asserts the association equals the manifest's values.
+
+- [ ] **T-15** Execute the dbt singular test or record the O-1 deferral
+    - Type: verification
+    - Covers: AC-10 (denominator bounds), AC-11 (dbt half)
+    - Files: `SystemCode/remy/data-preparation/tests/coverage_quality_report.sql`, `docs/sdd/features/p1-003-coverage-quality-reporting/decisions.md`
+    - Done when: either `make dbt` executes the singular test and it passes, or
+      the O-1 seed deferral is recorded in `decisions.md` with the same shape as
+      p1-002's T-5 deferral. Do not fabricate seeds.
+
+- [ ] **T-16** Rewrite the AC-13 association assertion to check executed values
+    - Type: test
+    - Covers: AC-13
+    - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`
+    - Done when: `test_report_has_exactly_five_dimensions_and_association`
+      executes the report against the fixture DuckDB and asserts the executed
+      `source_snapshot_id` and `mart_content_checksum` values, not `field in SQL`.
+
+- [ ] **T-17** Add the observation-timestamp determinism case
+    - Type: test
+    - Covers: AC-9 (the edge case about observation-timestamp vs. content)
+    - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`
+    - Done when: two runs against the same fixture with different
+      `run_started_at` values produce identical `covered_count`, `denominator`,
+      `percentage`, `dimension`, `source_snapshot_id`, and `mart_content_checksum`.
+
+- [ ] **T-18** Fix the AC-6 fixture so the recipe denominator differs from the requirement denominator
+    - Type: test
+    - Covers: AC-6 (N-1)
+    - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`
+    - Done when: the fixture has more requirements than recipes (or at least one
+      recipe with zero requirements) and the test asserts the two denominators
+      differ, proving AC-6's "distinct from the requirement-level denominators."
+
+- [ ] **T-19** Parameterize the AC-12 fixture for missing nutrition and per-dimension gap counts
+    - Type: test
+    - Covers: AC-12 (N-2)
+    - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`
+    - Done when: nutrition `'missing'` and blank are exercised in addition to
+      price/conversion/dietary absence, and each uncovered dimension reports a
+      distinct gap count.

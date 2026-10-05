@@ -12,7 +12,7 @@ export NEO4J_URI NEO4J_USERNAME NEO4J_PASSWORD NEO4J_DATABASE NEO4J_HTTP NEO4J_U
        AURA_INSTANCEID AURA_INSTANCENAME
 
 .PHONY: help install sync lock check build build-all up up-all down logs \
-        api crawler dbt reproducible-manifest reproducibility-check reproducible-build ci \
+        api crawler dbt reproducible-manifest reproducibility-check reproducible-build coverage-report ci \
         dbt-all serve-neo4j serve-neo4j-replace frontend-install clean _neo4j-creds
 
 help:
@@ -24,6 +24,7 @@ help:
 		'make crawler          Run the crawler module' \
 		'make dbt              Build dbt models except the Neo4j serving model' \
 		'make dbt-all          Build dbt models, then load them into Neo4j' \
+		'make coverage-report  Generate a coverage and quality report' \
 		'make serve-neo4j      Load built marts into Neo4j' \
 		'make serve-neo4j-replace  Replace the existing Neo4j recipe graph' \
 		'make build            Build the API image' \
@@ -62,15 +63,22 @@ reproducible-manifest:
 		--database target/$(DBT_TARGET).duckdb \
 		--output target/$(DBT_TARGET)/source_snapshot_manifest.json
 
+coverage-report: reproducible-manifest
+	cd remy/data-preparation && \
+	  REMY_SOURCE_SNAPSHOT_ID=$$($(UV) run --package $(DBT_PACKAGE) python -c "import json; print(json.load(open('target/$(DBT_TARGET)/source_snapshot_manifest.json'))['association']['source_snapshot_id'])") \
+	  REMY_MART_CONTENT_CHECKSUM=$$($(UV) run --package $(DBT_PACKAGE) python -c "import json; print(json.load(open('target/$(DBT_TARGET)/source_snapshot_manifest.json'))['association']['mart_content_checksum'])") \
+	  REMY_BUILD_ID=$$($(UV) run --package $(DBT_PACKAGE) python -c "import json; print(json.load(open('target/$(DBT_TARGET)/source_snapshot_manifest.json'))['association']['build_id'])") \
+	  DBT_TARGET=$(DBT_TARGET) $(UV) run --package $(DBT_PACKAGE) dbt run --profiles-dir . --select coverage_quality_report
+
 reproducibility-check:
 	cd remy/data-preparation && $(UV) run --package $(DBT_PACKAGE) \
 		python scripts/check_reproducibility.py \
 		--manifest target/$(DBT_TARGET)/source_snapshot_manifest.json \
 		--expected reproducibility/expected_checksums.json
 
-reproducible-build: dbt reproducibility-check
+reproducible-build: dbt reproducibility-check coverage-report
 
-ci: reproducible-build
+ci: reproducible-build check
 
 _neo4j-creds:
 	@test -n "$(NEO4J_PASSWORD)" || { echo "Set NEO4J_PASSWORD or add it to .env.$(DBT_TARGET)"; exit 1; }

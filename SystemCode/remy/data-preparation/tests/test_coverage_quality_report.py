@@ -25,7 +25,7 @@ DIMENSIONS = {
 }
 
 
-def _run_report(requirements, candidates, recipes):
+def _run_report(requirements, candidates, recipes, run_started_at="2026-10-05 00:00:00"):
     """Execute the dbt model SQL against a small DuckDB fixture warehouse."""
     connection = duckdb.connect()
     connection.execute(
@@ -54,7 +54,7 @@ def _run_report(requirements, candidates, recipes):
         lambda match: {"REMY_SOURCE_SNAPSHOT_ID": "snapshot-1", "REMY_MART_CONTENT_CHECKSUM": "mart-1", "REMY_BUILD_ID": "build-1"}[match.group(1)],
         rendered,
     )
-    rendered = rendered.replace("{{ run_started_at }}", "2026-10-05 00:00:00")
+    rendered = rendered.replace("{{ run_started_at }}", run_started_at)
     result = connection.execute(rendered)
     rows = result.fetchall()
     columns = [description[0] for description in result.description]
@@ -112,10 +112,20 @@ def test_dietary_measure_requires_explicit_supported_evidence(populated_fixture)
     assert populated_fixture["dietary_evidence_coverage"]["denominator"] == 2
 
 
-def test_whole_recipe_requires_all_four_requirement_dimensions(populated_fixture):
-    """AC-6: whole-recipe requires all four per-requirement dimensions."""
-    assert populated_fixture["whole_recipe_completeness"]["covered_count"] == 0
-    assert populated_fixture["whole_recipe_completeness"]["denominator"] == 2
+def test_whole_recipe_denominator_is_distinct_from_requirement_denominator():
+    """AC-6: the recipe denominator counts recipes, not requirements."""
+    report = _run_report(
+        # 3 requirements across 2 recipes (recipe 1 has 2, recipe 2 has 1)
+        [("req-1", 1, "carrot"), ("req-2", 1, "salt"), ("req-3", 2, "rice")],
+        [
+            ("carrot", "food-1", "estimated", True, "certified", "unknown"),
+            ("salt", "food-2", "unavailable", False, "unknown", "unknown"),
+            ("rice", "food-3", "estimated", True, "certified", "unknown"),
+        ],
+        [1, 2],
+    )
+    assert report["nutrition_coverage"]["denominator"] == 3   # 3 requirements
+    assert report["whole_recipe_completeness"]["denominator"] == 2  # 2 recipes
 
 
 def test_nutrition_only_requirement_is_not_price_or_whole_recipe_complete():
@@ -139,10 +149,19 @@ def test_zero_populations_are_explicit_not_100_percent():
 
 
 def test_report_has_exactly_five_dimensions_and_association():
-    """AC-13: dimensions and build-association fields are explicit."""
-    for field in ("source_snapshot_id", "mart_content_checksum", "build_id"):
-        assert field in SQL
-    assert SQL.count(" as dimension") == 1
+    """AC-13: exactly five canonical dimensions, and every executed row
+    carries the association values."""
+    report = _run_report(
+        [("req-1", 1, "carrot")],
+        [("carrot", "food-1", "estimated", True, "certified", "unknown")],
+        [1],
+    )
+    assert set(report) == DIMENSIONS
+    assert len(report) == 5
+    for row in report.values():
+        assert row["source_snapshot_id"] == "snapshot-1"
+        assert row["mart_content_checksum"] == "mart-1"
+        assert row["build_id"] == "build-1"
 
 
 def test_repeated_report_comparison_points_are_content_columns():
@@ -161,6 +180,27 @@ def test_repeated_report_comparison_points_are_content_columns():
     )
     assert first_points == second_points
 
+def test_report_content_is_stable_across_observation_timestamps():
+    """AC-9 edge case: content is deterministic across run_started_at values;
+    the observation timestamp is provenance, not content."""
+    fixture = (
+        [("req-1", 1, "carrot")],
+        [("carrot", "food-1", "estimated", True, "certified", "unknown")],
+        [1],
+    )
+    first = _run_report(*fixture, run_started_at="2026-01-01 00:00:00")
+    second = _run_report(*fixture, run_started_at="2026-06-01 00:00:00")
+    comparison = ("dimension", "covered_count", "denominator", "percentage",
+                  "source_snapshot_id", "mart_content_checksum", "build_id")
+    first_points = sorted(
+        ({k: row[k] for k in comparison} for row in first.values()),
+        key=lambda r: r["dimension"],
+    )
+    second_points = sorted(
+        ({k: row[k] for k in comparison} for row in second.values()),
+        key=lambda r: r["dimension"],
+    )
+    assert first_points == second_points
 
 def test_missing_source_snapshot_publishes_no_report(tmp_path):
     """AC-11: a missing source registry fails before writing the manifest."""
