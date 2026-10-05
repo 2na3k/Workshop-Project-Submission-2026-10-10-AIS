@@ -1,17 +1,17 @@
 {
-  "package": "remy-data-preparation",
+  "package": "remy-api",
   "checks": [
     {
       "name": "test",
-      "command": "uv run --package remy-data-preparation pytest -q remy/data-preparation/tests"
+      "command": "cd remy/api && uv run --package remy-api pytest -q tests"
     },
     {
       "name": "lint",
-      "command": "uv run --package remy-data-preparation ruff check remy/data-preparation --select F,E9"
+      "command": "cd remy/api && uv run --package remy-api ruff check . --select F,E9"
     },
     {
       "name": "typecheck",
-      "command": "uv run --package remy-data-preparation mypy remy/data-preparation --ignore-missing-imports --exclude tests/test_serving_model.py"
+      "command": "cd remy/api && uv run --package remy-api mypy . --ignore-missing-imports"
     }
   ],
   "retries": 2,
