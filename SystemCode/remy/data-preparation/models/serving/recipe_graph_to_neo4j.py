@@ -337,8 +337,26 @@ def _admit(accepted, quality):
     return node_total, relationship_total
 
 
+def _relation(dbt, mart):
+    """Resolve a canonical mart through literal dbt refs for parser discovery."""
+    refs = {
+        "node_recipe": dbt.ref("node_recipe"),
+        "node_food_concept": dbt.ref("node_food_concept"),
+        "node_food": dbt.ref("node_food"),
+        "node_component": dbt.ref("node_component"),
+        "edge_requires": dbt.ref("edge_requires"),
+        "edge_fulfills": dbt.ref("edge_fulfills"),
+        "edge_has_component": dbt.ref("edge_has_component"),
+        "graph_quality_manifest": dbt.ref("graph_quality_manifest"),
+    }
+    try:
+        return refs[mart]
+    except KeyError as exc:
+        raise ValueError(f"admission failed: unknown canonical mart {mart}") from exc
+
+
 def _key_set(dbt, mart, key, batch_size):
-    columns = dbt.ref(mart)
+    columns = _relation(dbt, mart)
     if key not in columns.columns:
         raise ValueError(f"admission failed: canonical mart {mart} does not provide key column {key}")
     return {row[key] for row in _materialise(columns, batch_size)}
@@ -347,7 +365,7 @@ def _key_set(dbt, mart, key, batch_size):
 def _assert_referential_integrity(dbt, keys, batch_size):
     """Reject a mart whose linking rows point at nodes the build does not contain."""
     for relationship, mart, start_label, start_column, end_label, end_column in EDGES:
-        relation = dbt.ref(mart)
+        relation = _relation(dbt, mart)
         for column in (start_column, end_column):
             if column not in relation.columns:
                 raise ValueError(
@@ -537,7 +555,7 @@ def model(dbt, session):
         loads.extend(EDGE_LOADS)
 
         for entity, relationship, mart, statement in loads:
-            relation = dbt.ref(mart)
+            relation = _relation(dbt, mart)
             loaded = 0
             if relationship is None:
                 allowed = CANONICAL_NODE_PROPERTIES.get(entity, set())
