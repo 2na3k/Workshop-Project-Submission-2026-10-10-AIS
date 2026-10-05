@@ -11,7 +11,7 @@ class Ingredient:
     preparation: str | None = None
     optional: bool = False
     position: int | None = None
-    occurrence_id: str = ""
+    occurrence_id: str | None = None
     raw_text: str | None = None
     cleaned_text: str | None = None
     description: str | None = None

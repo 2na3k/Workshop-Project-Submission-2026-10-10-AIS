@@ -254,7 +254,7 @@ or p3 response/explanation design.
     - Files: `.../plan/repository.py`, `.../plan/service.py`
     - Done when: T-4 passes; the repository hydrates the freshness, package/unit, and dietary/allergen evidence from canonical `FULFILLS` fields; the service propagates the real outcome without re-filtering or converting absent evidence to success.
 
-- [ ] **T-7** Run the full API test suite and `sdd.py ci`
+- [x] **T-7** Run the full API test suite and `sdd.py ci`
     - Type: verification
     - Covers: all ACs and interfaces
     - Files: (all above)

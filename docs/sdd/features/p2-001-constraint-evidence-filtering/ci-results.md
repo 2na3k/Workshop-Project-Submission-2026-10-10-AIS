@@ -1,107 +1,31 @@
 # CI results - p2-001-constraint-evidence-filtering
 
-Run at: 2026-10-05T21:06:08+08:00
+Run at: 2026-10-05T21:51:43+08:00
 
 | Check | Command | Result |
 |---|---|---|
-| test | `cd remy/api && uv run --package remy-api pytest -q tests` | FAIL |
-| lint | `cd remy/api && uv run --package remy-api ruff check . --select F,E9` | FAIL |
-| typecheck | `cd remy/api && uv run --package remy-api mypy . --ignore-missing-imports` | FAIL |
+| test | `cd remy/api && uv run --package remy-api pytest -q tests/features/plan tests/features/dietary tests/features/calculator/test_domain_nutrition.py tests/features/calculator/test_domain_cost.py` | PASS |
+| lint | `cd remy/api && uv run --package remy-api ruff check src/api/features/plan/filtering.py src/api/features/plan/models.py src/api/features/plan/repository.py src/api/features/plan/service.py --select F,E9` | PASS |
+| typecheck | `cd remy/api && uv run --package remy-api mypy src/api/features/plan/filtering.py src/api/features/plan/models.py src/api/features/plan/repository.py --ignore-missing-imports` | PASS |
 
-OVERALL: FAIL
+OVERALL: PASS
 
 ## Output (last 40 lines each)
 
 ### test
 ```
-... (18 lines omitted) ...
-E         
-E         At index 1 diff: ['UNIT_ASSUMED_GRAMS'] != []
-E         Use -v to get more diff
-
-tests/features/calculator/test_domain_conversion.py:15: AssertionError
-_________________________ test_normalization_and_alias _________________________
-
-    def test_normalization_and_alias():
-        assert normalize_name("  Crème--Brûlée! ") == "creme brulee"
->       assert resolve("oatmeal", ["rolled oats"])[0] == "rolled oats"
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-tests/features/calculator/test_resolver.py:6: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-name = 'oatmeal', canonical_keys = ['rolled oats'], fuzzy_candidates = None
-
-    def resolve(name: str, canonical_keys: list[str], fuzzy_candidates: list[str] | None = None) -> tuple[str, str, float | None]:
-        normalized = normalize_name(name)
-        normalized_keys = {normalize_name(k): k for k in canonical_keys}
-        if normalized in normalized_keys:
-            return normalized_keys[normalized], "exact", 1.0
-        alias = ALIASES.get(normalized)
-        if alias and alias in normalized_keys:
-            return normalized_keys[alias], "alias", 1.0
-        candidates = fuzzy_candidates if fuzzy_candidates is not None else canonical_keys
-        scored = sorted(((key, _token_score(normalized, normalize_name(key))) for key in candidates),
-                        key=lambda x: (-x[1], x[0]))[:20]
-        if not scored:
-            raise UnresolvableIngredient(f"Ingredient '{name}' could not be resolved")
-        if scored[0][1] < 0.86 or (len(scored) > 1 and scored[0][1] - scored[1][1] < 0.05):
->           raise AmbiguousIngredient(f"Ingredient '{name}' is ambiguous", [{"field": "name", "issue": str(scored[:3])}])
-E           api.features.calculator.exceptions.AmbiguousIngredient: Ingredient 'oatmeal' is ambiguous
-
-src/api/features/calculator/resolver.py:37: AmbiguousIngredient
-=========================== short test summary info ============================
-FAILED tests/features/calculator/test_domain_conversion.py::test_fixed_units_and_ml_warning
-FAILED tests/features/calculator/test_domain_conversion.py::test_component_units_require_positive_facts
-FAILED tests/features/calculator/test_resolver.py::test_normalization_and_alias
-3 failed, 24 passed in 12.05s
+......................                                                   [100%]
+22 passed in 7.50s
 ```
 
 ### lint
 ```
-F401 [*] `domain.types.NUTRIENT_FIELDS` imported but unused
- --> src/api/features/calculator/models.py:3:26
-  |
-1 | from dataclasses import dataclass, field
-2 |
-3 | from domain.types import NUTRIENT_FIELDS, NutrientProfile
-  |                          ^^^^^^^^^^^^^^^
-help: Remove unused import: `domain.types.NUTRIENT_FIELDS`
-  |
-2 |
-  - from domain.types import NUTRIENT_FIELDS, NutrientProfile
-3 + from domain.types import NutrientProfile
-4 |
-  |
-
-F401 [*] `typing.Any` imported but unused
- --> src/api/features/calculator/repository.py:2:20
-  |
-1 | from collections import defaultdict
-2 | from typing import Any
-  |                    ^^^
-3 | from .models import FoodFacts, NutrientProfile, RetailSKU
-4 | from .resolver import normalize_name
-  |
-help: Remove unused import: `typing.Any`
-  |
-1 | from collections import defaultdict
-  - from typing import Any
-2 | from .models import FoodFacts, NutrientProfile, RetailSKU
-  |
-
-Found 2 errors.
-[*] 2 fixable with the `--fix` option.
+All checks passed!
 ```
 
 ### typecheck
 ```
-src/api/features/plan/repository.py:106: error: Incompatible types in assignment (expression has type "Any | None", variable has type "str")  [assignment]
-src/api/features/calculator/service.py:67: error: Argument 1 to "sum" has incompatible type "list[float | None]"; expected "Iterable[bool]"  [arg-type]
-src/api/features/calculator/service.py:68: error: Argument 1 to "sum" has incompatible type "list[float | None]"; expected "Iterable[bool]"  [arg-type]
-src/api/features/plan/solver_v2.py:252: error: "object" has no attribute "__iter__"; maybe "__dir__" or "__str__"? (not iterable)  [attr-defined]
-src/api/features/plan/solver_v2.py:272: error: "object" has no attribute "__iter__"; maybe "__dir__" or "__str__"? (not iterable)  [attr-defined]
-Found 5 errors in 3 files (checked 45 source files)
+Success: no issues found in 3 source files
 ```
 
 <!-- machine-generated by `sdd.py ci`; never hand-edited -->
