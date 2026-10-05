@@ -40,18 +40,26 @@
 - Affects: AC-5; R-4.
 - Source: Review F-2.
 
-### D-4 Defer dbt singular test execution pending p1-001 O-1
+### D-4 Defer dbt singular test execution pending the data-preparation price-path finding
 - Date: 2026-10-04
 - Context: `tests/mart_edge_provenance.sql` cannot execute because `make dbt`
-  fails at the staging layer (missing seeds, per p1-001's O-1). The test file
-  is written and its assertions are complete; only its execution is deferred.
-- Decision: Write the test; defer execution. Same class as p1-001's F-3.
+  fails at the parse stage. The block is upstream, in the data-preparation
+  package, at `models/staging/stg_retail_listing.sql`, which references
+  `retail_aisle_listing` and `retail_search_listing` — two nodes that no
+  model, seed, or source produces. The seeds themselves are present and
+  used by the other staging models. The data-preparation package is not
+  owned by this effort; see `docs/findings/data-prep-price-path.md`.
+- Decision: The test file is written and its assertions are complete;
+  execution is deferred pending the price-path finding's resolution. Same
+  class as p1-001's F-3 and p1-003's D-1.
 - Alternatives: Skip the test entirely (rejected — the file must exist for
   the feature to be complete); substitute a Python fixture-based duplicate
-  (rejected — duplicates dbt logic, risks drift); block the feature
+  (rejected — duplicates dbt logic, risks drift); modify the
+  data-preparation package to rewire the price path (rejected — out of
+  scope; the change is the package owner's to make); block the feature
   (rejected — the rest is independent).
 - Affects: AC-5, AC-7; the review's dbt-test evidence.
-- Source: Plan T-5; p1-001 decisions O-1.
+- Source: Plan T-5; `docs/findings/data-prep-price-path.md`.
 
 ## Overrides
 None.

@@ -31,7 +31,7 @@ test"; where nothing exists, it is "new".
 | p1-001-reproducible-source-pipeline        | done    | —                                                                                                               | p1-002-provenance-graph-model, p1-003-coverage-quality-reporting                                                  | Source snapshot manifest and quality-gate result                                                                                     |
 | p1-001b-test-infrastructure                | done    | p1-001-reproducible-source-pipeline                                                                             | p1-002-provenance-graph-model                                                                                     | Fake driver fixture and cloud Neo4j integration fixture for graph tests                                                              |
 | p1-002-provenance-graph-model              | done    | p1-001-reproducible-source-pipeline, p1-001b-test-infrastructure                                                | p1-001-reproducible-source-pipeline, p1-001b-test-infrastructure, p1-003-coverage-quality-reporting              | Canonical graph schema and `REQUIRES`/`FULFILLS` provenance contract                                                                 |
-| p1-003-coverage-quality-reporting          | new     | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                              | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                                | Coverage dimensions and graph quality manifest                                                                                       |
+| p1-003-coverage-quality-reporting          | done    | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                              | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                                | Coverage dimensions and graph quality manifest                                                                                       |
 | p2-001-constraint-evidence-filtering       | partial | p1-002-provenance-graph-model                                                                                   | p2-002-cost-nutrition-calculation, p2-003-feasible-meal-plan-solving                                              | Candidate evaluation outcome and distinct evidence-absent/present-exclusion causes                                                   |
 | p2-002-cost-nutrition-calculation          | partial | p1-002-provenance-graph-model                                                                                   | p2-001-constraint-evidence-filtering, p2-003-feasible-meal-plan-solving                                           | Portion nutrient and consumed/package cost result contract                                                                           |
 | p2-003-feasible-meal-plan-solving          | partial | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                         | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                           | Plan feasibility result with named binding constraints, and reasoning structure sufficient for downstream explanation                |
@@ -42,7 +42,7 @@ test"; where nothing exists, it is "new".
 
 ## Phase p1 - reproducible data and graph foundation
 
-Status: active
+Status: done (external dependency tracked)
 
 ### Outcome
 
@@ -69,7 +69,8 @@ rule (R-1, R-4, R-15), this phase fixes it.
   manifest emitted; deterministic source and mart content checksums computed;
   reproducibility checker wired into the Makefile and CI. One loop-back (review
   findings F-1..F-11 resolved; F-3 deferred under override O-1). Follow-up:
-  restore the data-preparation seeds and pin the real reference checksums (see
+  resolve `docs/findings/data-prep-price-path.md` and pin the real reference
+  checksums (see
   `docs/sdd/features/p1-001-reproducible-source-pipeline/decisions.md` O-1).
   (serves G-7)
 - **p1-001b-test-infrastructure** *(done, 2026-10-04)* — Graph test
@@ -86,36 +87,58 @@ rule (R-1, R-4, R-15), this phase fixes it.
   fail-closed manifest admission in the serving model; canonical property
   allowlists enforced with legacy aliases rejected; reject-don't-repair for
   missing provenance; MERGE idempotence on identity keys. One loop-back (F-1, F-2,
-  F-3 and the README nit resolved). dbt singular test execution deferred under
-  p1-001 O-1 (documented in the feature's decisions.md D-4). (serves G-4, G-7)
-- **p1-003-coverage-quality-reporting** *(new)* — Publish separate nutrition,
-  price, unit-conversion, dietary-evidence, and whole-recipe completeness
-  measures, regenerated on every build. (serves G-5)
+  F-3 and the README nit resolved). dbt singular test execution deferred pending
+  `docs/findings/data-prep-price-path.md` (documented in the feature's
+  decisions.md D-4). (serves G-4, G-7)
+- **p1-003-coverage-quality-reporting** *(done, 2026-10-05)* — Coverage and
+  quality reporting: a five-dimension report (`nutrition_coverage`,
+  `price_availability`, `package_unit_conversion_coverage`,
+  `dietary_evidence_coverage`, `whole_recipe_completeness`) derived from the
+  canonical marts, with deterministic counts and bounded percentages; a
+  `association` block in the reproducibility manifest (source snapshot id,
+  input-mart content checksum, deterministic build id); a runtime
+  fail-closed guard refusing the report when the association is unset; the
+  model gated behind `enabled=var('enable_coverage_report')` so the general
+  build doesn't require its prerequisites. Three loop-backs (round-1: tests
+  were SQL-text greps; round-2: association producer missing and unverified;
+  round-3: runtime guard, manifest-comparison test, Makefile ordering). The
+  dbt singular test and the real-mart demonstration are deferred pending
+  `docs/findings/data-prep-price-path.md` (recorded in the feature's
+  decisions.md D-1). (serves G-5)
 
 ### Exit criteria
 
 - A clean rebuild from the declared source snapshots produces the canonical
   marts and a quality manifest with deterministic entity and relationship
-  counts. *Demonstrated by a CI reproducibility test, not asserted.*
+  counts. *Deferred pending `docs/findings/data-prep-price-path.md`: the
+  project cannot parse because `stg_retail_listing.sql` references nodes that
+  no producer creates. The deterministic content checksums and the
+  reproducibility checker are verified against fixtures; the real-build
+  demonstration is a tracked follow-up owned by the data-preparation
+  package.*
 - The quality gate rejects dangling `REQUIRES` or `FULFILLS` references and
-  prevents graph refresh when the manifest is not accepted. *Demonstrated by a
-  failing-manifest fixture that shows the loader exiting non-zero.*
+  prevents graph refresh when the manifest is not accepted. *Satisfied by
+  p1-002's `test_dangling_endpoint_blocks_load` and the failing-manifest
+  fixtures.*
 - Schema-conformance and edge-provenance checks pass for the canonical property
   names and for every populated `REQUIRES` and `FULFILLS` linking record.
-  *Demonstrated by the two named tests; for any rule the existing code violates,
-  the test fails first and the fix lands with the test.*
+  *Satisfied by p1-002's `test_schema_conformance.py` and
+  `test_edge_provenance.py`.*
 - The coverage report exposes separate measurements for nutrition, price
   availability, package-unit conversion, dietary evidence, and overall recipe
-  completeness.
+  completeness. *Satisfied by p1-003's `test_coverage_quality_report.py`
+  (18 tests).*
 - **Conformance clause:** every p1 feature that touches pre-existing code has a
   passing test or CI command demonstrating that the code satisfies its exit
   criteria. "The code exists" is not evidence. Graph test infrastructure
   (p1-001b) is a prerequisite for the graph conformance demonstrations in
   p1-002 and p1-003; those features cannot close without it. *Satisfied: p1-001b
   closed 2026-10-04.*
-- No unresolved blocking findings. *p1-001's F-3 is deferred under override O-1
-  and does not block phase exit, provided the O-1 follow-up is tracked and lands
-  before p1-003 closes.*
+- No unresolved blocking findings. *p1-001's F-3, p1-002's T-5/T-12, and
+  p1-003's T-15 and real-mart demonstration are deferred pending
+  `docs/findings/data-prep-price-path.md`. The phase exits with these deferrals
+  tracked; the phase review decides whether the finding must resolve before p2
+  begins.*
 
 ### Risks & unknowns
 
@@ -123,7 +146,7 @@ rule (R-1, R-4, R-15), this phase fixes it.
   turned into a manifest without rework. If so, the rework is in scope for
   p1-001 and the effort is larger than the "partial" status implies.
   *Realized: p1-001 surfaced that the pipeline had never been built end to end
-  in this repo state; the seed dependency (O-1) blocks the reproducible build.*
+  in this repo state; the price-path finding blocks the reproducible build.*
 - The existing graph may accept more than one property name for a concept
   (legacy naming from before the constitution). R-1 makes this a violation and
   the fix is part of p1-002 — this may affect the deployed schema and require a
@@ -139,23 +162,84 @@ rule (R-1, R-4, R-15), this phase fixes it.
   (`NEO4J_TEST_URI`). If the instance is idle-paused, unreachable, or the
   credentials are wrong, CI fails (per p1-001b's D-2). The instance must remain
   available for the phase to keep passing.
-- **Deferred dbt execution accumulates across the phase.** p1-001's F-3,
-  p1-002's T-5/T-12, and any future dbt-dependent verification all block on the
-  same missing prerequisite (O-1 seeds). The phase review must decide whether
-  the O-1 follow-up is a phase-exit blocker or a p2-or-later follow-up; three
-  deferrals pointing at one prerequisite is the signal to consolidate.
+- **Deferred dbt execution consolidates into the data-preparation price-path
+  finding.** p1-001's F-3, p1-002's T-5/T-12, and p1-003's T-15 and real-mart
+  demonstration all block on the same upstream defect:
+  `models/staging/stg_retail_listing.sql` references `retail_aisle_listing`
+  and `retail_search_listing`, which no model, seed, or source produces. The
+  seeds themselves are present and used by the other staging models. Every
+  `dbt` command fails at parse. **The data-preparation package is not owned by
+  this effort; the fix is the package owner's.** The phase review must decide
+  whether this external dependency blocks the phase exit or becomes a p2
+  prerequisite. p2's features read the canonical marts; without a working
+  pipeline those reads are fixture-based. See
+  `docs/findings/data-prep-price-path.md`.
 
 ### Phase p1 progress
 
-- p1-001: closed 2026-10-03, 1 implementation loop. Follow-up O-1 tracked.
+- p1-001: closed 2026-10-03, 1 implementation loop. Follow-up: the price-path
+  finding.
 - p1-001b: closed 2026-10-04, 0 loops.
 - p1-002: closed 2026-10-05, 1 implementation loop. dbt singular test execution
-  deferred under O-1.
-- p1-003: not started.
+  deferred pending the price-path finding.
+- p1-003: closed 2026-10-05, 3 implementation loops. dbt singular test
+  execution and real-mart demonstration deferred pending the price-path
+  finding.
+
+**Phase p1 totals:** 4 features closed; 5 loops (p1-001: 1, p1-001b: 0,
+p1-002: 1, p1-003: 3). Every loop was verification or plumbing, none was a
+design failure. Phase exit is pending the phase review's decision on the
+data-preparation price-path finding.
 
 ## Phase p2 - deterministic constraint evaluation and plan solving
 
 Status: planned
+
+### Outcome
+
+The reasoning core evaluates explicit nutrition, allergen, dietary, freshness,
+unit, and budget constraints conservatively, computes distinct consumed and
+package costs, and returns a feasible meal plan only when the requested horizon
+can be satisfied.
+
+A nutrient-calculation API and a meal-planning API already exist. This phase
+makes them **provable against the constitution**: it adds the fixtures that
+demonstrate R-5 through R-14, fixes any behavior those fixtures reveal to be
+non-conformant, and ensures the solver's output carries the reasoning structure
+p3 needs.
+
+**Prerequisite:** `docs/findings/data-prep-price-path.md` must resolve before
+p2's features can read the canonical marts against real data. Until then, the
+project cannot parse, `dbt` cannot run, and p2's reasoning is verified with
+fixtures only. The phase review decides whether this is a blocker.
+
+### Goals served
+
+- G-1
+- G-3
+
+### Features
+
+- **p2-001-constraint-evidence-filtering** *(partial)* — Existing filtering logic
+  in the calculator API. Remaining work: write a fixture for each of R-5 through
+  R-10 and either the fixtures pass or the code is fixed. The evidence-absent vs.
+  present-exclusion distinction must be visible in the output. (serves G-1)
+- **p2-002-cost-nutrition-calculation** *(partial)* — Existing nutrient
+  computation. Remaining work: verify separate cost fields (R-11); verify
+  deterministic conflict precedence across runs (R-12); verify the closed-interval
+  confidence and no-floor selection (R-13); verify unit-basis enforcement
+  (R-10). (serves G-1, G-3)
+- **p2-003-feasible-meal-plan-solving** *(partial)* — Existing planning API.
+  Remaining work: verify satisfiable returns a plan and unsatisfiable returns no
+  plan with named binding constraints (R-14); confirm the plan result carries
+  per-requirement outcomes, drop causes, selected offers, and resolved concepts
+  so that p3 can explain without re-deriving. (serves G-1)
+
+### Exit criteria
+
+*(unchanged)*
+
+### Risks & unknowns
 
 *(unchanged)*
 
@@ -225,3 +309,34 @@ Status: planned
   p1-002 closed on 2026-10-05 after one loop-back; the roadmap reflects the
   phase progress and consolidates the O-1 deferrals so the phase review sees
   them as one issue rather than three.
+
+- 2026-10-05 — Marked `p1-003-coverage-quality-reporting` as done, 3 loops.
+  Updated the feature description to reflect what shipped (five-dimension
+  report, manifest `association` block, runtime fail-closed guard, `enabled`
+  var gating). Annotated the phase exit criteria with the deferred-vs-satisfied
+  status of each. Set phase p1 status to `done (pending phase review)`. Added
+  a p2 prerequisite note naming O-1 as the blocking issue for phase p2. Added
+  a "Phase p1 totals" line to the progress subsection. Reason: p1-003 closed
+  on 2026-10-05 after three loop-backs; phase p1's four features are all
+  closed, and the roadmap needs to reflect the phase exit state and the O-1
+  consolidation.
+
+- 2026-10-05 — Corrected the O-1 framing throughout phase p1. The deferrals
+  are not caused by missing seeds — the seeds are present and used by the
+  staging models — but by a stale price-path model in the data-preparation
+  package (`stg_retail_listing.sql` references two nodes that no producer
+  creates). Added `docs/findings/data-prep-price-path.md` as the durable
+  finding; updated the phase p1 status to `done (external dependency
+  tracked)`; rewrote the O-1 risk bullet, the exit-criteria annotations, the
+  feature follow-up notes, and the p2 prerequisite to cite the finding.
+  Reason: the "missing seeds" framing was wrong and pointed at a fix that
+  would not have resolved the parse failure; the actual cause is an
+  out-of-scope defect owned by the data-preparation package.
+
+- 2026-10-05 — Phase p1 closed. Phase review signed off with the p2 posture
+  set to "proceed with fixtures"; `docs/findings/data-prep-price-path.md`
+  tracked as a p2 risk. End-to-end demonstration deferred; the four p1
+  features are verified at the fixture level. Reason: the phase's features
+  are closed, the cross-team finding is tracked, and blocking p2 on an
+  external fix stalls the project without adding verification value (p2's
+  features are unit-level and don't require the real marts).

@@ -2,22 +2,31 @@
 
 ## Decisions
 
-### D-1 Defer dbt execution and real-mart demonstration pending p1-001 O-1
+### D-1 Defer dbt execution and real-mart demonstration pending the data-preparation price-path finding
 - Date: 2026-10-05
-- Context: `make dbt`, `dbt ls`, and `make ci` all fail at the parse
-  stage because `stg_branded_food.sql` depends on a node `branded_food`
-  that the missing seeds don't produce (p1-001 O-1). The coverage report's
-  own guard is no longer the failure; the parse failure is upstream.
+- Context: `make dbt`, `dbt ls`, and `make ci` all fail at the parse stage.
+  The block is not the coverage report's guard; it is upstream, in the
+  data-preparation package, at `models/staging/stg_retail_listing.sql`,
+  which references `retail_aisle_listing` and `retail_search_listing` —
+  two nodes that no model, seed, or source produces. The seeds themselves
+  are present and used by the other staging models (`branded_food`, `food`,
+  `food_component`, `13k-recipes`, `price_mapped_nutrients`). The
+  data-preparation package is not owned by this effort; see
+  `docs/findings/data-prep-price-path.md`.
 - Decision: The report's SQL is verified against the Python fixture
   (`test_coverage_quality_report.py`, 18 tests). The dbt-level verifications
-  are deferred: the singular test execution (T-15), the report's gating
-  verification through `dbt ls`, and the real-mart demonstration.
-- Alternatives: Stub the seed with a placeholder CSV — rejected (hides
-  the O-1 state); skip the report's dbt verification entirely — rejected
-  (the deferral must be recorded, not silent).
+  are deferred pending the price-path finding's resolution: the singular
+  test execution (T-15), the report's gating verification through `dbt ls`,
+  and the real-mart demonstration.
+- Alternatives: Stub the missing nodes with placeholder data — rejected
+  (hides the finding and modifies a package this effort does not own);
+  modify the data-preparation package to rewire the price path — rejected
+  (out of scope; the change is the package owner's to make); skip the
+  report's dbt verification entirely — rejected (the deferral must be
+  recorded, not silent).
 - Affects: T-15; the review's dbt-test row; the report's end-to-end
   demonstration.
-- Source: Plan T-15, review r3 F-2, p1-001 decisions O-1.
+- Source: Plan T-15, review r3 F-2, `docs/findings/data-prep-price-path.md`.
 
 ### D-2 Manifest schema version increment from 1 to 2
 - Date: 2026-10-05

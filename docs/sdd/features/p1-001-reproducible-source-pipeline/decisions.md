@@ -62,29 +62,39 @@
 
 ## Overrides
 
-### O-1 Defer F-3 pending seed restoration
+### O-1 Defer F-3 pending the data-preparation price-path finding
 - Applies to: F-3
 - Reason: F-3 requires pinning real checksums from an accepted reference build.
-  The build cannot run because the data-preparation seed files (`seeds/branded_food.csv`
-  and siblings) are absent from the repository and are not recoverable from git
-  history. The seeds are a pre-existing dependency of the data-preparation pipeline,
-  not a p1-001 artifact, and the pipeline has never been built end to end in this
-  repository state.
-- Decision: F-3 deferred under human override. `reproducibility/expected_checksums.json`
-  ships empty (`{"schema_version": 1, "manifest_schema_version": 1, "marts": {}}`)
-  and `make reproducibility-check` fails closed with a clear "missing pinned
-  checksum" error. That is intentional: the pinned file must not carry a fabricated
-  baseline. The remaining findings (F-1, F-2, F-4..F-11) are resolved in this loop.
+  The build cannot run because `dbt` fails to parse the project. The block is
+  upstream, in the data-preparation package, at
+  `models/staging/stg_retail_listing.sql`, which references `retail_aisle_listing`
+  and `retail_search_listing` — two nodes that no model, seed, or source produces.
+  The seeds themselves are present and used by the other staging models
+  (`branded_food`, `food`, `food_component`, `13k-recipes`,
+  `price_mapped_nutrients`). The data-preparation package is not owned by this
+  effort; see `docs/findings/data-prep-price-path.md`.
+- Decision: F-3 deferred under human override.
+  `reproducibility/expected_checksums.json` ships empty
+  (`{"schema_version": 1, "manifest_schema_version": 1, "marts": {}}`) and
+  `make reproducibility-check` fails closed with a clear "missing pinned
+  checksum" error. That is intentional: the pinned file must not carry a
+  fabricated baseline. The remaining findings (F-1, F-2, F-4..F-11) are resolved
+  in this loop.
 - Alternatives: Fabricate placeholder pinned checksums — rejected, it would make
-  R-15's gate pass on invented values; restore the seeds inside p1-001 — rejected as
-  out-of-scope; block close indefinitely — rejected in favour of a tracked follow-up.
-- Impact: R-15's gate is not satisfiable end-to-end until the seeds exist. `sdd.py ci`
-  passes because its test/lint/typecheck checks do not exercise `make reproducibility-check`;
-  the p1-001 code is verified as typed, lint-clean, and unit-tested, but its
+  R-15's gate pass on invented values; modify the data-preparation package to
+  rewire the price path — rejected, out of scope; restore the seeds inside
+  p1-001 — rejected as out-of-scope (the seeds are present; the missing piece is
+  not a seed); block close indefinitely — rejected in favour of a tracked
+  follow-up.
+- Impact: R-15's gate is not satisfiable end-to-end until the data-preparation
+  price-path finding is resolved. `sdd.py ci` passes because its
+  test/lint/typecheck checks do not exercise `make reproducibility-check`; the
+  p1-001 code is verified as typed, lint-clean, and unit-tested, but its
   end-to-end reproducibility claim is not yet demonstrated.
 - Who: Racker-Hank
 - When: 2026-10-03
-- Follow-up: Restore the seeds; run `make dbt DBT_TARGET=nonprod`; pin the resulting
-  checksums into `expected_checksums.json`; land the real-build integration tests
-  F-4/F-6/F-7; re-review and close F-3. Track separately as "restore data-preparation
-  seeds and pin reproducibility reference."
+- Follow-up: Resolve `docs/findings/data-prep-price-path.md` (the data-preparation
+  package owner rewires or supplies the missing nodes); then run
+  `make dbt DBT_TARGET=nonprod`; pin the resulting checksums into
+  `expected_checksums.json`; land the real-build integration tests F-4/F-6/F-7;
+  re-review and close F-3. Tracked separately under the finding.
