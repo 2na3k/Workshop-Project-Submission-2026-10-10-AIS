@@ -1,5 +1,8 @@
-### D-1 Defer dbt execution and real-mart demonstration pending p1-001 O-1
+# Decisions - Coverage and quality reporting
 
+## Decisions
+
+### D-1 Defer dbt execution and real-mart demonstration pending p1-001 O-1
 - Date: 2026-10-05
 - Context: `make dbt`, `dbt ls`, and `make ci` all fail at the parse
   stage because `stg_branded_food.sql` depends on a node `branded_food`
@@ -14,4 +17,38 @@
   (the deferral must be recorded, not silent).
 - Affects: T-15; the review's dbt-test row; the report's end-to-end
   demonstration.
-- Source: p1-001 decisions O-1.
+- Source: Plan T-15, review r3 F-2, p1-001 decisions O-1.
+
+### D-2 Manifest schema version increment from 1 to 2
+- Date: 2026-10-05
+- Context: Adding `coverage_quality_report` to `REQUIRED_MARTS` and requiring
+  its content checksum and content columns in the reproducibility manifest
+  extends the manifest contract.
+- Decision: Increment `MANIFEST_SCHEMA_VERSION` from 1 to 2 in
+  `reproducibility_manifest.py`, and update the serving model's
+  (`recipe_graph_to_neo4j.py`) accepted manifest schema version constant
+  to 2 in the same change so graph admission continues to accept the
+  extended manifest.
+- Alternatives: Retain version 1 with optional mart — rejected (fails closed
+  reproducible contract); introduce a separate quality-only manifest —
+  rejected (splits source snapshot and mart checksum truth).
+- Affects: `reproducibility_manifest.py`, `recipe_graph_to_neo4j.py`,
+  `test_reproducibility_manifest.py`, `test_serving_model.py`.
+- Source: Plan Design §5, T-8, review r3 F-5.
+
+### D-3 Fail-closed build association verification
+- Date: 2026-10-05
+- Context: Unset or blank build association environment variables could
+  silently publish NULL association columns, contrary to spec AC-11.
+- Decision: Enforce non-empty `REMY_SOURCE_SNAPSHOT_ID`,
+  `REMY_MART_CONTENT_CHECKSUM`, and `REMY_BUILD_ID` in the report's
+  `validated` CTE, raising `error('coverage_quality_report failed closed: build association is not configured')`
+  if any variable is missing or empty.
+- Alternatives: Default-fill with placeholder strings — rejected (misrepresents
+  reproducibility provenance); emit NULLs — rejected (violates spec AC-11
+  fail-closed contract).
+- Affects: `coverage_quality_report.sql`, `test_coverage_quality_report.py`.
+- Source: Review r3 F-1, commit bd06ed3.
+
+## Overrides
+None.
