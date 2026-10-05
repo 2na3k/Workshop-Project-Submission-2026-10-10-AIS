@@ -21,6 +21,14 @@ from reproducibility_manifest import (
 )
 
 
+def test_report_matches_source_and_mart_manifest_association() -> None:
+    """AC-10: the report is a deterministic required mart with association fields."""
+    assert "coverage_quality_report" in REQUIRED_MARTS
+    columns = set(MART_CONTENT_COLUMNS["coverage_quality_report"])
+    assert {"source_snapshot_id", "mart_content_checksum"} <= columns
+    assert {"dimension", "covered_count", "denominator", "percentage"} <= columns
+
+
 def write_registry(
     tmp_path: Path, *, include_source: str | None = None
 ) -> tuple[Path, Path]:

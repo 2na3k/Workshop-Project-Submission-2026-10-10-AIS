@@ -279,7 +279,7 @@ evidence, not a reason to split the feature.
     - Files: `SystemCode/remy/data-preparation/tests/coverage_quality_report.sql`
     - Done when: the singular test fails the build on duplicate or missing dimensions, negative counts, covered > denominator, or percentages out of bounds.
 
-- [ ] **T-7** Write failing tests for determinism, build association, and exact vocabulary (AC-9, AC-10, AC-13)
+- [x] **T-7** Write failing tests for determinism, build association, and exact vocabulary (AC-9, AC-10, AC-13)
     - Type: test
     - Covers: AC-9, AC-10, AC-13
     - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`, `SystemCode/remy/data-preparation/tests/test_reproducibility_manifest.py`

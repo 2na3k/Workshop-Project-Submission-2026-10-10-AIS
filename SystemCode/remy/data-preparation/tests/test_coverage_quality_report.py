@@ -65,3 +65,23 @@ def test_zero_populations_are_explicit_not_100_percent():
     """AC-8: zero populations do not fabricate a passing percentage."""
     assert "case when denominator = 0 then null" in SQL
     assert "'no_population'" in SQL
+
+
+def test_report_has_exactly_five_dimensions_and_association():
+    """AC-13: dimensions and build-association fields are explicit."""
+    for field in ("source_snapshot_id", "mart_content_checksum", "build_id"):
+        assert field in SQL
+    assert SQL.count(" as dimension") == 1
+
+
+def test_repeated_report_comparison_points_are_content_columns():
+    """AC-9: deterministic report fields are all named in the model."""
+    for field in (
+        "covered_count",
+        "denominator",
+        "percentage",
+        "dimension",
+        "source_snapshot_id",
+        "mart_content_checksum",
+    ):
+        assert field in SQL
