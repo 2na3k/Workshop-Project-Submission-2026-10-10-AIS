@@ -240,3 +240,83 @@ evidence, not a reason to split the feature.
   'retailer_claim', 'ingredient_screen_pass')`, `vegetarian_status IN
   ('retailer_claim', 'ingredient_screen_pass')`). Applied to Design §3, the
   AC-2/AC-3/AC-5 test rows, and the Risks section.
+
+## Tasks
+
+- [ ] **T-1** Verify predicate values and the manifest-version compatibility before writing code
+    - Type: prerequisite
+    - Covers: plan Risks "predicate values must match" and "manifest contract" bullets
+    - Files: (read-only)
+    - Done when: `nutrition_status = 'validated'`, `price_status = 'estimated'`, `cost_basis_compatible = true`, `halal_status IN ('certified', 'retailer_claim', 'ingredient_screen_pass')`, `vegetarian_status IN ('retailer_claim', 'ingredient_screen_pass')` are confirmed present in the canonical marts; `MANIFEST_SCHEMA_VERSION` in `reproducibility_manifest.py` and the serving model's accepted version constant are named. If any predicate value has no producer in the marts, stop and route to spec.
+
+- [ ] **T-2** Write failing tests for the five dimensions (AC-1 through AC-6)
+    - Type: test
+    - Covers: AC-1, AC-2, AC-3, AC-4, AC-5, AC-6
+    - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`
+    - Done when: each test constructs a controlled fixture population and asserts the covered count, denominator, and percentage for its dimension; each fails because the report does not exist yet. Nutrition uses `nutrition_status = 'validated'`; price uses `price_status = 'estimated'`; conversion requires `cost_basis_compatible = true`; dietary uses the exact accepted sets; whole-recipe uses a distinct recipe denominator.
+
+- [ ] **T-3** Write failing tests for cross-dimension independence and empty populations (AC-7, AC-8)
+    - Type: test
+    - Covers: AC-7, AC-8
+    - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`
+    - Done when: the nutrition-only/price-absent fixture asserts independent counting (nutrition numerator 1, price numerator 0, whole-recipe not complete); the empty fixture asserts typed no-population results for all five dimensions with no fabricated percentage.
+
+- [ ] **T-4** Implement the coverage report mart (AC-1 through AC-6)
+    - Type: impl
+    - Covers: AC-1, AC-2, AC-3, AC-4, AC-5, AC-6
+    - Files: `SystemCode/remy/data-preparation/models/mart/coverage_quality_report.sql`, `SystemCode/remy/data-preparation/models/mart/schema.yml`
+    - Done when: T-2 passes; the report exposes exactly five named dimensions with counts, denominators, and percentages.
+
+- [ ] **T-5** Implement empty-population and cross-dimension behavior (AC-7, AC-8)
+    - Type: impl
+    - Covers: AC-7, AC-8
+    - Files: `SystemCode/remy/data-preparation/models/mart/coverage_quality_report.sql`
+    - Done when: T-3 passes; zero denominators emit typed no-population results; cross-dimension counting is independent.
+
+- [ ] **T-6** Write the dbt singular test for metric validity (AC-11, dbt half)
+    - Type: test
+    - Covers: AC-11 (dbt half)
+    - Files: `SystemCode/remy/data-preparation/tests/coverage_quality_report.sql`
+    - Done when: the singular test fails the build on duplicate or missing dimensions, negative counts, covered > denominator, or percentages out of bounds.
+
+- [ ] **T-7** Write failing tests for determinism, build association, and exact vocabulary (AC-9, AC-10, AC-13)
+    - Type: test
+    - Covers: AC-9, AC-10, AC-13
+    - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`, `SystemCode/remy/data-preparation/tests/test_reproducibility_manifest.py`
+    - Done when: the determinism test compares all five comparison points (counts, denominators, percentages, dimension identities, build association); the association test ties the report to the manifest's source snapshot and mart checksums; the vocabulary test asserts exactly five dimensions and names the association fields.
+
+- [ ] **T-8** Implement the manifest contract extension and version compatibility (AC-9, AC-10, AC-13)
+    - Type: impl
+    - Covers: AC-9, AC-10, AC-13
+    - Files: `SystemCode/remy/data-preparation/scripts/reproducibility_manifest.py`, `SystemCode/remy/data-preparation/models/serving/recipe_graph_to_neo4j.py`, `SystemCode/remy/data-preparation/models/mart/schema.yml`
+    - Done when: T-7 passes; the manifest schema version is incremented and the report is included in the required-mart set with its deterministic content checksum; the serving model's accepted version constant matches so p1-002's admission still accepts the extended manifest.
+
+- [ ] **T-9** Write the negative test for missing or uncomputable inputs (AC-11, Python half)
+    - Type: test
+    - Covers: AC-11 (Python half)
+    - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`
+    - Done when: missing source snapshot, missing canonical mart, or an uncomputable dimension each cause the report generation to fail non-zero and publish no accepted report; the test asserts the absence of an output report, not only the raised error.
+
+- [ ] **T-10** Implement fail-closed behavior for missing or invalid inputs (AC-11, AC-12)
+    - Type: impl
+    - Covers: AC-11, AC-12
+    - Files: `SystemCode/remy/data-preparation/models/mart/coverage_quality_report.sql`, `SystemCode/remy/data-preparation/scripts/reproducibility_manifest.py`
+    - Done when: T-9 passes; missing evidence is reported as uncovered with a distinct gap count (`nutrition_status = 'missing'`, `price_status = 'unavailable'`, `cost_basis_compatible = false`, dietary status outside the accepted sets); invalid inputs fail the build.
+
+- [ ] **T-11** Declare the coverage report as build-quality metadata in the serving schema
+    - Type: impl
+    - Covers: plan Design §6
+    - Files: `SystemCode/remy/data-preparation/models/serving/schema.yml`
+    - Done when: the serving schema declares that the coverage report is consumed as build-quality metadata and is not projected as graph nodes or edges.
+
+- [ ] **T-12** Document the report in the README
+    - Type: impl
+    - Covers: the spec's User-facing behavior section
+    - Files: `SystemCode/remy/data-preparation/README.md`
+    - Done when: the README documents the five dimensions, the exact predicate values (and the models that produce them), empty-population behavior, build association, regeneration, and the "descriptive, not threshold" posture.
+
+- [ ] **T-13** Run `pytest`, `sdd.py ci`, and `make ci`; record evidence
+    - Type: verification
+    - Covers: AC-1 through AC-13
+    - Files: (all above)
+    - Done when: `sdd.py ci` reports OVERALL PASS; the dbt singular test compiles and its execution is either completed by `make ci` or documented as blocked by the p1-001 O-1 seed dependency; the report's real-mart demonstration is recorded as O-1-deferred; no fabricated checksum is introduced.
