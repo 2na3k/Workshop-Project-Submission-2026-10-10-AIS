@@ -1,0 +1,11 @@
+{
+  "stage": "specified",
+  "spec_hash": "sha256:01de1b62ca92d03f",
+  "history": [
+    {
+      "at": "2026-10-05T08:56:07+08:00",
+      "event": "proposed -> specified"
+    }
+  ],
+  "updated_at": "2026-10-05T08:56:07+08:00"
+}
