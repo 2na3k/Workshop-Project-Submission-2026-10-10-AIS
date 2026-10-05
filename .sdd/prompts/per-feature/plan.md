@@ -14,18 +14,29 @@
 
 ## Procedure
 1. `sdd.py gate plan <id>` must pass.
-2. Fill Approach (chosen + main rejected alternative, one line each), Design,
-   Files to touch.
-3. Constitution alignment: one line per relevant rule.
-4. Test strategy: a row per AC. No AC untested.
-5. Risks & mitigations.
-6. Scope check: does this fit one working context? If no, split the feature.
-7. Stop. Submit to plan review.
-8. Only after APPROVE or APPROVE-WITH-NITS: append `## Tasks`, test tasks
-   before the impl tasks they cover. Every AC must be covered by at least one
-   task. Tasks are hashed into state.json (tasks_hash) and frozen for this loop.
+2. Read the code the feature changes before writing Files-to-touch, Design, or
+   the fixture assignments. Write against what is actually there, not what the
+   spec assumes.
+3. Fill Approach (chosen + rejected alternative), Design, Files to touch.
+4. Constitution alignment: one line per relevant rule.
+5. Test strategy: one row per AC. No AC untested.
+6. Integration per interface: one row in `## Integration per interface` per
+   interface the plan names (producer → consumer). Test runs the real code
+   under test (dependencies may be mocked, the code under test may not), reads
+   from the producer, asserts on the consumer. If it can't run in this
+   environment, record the deferral in `## Revision notes` and `decisions.md`;
+   don't omit the row. No interfaces → write "None — single-component change."
+7. Risks & mitigations.
+8. Scope check: one working context? If no, split.
+9. Stop. Submit to plan review.
+10. After APPROVE or APPROVE-WITH-NITS: append `## Tasks` (tests before the
+    impl tasks they cover). Every AC and every interface row needs ≥1 task.
+    Tasks are hashed into state.json (tasks_hash) and frozen.
 
 ## Do not
-- Write `## Tasks` before plan review approves.
+- Write `## Tasks` before approval.
 - Edit spec.md, constitution.md, or any review artifact.
-- Leave an AC uncovered by a task or a test.
+- Leave an AC uncovered by a task or test.
+- Omit an interface row, or leave one without an integration test.
+- Mock the code under test (dependencies yes, code under test no).
+- Re-implement the consumer in a test.
