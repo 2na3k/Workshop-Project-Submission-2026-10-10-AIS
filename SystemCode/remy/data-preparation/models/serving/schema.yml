@@ -15,7 +15,14 @@ models:
       the deterministic entity counts. Populated REQUIRES and FULFILLS records
       are additionally checked for resolvable endpoints and stamped with the
       accepted source snapshot, so a linking record cannot publish without
-      snapshot provenance.
+      snapshot provenance. The coverage_quality_report is consumed as
+      build-quality metadata by CI and operators; it is not projected as a
+      Neo4j node or relationship.
+    meta:
+      coverage_quality_report:
+        consumed_as: build_quality_metadata
+        projected_as_graph_nodes: false
+        projected_as_graph_edges: false
     columns:
       - name: entity
         description: "Neo4j node label or relationship type loaded."

@@ -303,7 +303,7 @@ evidence, not a reason to split the feature.
     - Files: `SystemCode/remy/data-preparation/models/mart/coverage_quality_report.sql`, `SystemCode/remy/data-preparation/scripts/reproducibility_manifest.py`
     - Done when: T-9 passes; missing evidence is reported as uncovered with a distinct gap count (`nutrition_status = 'missing'`, `price_status = 'unavailable'`, `cost_basis_compatible = false`, dietary status outside the accepted sets); invalid inputs fail the build.
 
-- [ ] **T-11** Declare the coverage report as build-quality metadata in the serving schema
+- [x] **T-11** Declare the coverage report as build-quality metadata in the serving schema
     - Type: impl
     - Covers: plan Design §6
     - Files: `SystemCode/remy/data-preparation/models/serving/schema.yml`
