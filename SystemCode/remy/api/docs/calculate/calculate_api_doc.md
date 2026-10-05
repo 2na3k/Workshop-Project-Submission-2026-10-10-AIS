@@ -80,6 +80,9 @@ Calculates total + per-serving nutrition, consumed cost vs. retail package cost 
 | `ingredients[].quantity` | `number`        | ✅ Required | must be `> 0`                               | Numeric quantity                           |
 | `ingredients[].unit`     | `string`        | ✅ Required | enum: `g` \| `kg` \| `ml` \| `tbsp` \| `pc` | Unit of measure                            |
 
+> `name` can be singular or plural, in any case: `"Tomatoes"`, `"tomato"` and `"TOMATO"` all match the
+> same food. The API singularizes the name itself, so the client does not need to.
+
 ### Request Example
 
 ```json

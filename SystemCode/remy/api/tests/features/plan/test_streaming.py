@@ -8,19 +8,36 @@ from api.core.exceptions import AppError
 from api.features.plan.dependencies import get_plan_service
 from api.features.plan.exceptions import PlanInfeasible
 from api.features.plan.service import PlanService
-from api.features.plan.streaming import KEEP_ALIVE, stream_plan
+from api.features.plan.schemas import DayResponse, MealResponse, PlanResponse
+from api.features.plan.streaming import KEEP_ALIVE, stream_plan, word_chunks
 from api.main import app
 
 
 class FakePlan:
+    days = []
+
     def model_dump(self, mode):
         return {"plan_id": "plan_test", "status": "complete", "days": []}
 
 
+def meal(slot, title, calories):
+    return MealResponse(slot=slot, recipe_id=f"r_{slot}", title=title, nutrients={"calories": calories},
+                        ingredients=[], instructions=None)
+
+
+def real_plan(horizon_days):
+    days = [DayResponse(day=d, meals=[meal("meal_1", "Chickpea Curry", 640), meal("meal_2", "Oat Bowl", 420.4),
+                                      meal("meal_3", "Tofu Stir Fry", 510)])
+            for d in range(1, horizon_days + 1)]
+    return PlanResponse(plan_id="plan_real", status="complete", message="ok", validation_summary={},
+                        horizon_totals={}, days=days)
+
+
 class FakeService:
-    def __init__(self, fetch_delay=0.0, solve_error=None):
+    def __init__(self, fetch_delay=0.0, solve_error=None, plan=None):
         self.fetch_delay = fetch_delay
         self.solve_error = solve_error
+        self.plan = plan or FakePlan()
 
     def fetch_candidates(self):
         time.sleep(self.fetch_delay)
@@ -35,7 +52,7 @@ class FakeService:
         return [[recipes[0]]], []
 
     def build_response(self, days, relaxations, request):
-        return FakePlan()
+        return self.plan
 
 
 class EmptyRepository:
@@ -66,6 +83,41 @@ def test_progress_events_then_the_plan():
     assert [data["stage"] for _, data in parsed[:3]] == ["loading", "selecting", "solving"]
     assert parsed[0][1] == {"stage": "loading", "message": "Loading recipes", "step": 1, "total": 3}
     assert parsed[-1][1]["plan_id"] == "plan_test"
+
+
+def test_word_chunks_flush_every_hundred_words_without_splitting_words():
+    words = [f"w{i}" for i in range(250)]
+    text = " ".join(words) + "\n"
+    pieces = [text[i:i + 7] for i in range(0, len(text), 7)]
+    chunks = list(word_chunks(pieces))
+    assert [len(chunk.split()) for chunk in chunks] == [100, 100, 50]
+    assert "".join(chunks) == text
+    assert "".join(chunks).split() == words
+
+
+def test_word_chunks_wait_for_a_word_to_finish_before_flushing():
+    assert list(word_chunks(["one two thr", "ee four"], size=3)) == ["one two three", " four"]
+    assert list(word_chunks(["one two", " "], size=2)) == ["one two"]
+    assert list(word_chunks(["  ", "\n"])) == []
+
+
+def test_plan_text_streams_in_hundred_word_chunks_before_the_plan():
+    parsed = events(collect(FakeService(plan=real_plan(10))))
+    names = [name for name, _ in parsed]
+    assert names[:3] == ["progress"] * 3 and names[-1] == "plan"
+    texts = [data["text"] for name, data in parsed if name == "text"]
+    assert len(texts) == 3
+    assert [len(text.split()) for text in texts[:-1]] == [100, 100]
+    full = "".join(texts)
+    assert full.startswith("Day 1: Chickpea Curry (640 kcal), Oat Bowl (420 kcal) and Tofu Stir Fry (510 kcal). "
+                           "About 1,570 kcal in all.\nDay 2:")
+    assert full.count("\n") == 10
+    assert parsed[-1][1]["plan_id"] == "plan_real"
+
+
+def test_short_plans_flush_their_text_once():
+    texts = [data["text"] for name, data in events(collect(FakeService(plan=real_plan(1)))) if name == "text"]
+    assert len(texts) == 1 and texts[0].startswith("Day 1:")
 
 
 def test_slow_steps_send_keep_alive_comments():

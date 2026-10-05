@@ -1,7 +1,6 @@
 from collections import defaultdict
 from typing import Any
 from .models import FoodFacts, NutrientProfile, RetailSKU
-from .resolver import normalize_name
 
 QUERY_A = """
 UNWIND $normalized_names AS normalized_name
@@ -47,8 +46,8 @@ class CostNutritionRepository:
     def __init__(self, driver):
         self.driver = driver
 
-    def resolve_candidates(self, names: list[str]) -> dict[str, list[str]]:
-        normalized = [normalize_name(name) for name in names]
+    def resolve_candidates(self, normalized: list[str]) -> dict[str, list[str]]:
+        """Find FoodConcept keys for each already-normalized search term."""
         with self.driver.session() as session:
             rows = session.run(QUERY_A, normalized_names=normalized)
             result = defaultdict(list)

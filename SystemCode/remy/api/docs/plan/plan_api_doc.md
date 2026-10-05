@@ -76,8 +76,9 @@ POST /api/v1/plan
 ```
 
 Generates a `horizon_days` × `meals_per_day` meal plan honouring the supplied constraints. The
-response is a Server-Sent Events stream: progress events while the plan is being built, then the
-finished plan (per-day meals plus averaged horizon totals) as a single `plan` event.
+response is a Server-Sent Events stream: progress events while the plan is being built, a
+plain-text overview of the plan flushed in 100-word chunks, then the finished plan (per-day meals
+plus averaged horizon totals) as a single `plan` event.
 
 ---
 
@@ -210,11 +211,18 @@ Each event is an `event:` line and a `data:` line holding one line of JSON, foll
 | Event      | When                                         | `data`                                                        |
 |------------|----------------------------------------------|---------------------------------------------------------------|
 | `progress` | As each step starts                          | `{ "stage", "message", "step", "total" }`; stages are `loading`, `selecting`, `solving` |
+| `text`     | After solving, before `plan`. Zero or more.  | `{ "text" }`: the next chunk of a plain-text overview of the plan (see below) |
 | `plan`     | Once, when the plan is ready. Stream ends.   | The plan object described in **The `plan` Event** below       |
 | `error`    | Once, if building the plan fails. Stream ends. | The standard error envelope (`{ "error": { ... } }`)        |
 
 While a step is still running, the server sends a comment line `: keep-alive` every 10 seconds so
 proxies and browsers do not close an idle connection. Comment lines carry no data; ignore them.
+
+The `text` overview has one line per day, e.g. `Day 1: Chickpea & Spinach Curry (640 kcal), ...
+About 1,570 kcal in all.` The server buffers it and flushes a chunk each time 100 words have built
+up, so every `text` chunk except the last holds exactly 100 words; the last holds whatever is left.
+Chunks are cut between words and keep their whitespace, so append them in order (`full += chunk`)
+to rebuild the text exactly. Show it as it arrives; the `plan` event still carries all the data.
 
 The endpoint is a `POST`, so the browser's `EventSource` cannot be used. Read the body with
 `fetch` and a stream reader (see the cheat sheet at the end).
@@ -230,6 +238,12 @@ event: progress
 data: {"stage":"solving","message":"Balancing your days","step":3,"total":3}
 
 : keep-alive
+
+event: text
+data: {"text":"Day 1: Chickpea & Spinach Curry (640 kcal), Lentil Soup (420 kcal) and ... About 1,570 kcal in all.\nDay 2: ..."}
+
+event: text
+data: {"text":" Tofu Stir Fry (510 kcal). About 1,480 kcal in all.\n"}
 
 event: plan
 data: {"plan_id":"plan_a1b2c3d4e5","status":"partial","message":"Successfully generated a 3-day meal plan.", ...}
@@ -478,7 +492,7 @@ first nutrient's code). Map these directly to your form input refs.
 ## 🧑‍💻 Frontend Integration Cheat Sheet
 
 ```js
-async function generatePlan(payload, onProgress) {
+async function generatePlan(payload, onProgress, onText) {
     const res = await fetch('/api/v1/plan', {
         method: 'POST',
         headers: {'Content-Type': 'application/json', Accept: 'text/event-stream'},
@@ -506,6 +520,7 @@ async function generatePlan(payload, onProgress) {
             if (!event || !data) continue;
             const body = JSON.parse(data);
             if (event === 'progress') onProgress?.(body);
+            if (event === 'text') onText?.(body.text);
             if (event === 'plan') return body;
             if (event === 'error') throw new ApiError(200, body.error.code, body.error.message, body.error.details);
         }

@@ -72,6 +72,24 @@ test("plan requests stream through the /api/v1 proxy and report progress", async
   assert.deepEqual(JSON.parse(options.body), request);
 });
 
+test("text chunks reach onText in order, before the plan resolves", async () => {
+  const first = "Day 1: Chickpea Curry (640 kcal). About 640 kcal in all.\nDay 2:";
+  const second = " Oat Bowl (420 kcal). About 420 kcal in all.\n";
+  mock.method(globalThis, "fetch", async () => stream(splitEvery(
+    progress(3, "solving", "Balancing your days") +
+      event("text", { text: first }) +
+      event("text", { text: second }) +
+      event("text", { nope: true }) +
+      event("plan", plan),
+    5,
+  )));
+  const chunks = [];
+  const result = await generatePlan(request, { onText: (chunk) => chunks.push(chunk) });
+  assert.deepEqual(result, plan);
+  assert.deepEqual(chunks, [first, second]);
+  assert.equal(chunks.join(""), `${first}${second}`);
+});
+
 test("empty limit bounds are dropped from the payload", async () => {
   const fetchMock = mock.method(globalThis, "fetch", async () => stream([event("plan", plan)]));
   await generatePlan({

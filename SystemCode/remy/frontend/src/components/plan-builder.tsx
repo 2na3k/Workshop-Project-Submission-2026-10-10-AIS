@@ -59,6 +59,7 @@ export default function PlanBuilder() {
   const [targets, setTargets] = useState<TargetRow[]>([]);
   const [pending, setPending] = useState(false);
   const [progress, setProgress] = useState<PlanProgress | null>(null);
+  const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<{ response: PlanResponse; servings: number } | null>(null);
   const nextId = useRef(0);
@@ -121,9 +122,13 @@ export default function PlanBuilder() {
     setError(null);
     setPlan(null);
     setProgress(null);
+    setText("");
     setPending(true);
     try {
-      const response = await generatePlan(request, { onProgress: setProgress });
+      const response = await generatePlan(request, {
+        onProgress: setProgress,
+        onText: (chunk) => setText((current) => current + chunk),
+      });
       setPlan({ response, servings: request.servings });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not build a plan.");
@@ -276,8 +281,14 @@ export default function PlanBuilder() {
         </p>
       )}
 
+      {pending && text && (
+        <p aria-live="polite" className="mt-4 whitespace-pre-line rounded-2xl border border-subtle bg-surface p-4 text-sm leading-relaxed">
+          {text.trim()}
+        </p>
+      )}
+
       <div ref={resultRef} className="scroll-mt-6">
-        {plan && <PlanView plan={plan.response} servings={plan.servings} />}
+        {plan && <PlanView plan={plan.response} servings={plan.servings} overview={text} />}
       </div>
     </>
   );

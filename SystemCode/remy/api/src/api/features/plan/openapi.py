@@ -8,6 +8,8 @@ STREAM_EXAMPLE = (
     'event: progress\n'
     'data: {"stage":"solving","message":"Balancing your days","step":3,"total":3}\n\n'
     ': keep-alive\n\n'
+    'event: text\n'
+    'data: {"text":"Day 1: Chickpea & Spinach Curry (640 kcal). About 640 kcal in all.\\n"}\n\n'
     'event: plan\n'
     'data: {"plan_id":"plan_a1b2c3d4e5","status":"complete",'
     '"message":"Successfully generated a 1-day meal plan.",'
@@ -35,6 +37,9 @@ PLAN_DESCRIPTION = (
     "- `progress`: `{stage, message, step, total}` as each step starts "
     "(`loading`, `selecting`, `solving`).\n"
     "- `: keep-alive` comment lines every 10 seconds while a step is still running.\n"
+    "- `text`: `{text}`, a plain-text overview of the plan, one line per day. The server "
+    "buffers it and flushes every 100 words (the last chunk may be shorter); join the chunks "
+    "in order to get the full text.\n"
     "- `plan`: the finished plan, in the same shape the endpoint used to return as JSON. "
     "The stream ends after it.\n"
     "- `error`: the shared error envelope, for failures after the stream has started "

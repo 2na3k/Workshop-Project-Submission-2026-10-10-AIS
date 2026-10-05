@@ -184,6 +184,11 @@ function isProgress(payload: unknown): payload is PlanProgress {
     typeof progress.step === "number" && typeof progress.total === "number";
 }
 
+const textOf = (payload: unknown) => {
+  const text = (payload as { text?: unknown } | null)?.text;
+  return typeof text === "string" ? text : null;
+};
+
 const parseJson = (text: string): unknown => {
   try {
     return JSON.parse(text);
@@ -196,7 +201,11 @@ const UNEXPECTED = "The meal planner returned an unexpected response. Please try
 
 export async function generatePlan(
   request: PlanRequest,
-  { onProgress }: { onProgress?: (progress: PlanProgress) => void } = {},
+  { onProgress, onText }: {
+    onProgress?: (progress: PlanProgress) => void;
+    /** Called with each text chunk (about 100 words) as the server flushes it. */
+    onText?: (chunk: string) => void;
+  } = {},
 ): Promise<PlanResponse> {
   validate(request);
 
@@ -228,6 +237,10 @@ export async function generatePlan(
   const feed = createSseParser(({ event, data }) => {
     const payload = parseJson(data);
     if (event === "progress" && isProgress(payload)) onProgress?.(payload);
+    if (event === "text") {
+      const text = textOf(payload);
+      if (text !== null) onText?.(text);
+    }
     if (event === "plan") {
       if (isPlan(payload)) outcome.plan = payload;
       else outcome.error = UNEXPECTED;

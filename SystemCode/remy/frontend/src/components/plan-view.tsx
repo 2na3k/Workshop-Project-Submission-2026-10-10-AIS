@@ -10,7 +10,7 @@ import {
 
 const HEADLINE = new Set(["calories", "protein_g", "carbs_g", "fat_g"]);
 
-export default function PlanView({ plan, servings }: { plan: PlanResponse; servings: number }) {
+export default function PlanView({ plan, servings, overview }: { plan: PlanResponse; servings: number; overview?: string }) {
   const totals = sortedNutrients(plan.horizon_totals);
   const complete = plan.status === "complete";
 
@@ -32,6 +32,9 @@ export default function PlanView({ plan, servings }: { plan: PlanResponse; servi
         {plan.message}
         {servings > 1 && ` Amounts are for ${servings} servings.`}
       </p>
+      {overview?.trim() && (
+        <p className="mt-4 whitespace-pre-line text-sm leading-relaxed">{overview.trim()}</p>
+      )}
 
       {plan.relaxations.length > 0 && (
         <div className="mt-5 rounded-2xl bg-cream p-4 text-sm">
