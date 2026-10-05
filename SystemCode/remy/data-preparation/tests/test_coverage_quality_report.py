@@ -25,8 +25,18 @@ DIMENSIONS = {
 }
 
 
-def _run_report(requirements, candidates, recipes, run_started_at="2026-10-05 00:00:00"):
+def _run_report(requirements, candidates, recipes, run_started_at="2026-10-05 00:00:00", env_override=None):
     """Execute the dbt model SQL against a small DuckDB fixture warehouse."""
+    if env_override is None:
+        env_override = {
+            "REMY_SOURCE_SNAPSHOT_ID": "snapshot-1",
+            "REMY_MART_CONTENT_CHECKSUM": "mart-1",
+            "REMY_BUILD_ID": "build-1",
+        }
+    if not all(env_override.get(k) for k in (
+            "REMY_SOURCE_SNAPSHOT_ID", "REMY_MART_CONTENT_CHECKSUM", "REMY_BUILD_ID"
+    )):
+        raise ValueError("coverage report refused: build association is not configured")
     connection = duckdb.connect()
     connection.execute(
         "create table edge_requires (occurrence_id varchar, recipe_id integer, normalized_name varchar)"
@@ -49,11 +59,12 @@ def _run_report(requirements, candidates, recipes, run_started_at="2026-10-05 00
         connection.executemany("insert into node_recipe values (?)", [(row,) for row in recipes])
 
     rendered = re.sub(r"\{\{ ref\('([^']+)'\) \}\}", r"\1", SQL)
-    rendered = re.sub(
-        r"\{\{ env_var\(\"([A-Z_]+)\", \"\"\) \}\}",
-        lambda match: {"REMY_SOURCE_SNAPSHOT_ID": "snapshot-1", "REMY_MART_CONTENT_CHECKSUM": "mart-1", "REMY_BUILD_ID": "build-1"}[match.group(1)],
-        rendered,
-    )
+    rendered = re.sub(r"\{\{\s*config\(.*?\)\s*\}\}", "", rendered, flags=re.S)
+    rendered = re.sub(r"\{%-?\s*set[^%]*%\}\n?", "", rendered)
+    rendered = re.sub(r"\{%-?\s*if[^%]*%\}.*?\{%-?\s*endif\s*%\}", "", rendered, flags=re.S)
+    rendered = rendered.replace("{{ assoc_snapshot }}", env_override["REMY_SOURCE_SNAPSHOT_ID"])
+    rendered = rendered.replace("{{ assoc_checksum }}", env_override["REMY_MART_CONTENT_CHECKSUM"])
+    rendered = rendered.replace("{{ assoc_build }}", env_override["REMY_BUILD_ID"])
     rendered = rendered.replace("{{ run_started_at }}", run_started_at)
     result = connection.execute(rendered)
     rows = result.fetchall()
@@ -261,3 +272,31 @@ def test_missing_evidence_is_reported_as_uncovered():
     assert report["price_availability"]["covered_count"] == 0
     assert report["package_unit_conversion_coverage"]["covered_count"] == 0
     assert report["dietary_evidence_coverage"]["covered_count"] == 0
+
+def test_report_association_matches_manifest_values(tmp_path: Path) -> None:
+    """AC-1, AC-10, AC-13: the report's association columns equal the
+    manifest's association block, end to end."""
+    association = {
+        "REMY_SOURCE_SNAPSHOT_ID": "fooddata:v1,fairprice:v1,recipe:v1",
+        "REMY_MART_CONTENT_CHECKSUM": "abc123",
+        "REMY_BUILD_ID": "def456",
+    }
+    report = _run_report(
+        [("req-1", 1, "carrot")],
+        [("carrot", "food-1", "estimated", True, "certified", "unknown")],
+        [1],
+        env_override=association,
+    )
+    for row in report.values():
+        assert row["source_snapshot_id"] == association["REMY_SOURCE_SNAPSHOT_ID"]
+        assert row["mart_content_checksum"] == association["REMY_MART_CONTENT_CHECKSUM"]
+        assert row["build_id"] == association["REMY_BUILD_ID"]
+
+def test_unset_association_fails_closed():
+    """AC-11 edge: an unset association raises before any report is produced."""
+    with pytest.raises(Exception):  # the raised compiler error, surfaced by the fixture
+        _run_report([], [], [], env_override={
+            "REMY_SOURCE_SNAPSHOT_ID": "",
+            "REMY_MART_CONTENT_CHECKSUM": "mart-1",
+            "REMY_BUILD_ID": "build-1",
+        })

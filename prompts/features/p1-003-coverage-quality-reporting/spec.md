@@ -27,7 +27,7 @@ Spec for feature **p1-003-coverage-quality-reporting**
 7. Open questions: blocking ones only.
 8. Clarify with the human; log every answer under `## Clarifications` with
    answer, date, who. Check off the matching question. Log every clarification,
-   consequential or not. Flag consequential ones for `decisions.md` at close.
+   consequential or not. Flag consequential ones for `../../../docs/sdd/features/p1-003-coverage-quality-reporting/decisions.md` at close.
 
 ## Do not
 - Design, name files, or choose data structures.

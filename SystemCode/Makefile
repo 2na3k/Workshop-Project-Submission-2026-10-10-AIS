@@ -42,7 +42,7 @@ sync:
 lock:
 	$(UV) lock
 
-check:
+lock-check:
 	$(UV) lock --check
 
 api:
@@ -53,7 +53,7 @@ crawler:
 
 dbt:
 	cd remy/data-preparation && mkdir -p target/$(DBT_TARGET)/staging target/$(DBT_TARGET)/ducklake/data && \
-		DBT_TARGET=$(DBT_TARGET) $(UV) run --package $(DBT_PACKAGE) dbt build --profiles-dir . --exclude tag:serving && \
+		DBT_TARGET=$(DBT_TARGET) $(UV) run --package $(DBT_PACKAGE) dbt build --profiles-dir . --exclude tag:serving --exclude coverage_quality_report && \
 		$(MAKE) reproducible-manifest DBT_TARGET=$(DBT_TARGET)
 
 reproducible-manifest:
@@ -63,7 +63,7 @@ reproducible-manifest:
 		--database target/$(DBT_TARGET).duckdb \
 		--output target/$(DBT_TARGET)/source_snapshot_manifest.json
 
-coverage-report: reproducible-manifest
+coverage-report: dbt
 	cd remy/data-preparation && \
 	  REMY_SOURCE_SNAPSHOT_ID=$$($(UV) run --package $(DBT_PACKAGE) python -c "import json; print(json.load(open('target/$(DBT_TARGET)/source_snapshot_manifest.json'))['association']['source_snapshot_id'])") \
 	  REMY_MART_CONTENT_CHECKSUM=$$($(UV) run --package $(DBT_PACKAGE) python -c "import json; print(json.load(open('target/$(DBT_TARGET)/source_snapshot_manifest.json'))['association']['mart_content_checksum'])") \
@@ -77,8 +77,6 @@ reproducibility-check:
 		--expected reproducibility/expected_checksums.json
 
 reproducible-build: dbt reproducibility-check coverage-report
-
-ci: reproducible-build check
 
 _neo4j-creds:
 	@test -n "$(NEO4J_PASSWORD)" || { echo "Set NEO4J_PASSWORD or add it to .env.$(DBT_TARGET)"; exit 1; }

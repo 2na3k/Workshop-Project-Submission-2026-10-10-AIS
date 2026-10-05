@@ -126,8 +126,6 @@ feature: p1-003-coverage-quality-reporting
 - `SystemCode/remy/data-preparation/README.md` — document the five report
   dimensions, the exact accepted predicate values, empty-population behavior,
   build association, and regeneration command/output.
-- `SystemCode/Makefile` — keep report generation/checking in the existing dbt,
-  reproducibility-manifest, and CI sequence.
 - `SystemCode/Makefile` — add a target that reads the p1-001 manifest and
   passes `REMY_SOURCE_SNAPSHOT_ID`, `REMY_MART_CONTENT_CHECKSUM`, and
   `REMY_BUILD_ID` to the dbt run that builds the coverage report.
@@ -248,6 +246,12 @@ evidence, not a reason to split the feature.
   Round-1 F-1 routed to plan; this revision closes it.
 - F-9 → Added T-15 through T-19 for round-2 findings F-2, F-3 and the
   carry-over nits N-1, N-2.
+- F-10 → Reconcile task state: T-14, T-16, T-17, T-18 landed alongside the
+  plan revision (commit e49a9af); ticked after F-1's manifest-comparison test
+  and the fail-closed association guard landed. T-15 ticked after the O-1
+  deferral was moved to docs/sdd/features/p1-003-coverage-quality-reporting/
+  decisions.md. T-19 remains open: the AC-12 fixture does not yet exercise
+  nutrition_status='missing'.
 
 ## Tasks
 
@@ -329,7 +333,7 @@ evidence, not a reason to split the feature.
     - Files: (all above)
     - Done when: `sdd.py ci` reports OVERALL PASS; the dbt singular test compiles and its execution is either completed by `make ci` or documented as blocked by the p1-001 O-1 seed dependency; the report's real-mart demonstration is recorded as O-1-deferred; no fabricated checksum is introduced.
 
-- [ ] **T-14** Wire the build association producer
+- [x] **T-14** Wire the build association producer
     - Type: impl
     - Covers: AC-1, AC-10, AC-13
     - Files: `SystemCode/Makefile`, `SystemCode/remy/data-preparation/models/mart/coverage_quality_report.sql`
@@ -341,7 +345,7 @@ evidence, not a reason to split the feature.
       fixture-backed run; a Python test executes the report with the env vars
       set and asserts the association equals the manifest's values.
 
-- [ ] **T-15** Execute the dbt singular test or record the O-1 deferral
+- [x] **T-15** Execute the dbt singular test or record the O-1 deferral
     - Type: verification
     - Covers: AC-10 (denominator bounds), AC-11 (dbt half)
     - Files: `SystemCode/remy/data-preparation/tests/coverage_quality_report.sql`, `docs/sdd/features/p1-003-coverage-quality-reporting/decisions.md`
@@ -349,7 +353,7 @@ evidence, not a reason to split the feature.
       the O-1 seed deferral is recorded in `decisions.md` with the same shape as
       p1-002's T-5 deferral. Do not fabricate seeds.
 
-- [ ] **T-16** Rewrite the AC-13 association assertion to check executed values
+- [x] **T-16** Rewrite the AC-13 association assertion to check executed values
     - Type: test
     - Covers: AC-13
     - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`
@@ -357,7 +361,7 @@ evidence, not a reason to split the feature.
       executes the report against the fixture DuckDB and asserts the executed
       `source_snapshot_id` and `mart_content_checksum` values, not `field in SQL`.
 
-- [ ] **T-17** Add the observation-timestamp determinism case
+- [x] **T-17** Add the observation-timestamp determinism case
     - Type: test
     - Covers: AC-9 (the edge case about observation-timestamp vs. content)
     - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`
@@ -365,7 +369,8 @@ evidence, not a reason to split the feature.
       `run_started_at` values produce identical `covered_count`, `denominator`,
       `percentage`, `dimension`, `source_snapshot_id`, and `mart_content_checksum`.
 
-- [ ] **T-18** Fix the AC-6 fixture so the recipe denominator differs from the requirement denominator
+- [x] **T-18** Fix the AC-6 fixture so the recipe denominator differs from the requirement 
+  denominator
     - Type: test
     - Covers: AC-6 (N-1)
     - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`

@@ -25,7 +25,7 @@ Fix, in this order:
 The denominator-bound half of AC-10 and the dbt half of AC-11 live in `tests/coverage_quality_report.sql:30-39`, which can't run until the seeds exist (p1-001 O-1). Two options:
 
 - If the seeds are available in your environment, run `make dbt` and confirm the singular test executes.
-- If the seeds are still missing, this is a documented deferral, not a fix. Record it in `decisions.md` as an O-1 deferral (same pattern as p1-002's T-5), and note in the AC-10/AC-11 test rows that the dbt half is deferred. Do **not** fabricate seed data.
+- If the seeds are still missing, this is a documented deferral, not a fix. Record it in `../../../docs/sdd/features/p1-003-coverage-quality-reporting/decisions.md` as an O-1 deferral (same pattern as p1-002's T-5), and note in the AC-10/AC-11 test rows that the dbt half is deferred. Do **not** fabricate seed data.
 
 **F-3 [MINOR] — assert executed values, not SQL text.**
 

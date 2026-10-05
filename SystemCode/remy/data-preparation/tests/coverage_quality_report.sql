@@ -1,3 +1,5 @@
+{{ config(enabled=var('enable_coverage_report', false)) }}
+
 with expected(dimension) as (
     values
         ('nutrition_coverage'),

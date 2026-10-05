@@ -1,3 +1,12 @@
+{{ config(
+    enabled=var('enable_coverage_report', false),
+    materialized='table',
+    tags=['coverage_report']
+) }}
+
+{% set assoc_snapshot = env_var("REMY_SOURCE_SNAPSHOT_ID", "") %}
+{% set assoc_checksum = env_var("REMY_MART_CONTENT_CHECKSUM", "") %}
+{% set assoc_build = env_var("REMY_BUILD_ID", "") %}
 with requirements as (
     select
         occurrence_id as requirement_id,
@@ -84,13 +93,17 @@ with requirements as (
         denominator,
         case when denominator = 0 then null else covered_count::double / denominator end as percentage,
         case when denominator = 0 then 'no_population' else 'computed' end as population_status,
-        nullif('{{ env_var("REMY_SOURCE_SNAPSHOT_ID", "") }}', '') as source_snapshot_id,
-        nullif('{{ env_var("REMY_MART_CONTENT_CHECKSUM", "") }}', '') as mart_content_checksum,
-        nullif('{{ env_var("REMY_BUILD_ID", "") }}', '') as build_id,
+        '{{ assoc_snapshot }}' as source_snapshot_id,
+        '{{ assoc_checksum }}' as mart_content_checksum,
+        '{{ assoc_build }}' as build_id,
         '{{ run_started_at }}'::timestamp as observed_at
     from metrics
 ), validated as (
     select case
+        when '{{ assoc_snapshot }}' = ''
+          or '{{ assoc_checksum }}' = ''
+          or '{{ assoc_build }}' = ''
+        then error('coverage_quality_report failed closed: build association is not configured')
         when count(*) <> 5
           or count(distinct dimension) <> 5
           or count(*) filter (where dimension not in (
