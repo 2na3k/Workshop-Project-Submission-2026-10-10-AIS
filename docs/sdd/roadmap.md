@@ -32,7 +32,7 @@ test"; where nothing exists, it is "new".
 | p1-001b-test-infrastructure                | done    | p1-001-reproducible-source-pipeline                                                                             | p1-002-provenance-graph-model                                                                                     | Fake driver fixture and cloud Neo4j integration fixture for graph tests                                                              |
 | p1-002-provenance-graph-model              | done    | p1-001-reproducible-source-pipeline, p1-001b-test-infrastructure                                                | p1-001-reproducible-source-pipeline, p1-001b-test-infrastructure, p1-003-coverage-quality-reporting              | Canonical graph schema and `REQUIRES`/`FULFILLS` provenance contract                                                                 |
 | p1-003-coverage-quality-reporting          | done    | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                              | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                                | Coverage dimensions and graph quality manifest                                                                                       |
-| p2-001-constraint-evidence-filtering       | partial | p1-002-provenance-graph-model                                                                                   | p2-002-cost-nutrition-calculation, p2-003-feasible-meal-plan-solving                                              | Candidate evaluation outcome and distinct evidence-absent/present-exclusion causes                                                   |
+| p2-001-constraint-evidence-filtering       | done    | p1-002-provenance-graph-model                                                                                   | p2-002-cost-nutrition-calculation, p2-003-feasible-meal-plan-solving                                              | Candidate evaluation outcome and distinct evidence-absent/present-exclusion causes                                                   |
 | p2-002-cost-nutrition-calculation          | partial | p1-002-provenance-graph-model                                                                                   | p2-001-constraint-evidence-filtering, p2-003-feasible-meal-plan-solving                                           | Portion nutrient and consumed/package cost result contract                                                                           |
 | p2-003-feasible-meal-plan-solving          | partial | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                         | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                           | Plan feasibility result with named binding constraints, and reasoning structure sufficient for downstream explanation                |
 | p3-001-workflow-recommendation-service     | partial | p2-003-feasible-meal-plan-solving                                                                               | p3-002-explainable-response-contract, p3-003-web-planner-experience, p3-004-conversational-constraint-interface   | Recommendation execution result and trace boundary                                                                                   |
@@ -193,7 +193,7 @@ data-preparation price-path finding.
 
 ## Phase p2 - deterministic constraint evaluation and plan solving
 
-Status: planned
+Status: active
 
 ### Outcome
 
@@ -211,7 +211,8 @@ p3 needs.
 **Prerequisite:** `docs/findings/data-prep-price-path.md` must resolve before
 p2's features can read the canonical marts against real data. Until then, the
 project cannot parse, `dbt` cannot run, and p2's reasoning is verified with
-fixtures only. The phase review decides whether this is a blocker.
+fixtures only. The phase review set the p2 posture to "proceed with fixtures,"
+tracking the finding as a p2 risk.
 
 ### Goals served
 
@@ -220,10 +221,18 @@ fixtures only. The phase review decides whether this is a blocker.
 
 ### Features
 
-- **p2-001-constraint-evidence-filtering** *(partial)* — Existing filtering logic
-  in the calculator API. Remaining work: write a fixture for each of R-5 through
-  R-10 and either the fixtures pass or the code is fixed. The evidence-absent vs.
-  present-exclusion distinction must be visible in the output. (serves G-1)
+- **p2-001-constraint-evidence-filtering** *(done, 2026-10-05)* — Constraint
+  evidence filtering: explicit per-constraint evaluation (allergen, dietary,
+  nutrient, freshness, unit-basis) producing retained, warned,
+  present-evidence-excludes, or evidence-absent outcomes; distinct drop causes
+  with fixed precedence (present-evidence-excludes before evidence-absent);
+  ingredient-scoped warnings for mild allergens; input-error rejection for
+  unsupported codes; conservative defaults (unspecified allergen severity →
+  severe; offer freshness threshold 24h inclusive). Internal outcome models
+  (`CandidateOutcome`, `ConstraintEvaluation`, `IngredientWarning`,
+  `FilterResult`) carry cause history without widening the user response
+  boundary. Zero loops. Pre-existing API baseline failures excluded from the
+  feature's CI and recorded in the feature's decisions.md D-1. (serves G-1)
 - **p2-002-cost-nutrition-calculation** *(partial)* — Existing nutrient
   computation. Remaining work: verify separate cost fields (R-11); verify
   deterministic conflict precedence across runs (R-12); verify the closed-interval
@@ -242,6 +251,13 @@ fixtures only. The phase review decides whether this is a blocker.
 ### Risks & unknowns
 
 *(unchanged)*
+
+### Phase p2 progress
+
+- p2-001: closed 2026-10-05, 0 loops. Pre-existing API baseline failures
+  excluded from the feature's CI (see the feature's decisions.md D-1).
+- p2-002: not started.
+- p2-003: not started.
 
 ## Phase p3 - explainable recommendation delivery
 
@@ -340,3 +356,13 @@ Status: planned
   are closed, the cross-team finding is tracked, and blocking p2 on an
   external fix stalls the project without adding verification value (p2's
   features are unit-level and don't require the real marts).
+
+- 2026-10-05 — Marked `p2-001-constraint-evidence-filtering` as done, 0 loops.
+  Set phase p2 status to `active`; added a "Phase p2 progress" subsection.
+  Recorded what shipped (per-constraint evaluation with distinct drop causes,
+  fixed cause precedence, ingredient-scoped warnings, conservative defaults,
+  input-error rejection, internal outcome models) and the pre-existing API
+  baseline failures excluded from the feature's CI. Reason: the first p2
+  feature closed in a single cycle with no review findings; the roadmap
+  reflects that p2 is now underway and that the API package has a recorded,
+  excluded baseline of unrelated failures.
