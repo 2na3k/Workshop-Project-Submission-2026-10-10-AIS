@@ -291,7 +291,7 @@ evidence, not a reason to split the feature.
     - Files: `SystemCode/remy/data-preparation/scripts/reproducibility_manifest.py`, `SystemCode/remy/data-preparation/models/serving/recipe_graph_to_neo4j.py`, `SystemCode/remy/data-preparation/models/mart/schema.yml`
     - Done when: T-7 passes; the manifest schema version is incremented and the report is included in the required-mart set with its deterministic content checksum; the serving model's accepted version constant matches so p1-002's admission still accepts the extended manifest.
 
-- [ ] **T-9** Write the negative test for missing or uncomputable inputs (AC-11, Python half)
+- [x] **T-9** Write the negative test for missing or uncomputable inputs (AC-11, Python half)
     - Type: test
     - Covers: AC-11 (Python half)
     - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`

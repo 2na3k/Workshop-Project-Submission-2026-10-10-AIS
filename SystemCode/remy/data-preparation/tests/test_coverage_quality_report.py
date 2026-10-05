@@ -2,6 +2,14 @@
 
 from pathlib import Path
 
+import pytest
+
+SCRIPT_DIR = Path(__file__).parents[1] / "scripts"
+import sys
+
+sys.path.insert(0, str(SCRIPT_DIR))
+import reproducibility_manifest
+
 
 MODEL = Path(__file__).parents[1] / "models" / "mart" / "coverage_quality_report.sql"
 SQL = MODEL.read_text(encoding="utf-8")
@@ -85,3 +93,51 @@ def test_repeated_report_comparison_points_are_content_columns():
         "mart_content_checksum",
     ):
         assert field in SQL
+
+
+def test_missing_source_snapshot_publishes_no_report(tmp_path):
+    """AC-11: a missing source registry fails before writing the manifest."""
+    output = tmp_path / "manifest.json"
+    with pytest.raises(ValueError):
+        reproducibility_manifest.build_manifest(
+            tmp_path / "missing-registry.json", tmp_path / "database.duckdb", output
+        )
+    assert not output.exists()
+
+
+def test_missing_canonical_mart_publishes_no_report(tmp_path, monkeypatch):
+    """AC-11: an unreadable canonical mart fails before publication."""
+    registry = tmp_path / "registry.json"
+    registry.write_text("{}", encoding="utf-8")
+    output = tmp_path / "manifest.json"
+    monkeypatch.setattr(
+        reproducibility_manifest,
+        "load_source_entries",
+        lambda _: [],
+    )
+    monkeypatch.setattr(
+        reproducibility_manifest,
+        "compute_mart_entries",
+        lambda _: (_ for _ in ()).throw(ValueError("missing canonical mart")),
+    )
+    with pytest.raises(ValueError):
+        reproducibility_manifest.build_manifest(
+            registry, tmp_path / "database.duckdb", output
+        )
+    assert not output.exists()
+
+
+def test_uncomputable_coverage_report_publishes_no_report(tmp_path, monkeypatch):
+    """AC-11: a manifest without a computed coverage report is rejected."""
+    output = tmp_path / "manifest.json"
+    monkeypatch.setattr(reproducibility_manifest, "load_source_entries", lambda _: [])
+    monkeypatch.setattr(
+        reproducibility_manifest,
+        "compute_mart_entries",
+        lambda _: {},
+    )
+    with pytest.raises(ValueError):
+        reproducibility_manifest.build_manifest(
+            tmp_path / "registry.json", tmp_path / "database.duckdb", output
+        )
+    assert not output.exists()
