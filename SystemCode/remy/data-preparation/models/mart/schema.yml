@@ -138,3 +138,36 @@ models:
       - name: within_allocation
         tests:
           - accepted_values: {values: [true]}
+
+  - name: coverage_quality_report
+    description: >
+      Deterministic, build-associated completeness measures. This is quality
+      metadata for operators and CI, not a user constraint decision.
+    meta:
+      reproducibility_content_columns: [dimension, covered_count, denominator, percentage, population_status, source_snapshot_id, mart_content_checksum, build_id]
+    columns:
+      - name: dimension
+        tests:
+          - not_null
+          - unique
+          - accepted_values:
+              values:
+                - nutrition_coverage
+                - price_availability
+                - package_unit_conversion_coverage
+                - dietary_evidence_coverage
+                - whole_recipe_completeness
+      - name: covered_count
+        tests: [not_null]
+      - name: denominator
+        tests: [not_null]
+      - name: percentage
+        description: Null only when population_status is no_population.
+      - name: population_status
+        tests:
+          - accepted_values: {values: [computed, no_population]}
+      - name: source_snapshot_id
+      - name: mart_content_checksum
+      - name: build_id
+      - name: observed_at
+        tests: [not_null]

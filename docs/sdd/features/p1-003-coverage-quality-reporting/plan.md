@@ -261,13 +261,13 @@ evidence, not a reason to split the feature.
     - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`
     - Done when: the nutrition-only/price-absent fixture asserts independent counting (nutrition numerator 1, price numerator 0, whole-recipe not complete); the empty fixture asserts typed no-population results for all five dimensions with no fabricated percentage.
 
-- [ ] **T-4** Implement the coverage report mart (AC-1 through AC-6)
+- [x] **T-4** Implement the coverage report mart (AC-1 through AC-6)
     - Type: impl
     - Covers: AC-1, AC-2, AC-3, AC-4, AC-5, AC-6
     - Files: `SystemCode/remy/data-preparation/models/mart/coverage_quality_report.sql`, `SystemCode/remy/data-preparation/models/mart/schema.yml`
     - Done when: T-2 passes; the report exposes exactly five named dimensions with counts, denominators, and percentages.
 
-- [ ] **T-5** Implement empty-population and cross-dimension behavior (AC-7, AC-8)
+- [x] **T-5** Implement empty-population and cross-dimension behavior (AC-7, AC-8)
     - Type: impl
     - Covers: AC-7, AC-8
     - Files: `SystemCode/remy/data-preparation/models/mart/coverage_quality_report.sql`
