@@ -273,7 +273,7 @@ evidence, not a reason to split the feature.
     - Files: `SystemCode/remy/data-preparation/models/mart/coverage_quality_report.sql`
     - Done when: T-3 passes; zero denominators emit typed no-population results; cross-dimension counting is independent.
 
-- [ ] **T-6** Write the dbt singular test for metric validity (AC-11, dbt half)
+- [x] **T-6** Write the dbt singular test for metric validity (AC-11, dbt half)
     - Type: test
     - Covers: AC-11 (dbt half)
     - Files: `SystemCode/remy/data-preparation/tests/coverage_quality_report.sql`
