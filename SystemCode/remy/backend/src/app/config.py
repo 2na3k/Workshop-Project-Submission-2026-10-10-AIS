@@ -32,6 +32,7 @@ class CookieConfig:
 @dataclass(frozen=True, slots=True)
 class Settings:
     database_url: str
+    database_password: str | None
     cors_origins: tuple[str, ...]
     bloom_capacity: int
     bloom_error_rate: float
@@ -70,6 +71,9 @@ def load_settings() -> Settings:
             "REMY_DATABASE_URL",
             "postgresql://localhost:5432/remy_main",
         ),
+        # Kept out of the URL so it can live in .env on its own. Overrides any
+        # password in REMY_DATABASE_URL when set.
+        database_password=os.environ.get("POSTGRES_PASSWORD") or None,
         cors_origins=tuple(
             origin.strip()
             for origin in os.environ.get(

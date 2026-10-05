@@ -52,7 +52,8 @@ cp remy/backend/.env.example remy/backend/.env
 Then fill them in:
 
 - `remy/api/.env`: `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD` and `NEO4J_DATABASE`.
-- `remy/backend/.env`: set `REMY_JWT_SECRET` to the output of `openssl rand -base64 48`.
+- `remy/backend/.env`: set `REMY_JWT_SECRET` to the output of `openssl rand -base64 48`,
+  and `POSTGRES_PASSWORD` (the database password) to the output of `openssl rand -hex 24`.
 
 Git ignores both files, so the passwords stay on your machine.
 

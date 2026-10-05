@@ -32,10 +32,12 @@ Aura). The local `neo4j` container and the data jobs are not started; see
    NEO4J_DATABASE=<database>
    ```
 
-3. **`remy/backend/.env`** exists with a signing secret for sign-in sessions:
+3. **`remy/backend/.env`** exists with a signing secret for sign-in sessions
+   and the database password, which the database and the backend share:
 
    ```dotenv
    REMY_JWT_SECRET=<output of: openssl rand -base64 48>
+   POSTGRES_PASSWORD=<output of: openssl rand -hex 24>
    ```
 
    Without it the backend invents a new secret on every start, so everyone is
@@ -108,7 +110,7 @@ curl -N -X POST http://localhost:3000/api/v1/plan \
 | Follow one service                     | `docker compose logs -f api`                     |
 | Restart one service                    | `docker compose restart api`                     |
 | Rebuild and restart one service        | `docker compose up --build -d api`               |
-| Open a shell in the database           | `docker compose exec postgres psql -U remy -d remy_main` |
+| Open a shell in the database (asks for `POSTGRES_PASSWORD`) | `docker compose exec postgres psql -U remy -d remy_main` |
 | Stop and remove containers (keep data) | `docker compose down`                            |
 | Stop and also delete the database      | `docker compose down -v`                         |
 
@@ -140,7 +142,6 @@ Compose reads these from your shell or from `SystemCode/.env`:
 | `API_PORT`               | `8081`         | Remy API port on your machine                    |
 | `FRONTEND_PORT`          | `3000`         | Web app port on your machine                     |
 | `REMY_API_ENV_FILE`      | `remy/api/.env` | File with the API's Neo4j settings (the Makefile uses `.env.nonprod`) |
-| `REMY_POSTGRES_PASSWORD` | `remy`         | PostgreSQL password; the database is not exposed outside Docker |
 
 ## The database
 
@@ -158,6 +159,15 @@ docker compose down -v
 Accounts from a PostgreSQL running outside Docker are not copied in.
 
 ## Troubleshooting
+
+**`postgres` exits with "superuser password is not specified".**
+Set `POSTGRES_PASSWORD` in `remy/backend/.env`.
+See [Before you start](#before-you-start).
+
+**`backend` is unhealthy with "password authentication failed".** The password
+in `remy/backend/.env` differs from the one the database was created with; the
+database keeps its first password. Put the old password back, or recreate the
+database (this deletes all accounts) with `docker compose down -v`.
 
 **"port is already allocated" or the script says a port is in use.**
 Something else is listening there, often the servers started without Docker.

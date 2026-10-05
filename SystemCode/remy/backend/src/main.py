@@ -16,7 +16,7 @@ settings = load_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.settings = settings
-    app.state.pool = await db.create_pool(settings.database_url)
+    app.state.pool = await db.create_pool(settings.database_url, settings.database_password)
     app.state.bloom = await db.load_bloom(
         app.state.pool, settings.bloom_capacity, settings.bloom_error_rate
     )

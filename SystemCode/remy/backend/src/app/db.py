@@ -7,8 +7,8 @@ import asyncpg
 from app.bloom import BloomFilter
 
 
-async def create_pool(database_url: str) -> asyncpg.Pool:
-    return await asyncpg.create_pool(database_url, min_size=1, max_size=10)
+async def create_pool(database_url: str, password: str | None = None) -> asyncpg.Pool:
+    return await asyncpg.create_pool(database_url, password=password, min_size=1, max_size=10)
 
 
 async def load_bloom(pool: asyncpg.Pool, capacity: int, error_rate: float) -> BloomFilter:

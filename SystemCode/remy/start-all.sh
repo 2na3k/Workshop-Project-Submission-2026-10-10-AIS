@@ -16,8 +16,9 @@ Remy API and the Next.js frontend. Opens the frontend in your browser once
 everything answers. Press Ctrl+C to stop and remove the containers; the
 PostgreSQL data is kept in a Docker volume for the next run.
 
-The API reads its Neo4j settings from api/.env and the auth backend reads
-backend/.env (its database URL and CORS origins are set by Compose).
+Needs POSTGRES_PASSWORD in backend/.env, which the database and the auth
+backend share. The API reads its Neo4j settings from api/.env. The backend's
+database URL and CORS origins are set by Compose.
 
 Ports can be changed with environment variables:
   BACKEND_PORT   auth backend   (default 8010)
@@ -75,6 +76,12 @@ if [ "$problems" -ne 0 ]; then
   exit 1
 fi
 
+if ! grep -Eq '^POSTGRES_PASSWORD=.+' "$ROOT/backend/.env" 2>/dev/null; then
+  fail "Set POSTGRES_PASSWORD in backend/.env. The database will not start without it."
+  printf '   To make one: openssl rand -hex 24\n' >&2
+  exit 1
+fi
+
 if [ -n "$(compose ps --status running --quiet 2>/dev/null)" ]; then
   fail "Remy is already running in Docker."
   printf '   Press Ctrl+C in the terminal running ./start-all.sh, or run: (cd %q && docker compose down)\n' "$SYSTEM_ROOT" >&2
@@ -109,7 +116,8 @@ if [ "$problems" -ne 0 ]; then
 fi
 
 [ -f "$ROOT/api/.env" ] || warn "api/.env not found. The API needs NEO4J_URI, NEO4J_USERNAME and NEO4J_PASSWORD."
-[ -f "$ROOT/backend/.env" ] || warn "backend/.env not found, so the auth backend makes up a JWT secret on every start (see backend/.env.example)."
+grep -Eq '^REMY_JWT_SECRET=.+' "$ROOT/backend/.env" 2>/dev/null ||
+  warn "REMY_JWT_SECRET is not set in backend/.env, so everyone is signed out whenever the backend restarts."
 
 banner() {
   echo
