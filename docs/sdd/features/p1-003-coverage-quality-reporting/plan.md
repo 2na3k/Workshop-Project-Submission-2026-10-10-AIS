@@ -315,7 +315,7 @@ evidence, not a reason to split the feature.
     - Files: `SystemCode/remy/data-preparation/README.md`
     - Done when: the README documents the five dimensions, the exact predicate values (and the models that produce them), empty-population behavior, build association, regeneration, and the "descriptive, not threshold" posture.
 
-- [ ] **T-13** Run `pytest`, `sdd.py ci`, and `make ci`; record evidence
+- [x] **T-13** Run `pytest`, `sdd.py ci`, and `make ci`; record evidence
     - Type: verification
     - Covers: AC-1 through AC-13
     - Files: (all above)
