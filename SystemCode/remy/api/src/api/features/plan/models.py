@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from datetime import datetime
 from domain.types import Nutrition
 
 
@@ -32,6 +33,47 @@ class Ingredient:
     nutrition_basis: str | None = None
     serving_size: float | None = None
     serving_size_unit: str | None = None
+    freshness_status: str | None = None
+    offer_observed_at: datetime | None = None
+    package_mass_g: float | None = None
+    package_unit_basis: str | None = None
+    cost_basis_compatible: bool | None = None
+    vegan_status: str | None = None
+
+
+@dataclass(frozen=True)
+class IngredientWarning:
+    code: str
+    ingredient_id: str
+    detail: str
+
+
+@dataclass(frozen=True)
+class ConstraintEvaluation:
+    constraint: str
+    state: str
+    detail: str | None = None
+    ingredient_id: str | None = None
+
+
+@dataclass
+class CandidateOutcome:
+    recipe_id: str
+    cause: str | None = None
+    evaluations: list[ConstraintEvaluation] = field(default_factory=list)
+    warnings: list[IngredientWarning] = field(default_factory=list)
+    missing_constraints: list[str] = field(default_factory=list)
+
+
+class FilterResult(list):
+    """Retained recipes plus candidate outcomes for downstream stages."""
+
+    def __init__(self, recipes=None, *, outcomes=None, drop_outcomes=None,
+                 unmapped_requirements=0):
+        super().__init__(recipes or [])
+        self.outcomes = outcomes or {}
+        self.drop_outcomes = drop_outcomes or {}
+        self.unmapped_requirements = unmapped_requirements
 
 
 @dataclass
