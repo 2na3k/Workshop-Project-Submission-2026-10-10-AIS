@@ -1,0 +1,9 @@
+{
+  "stage": "tasks-approved",
+  "loops": 0,
+  "plan_review_verdict": "APPROVE",
+  "spec_hash": "sha256:c61c7883bb40a27d",
+  "plan_hash": "sha256:4b5b75d61667ea54",
+  "tasks_hash": "sha256:6d6708e1015cfbbb",
+  "history": []
+}
