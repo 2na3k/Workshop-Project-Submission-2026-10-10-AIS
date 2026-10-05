@@ -6,7 +6,6 @@ services:
       POSTGRES_PASSWORD: ${REMY_POSTGRES_PASSWORD:-remy}
     volumes:
       - remy_postgres_data:/var/lib/postgresql/data
-      # Runs once, on an empty volume. It creates the remy_main database itself.
       - ./remy/backend/db.sql:/docker-entrypoint-initdb.d/db.sql:ro
     healthcheck:
       # -h forces TCP, which only opens after the init script has finished.
