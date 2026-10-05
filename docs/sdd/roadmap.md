@@ -30,7 +30,7 @@ test"; where nothing exists, it is "new".
 |--------------------------------------------|---------|-----------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
 | p1-001-reproducible-source-pipeline        | done    | —                                                                                                               | p1-002-provenance-graph-model, p1-003-coverage-quality-reporting                                                  | Source snapshot manifest and quality-gate result                                                                                     |
 | p1-001b-test-infrastructure                | done    | p1-001-reproducible-source-pipeline                                                                             | p1-002-provenance-graph-model                                                                                     | Fake driver fixture and cloud Neo4j integration fixture for graph tests                                                              |
-| p1-002-provenance-graph-model              | partial | p1-001-reproducible-source-pipeline, p1-001b-test-infrastructure                                                | p1-001-reproducible-source-pipeline, p1-001b-test-infrastructure, p1-003-coverage-quality-reporting              | Canonical graph schema and `REQUIRES`/`FULFILLS` provenance contract                                                                 |
+| p1-002-provenance-graph-model              | done    | p1-001-reproducible-source-pipeline, p1-001b-test-infrastructure                                                | p1-001-reproducible-source-pipeline, p1-001b-test-infrastructure, p1-003-coverage-quality-reporting              | Canonical graph schema and `REQUIRES`/`FULFILLS` provenance contract                                                                 |
 | p1-003-coverage-quality-reporting          | new     | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                              | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                                | Coverage dimensions and graph quality manifest                                                                                       |
 | p2-001-constraint-evidence-filtering       | partial | p1-002-provenance-graph-model                                                                                   | p2-002-cost-nutrition-calculation, p2-003-feasible-meal-plan-solving                                              | Candidate evaluation outcome and distinct evidence-absent/present-exclusion causes                                                   |
 | p2-002-cost-nutrition-calculation          | partial | p1-002-provenance-graph-model                                                                                   | p2-001-constraint-evidence-filtering, p2-003-feasible-meal-plan-solving                                           | Portion nutrient and consumed/package cost result contract                                                                           |
@@ -80,14 +80,14 @@ rule (R-1, R-4, R-15), this phase fixes it.
   fails under CI, so a skipped integration test in CI is a CI failure. CI
   workflow added. No production code changes. (enables G-4, G-7 for downstream
   features)
-- **p1-002-provenance-graph-model** *(partial)* — Existing graph load.
-  Remaining work: ensure every populated `REQUIRES` and `FULFILLS` edge carries
-  the properties R-4 requires; add the schema-conformance test (R-1: single
-  canonical property names) and the edge-provenance test; wire the loader so it
-  refuses to run unless the manifest passed. **Prerequisite:** p1-001's O-1
-  follow-up (restore seeds so the pipeline builds) — without a working pipeline,
-  this feature cannot demonstrate its exit criteria against real data. Test
-  infrastructure is now provided by p1-001b. (serves G-4, G-7)
+- **p1-002-provenance-graph-model** *(done, 2026-10-05)* — Provenance-preserving
+  canonical graph model: canonical edge vocabulary on `REQUIRES` and `FULFILLS`
+  (source, snapshot, mapping/normalization version, confidence, observation);
+  fail-closed manifest admission in the serving model; canonical property
+  allowlists enforced with legacy aliases rejected; reject-don't-repair for
+  missing provenance; MERGE idempotence on identity keys. One loop-back (F-1, F-2,
+  F-3 and the README nit resolved). dbt singular test execution deferred under
+  p1-001 O-1 (documented in the feature's decisions.md D-4). (serves G-4, G-7)
 - **p1-003-coverage-quality-reporting** *(new)* — Publish separate nutrition,
   price, unit-conversion, dietary-evidence, and whole-recipe completeness
   measures, regenerated on every build. (serves G-5)
@@ -127,7 +127,9 @@ rule (R-1, R-4, R-15), this phase fixes it.
 - The existing graph may accept more than one property name for a concept
   (legacy naming from before the constitution). R-1 makes this a violation and
   the fix is part of p1-002 — this may affect the deployed schema and require a
-  migration.
+  migration. *Realized: p1-002 enforced the canonical allowlist; legacy aliases
+  are rejected at load. No migration was required because the deployed graph
+  already used the canonical names.*
 - Coverage measurement may reveal gaps that were previously invisible. Gaps are
   reported, not hidden; closing them is not p1's job.
 - Retail crawling is constrained by the absence of a public API and price
@@ -137,12 +139,18 @@ rule (R-1, R-4, R-15), this phase fixes it.
   (`NEO4J_TEST_URI`). If the instance is idle-paused, unreachable, or the
   credentials are wrong, CI fails (per p1-001b's D-2). The instance must remain
   available for the phase to keep passing.
+- **Deferred dbt execution accumulates across the phase.** p1-001's F-3,
+  p1-002's T-5/T-12, and any future dbt-dependent verification all block on the
+  same missing prerequisite (O-1 seeds). The phase review must decide whether
+  the O-1 follow-up is a phase-exit blocker or a p2-or-later follow-up; three
+  deferrals pointing at one prerequisite is the signal to consolidate.
 
 ### Phase p1 progress
 
 - p1-001: closed 2026-10-03, 1 implementation loop. Follow-up O-1 tracked.
 - p1-001b: closed 2026-10-04, 0 loops.
-- p1-002: specified, plan pending.
+- p1-002: closed 2026-10-05, 1 implementation loop. dbt singular test execution
+  deferred under O-1.
 - p1-003: not started.
 
 ## Phase p2 - deterministic constraint evaluation and plan solving
@@ -205,3 +213,15 @@ Status: planned
   Added a risk about the integration tests' dependency on the configured cloud
   instance. Reason: p1-001b closed on 2026-10-04 with no loop-back; the roadmap
   needs to reflect that p1-002's test infrastructure is now in place.
+
+- 2026-10-05 — Marked `p1-002-provenance-graph-model` as done, 1 loop. Updated
+  the feature description to reflect what shipped (canonical edge vocabulary,
+  fail-closed admission, canonical allowlists, reject-don't-repair, MERGE
+  idempotence); recorded the F-1/F-2/F-3 + nit resolution. Marked the R-1
+  legacy-naming risk as realized (canonical allowlist enforced; no migration
+  required). Added a new phase risk naming the accumulating O-1 deferrals
+  (p1-001 F-3, p1-002 T-5/T-12) and requiring the phase review to decide
+  whether O-1 is a phase-exit blocker or a p2-or-later follow-up. Reason:
+  p1-002 closed on 2026-10-05 after one loop-back; the roadmap reflects the
+  phase progress and consolidates the O-1 deferrals so the phase review sees
+  them as one issue rather than three.
