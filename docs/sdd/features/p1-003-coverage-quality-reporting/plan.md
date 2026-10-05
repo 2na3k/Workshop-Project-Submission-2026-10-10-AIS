@@ -249,7 +249,7 @@ evidence, not a reason to split the feature.
     - Files: (read-only)
     - Done when: `nutrition_status = 'validated'`, `price_status = 'estimated'`, `cost_basis_compatible = true`, `halal_status IN ('certified', 'retailer_claim', 'ingredient_screen_pass')`, `vegetarian_status IN ('retailer_claim', 'ingredient_screen_pass')` are confirmed present in the canonical marts; `MANIFEST_SCHEMA_VERSION` in `reproducibility_manifest.py` and the serving model's accepted version constant are named. If any predicate value has no producer in the marts, stop and route to spec.
 
-- [ ] **T-2** Write failing tests for the five dimensions (AC-1 through AC-6)
+- [x] **T-2** Write failing tests for the five dimensions (AC-1 through AC-6)
     - Type: test
     - Covers: AC-1, AC-2, AC-3, AC-4, AC-5, AC-6
     - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`
