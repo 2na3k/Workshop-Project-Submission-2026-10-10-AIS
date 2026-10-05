@@ -89,10 +89,29 @@ with requirements as (
         nullif('{{ env_var("REMY_BUILD_ID", "") }}', '') as build_id,
         '{{ run_started_at }}'::timestamp as observed_at
     from metrics
+), validated as (
+    select case
+        when count(*) <> 5
+          or count(distinct dimension) <> 5
+          or count(*) filter (where dimension not in (
+                'nutrition_coverage',
+                'price_availability',
+                'package_unit_conversion_coverage',
+                'dietary_evidence_coverage',
+                'whole_recipe_completeness'
+            )) > 0
+          or bool_or(covered_count < 0)
+          or bool_or(denominator < 0)
+          or bool_or(covered_count > denominator)
+          or bool_or(percentage is not null and (percentage < 0 or percentage > 1))
+          or bool_or(denominator = 0 and percentage is not null)
+          or bool_or(denominator > 0 and percentage is null)
+        then error('coverage_quality_report failed closed: invalid metrics')
+        else true
+    end as valid
+    from associated
 )
-select *
-from associated
-where covered_count >= 0
-  and denominator >= 0
-  and covered_count <= denominator
-  and (percentage is null or (percentage >= 0 and percentage <= 1))
+select a.*
+from associated a
+cross join validated v
+where v.valid

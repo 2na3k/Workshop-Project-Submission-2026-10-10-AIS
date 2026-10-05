@@ -21,12 +21,29 @@ from reproducibility_manifest import (
 )
 
 
-def test_report_matches_source_and_mart_manifest_association() -> None:
+def test_report_matches_source_and_mart_manifest_association(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """AC-10: the report is a deterministic required mart with association fields."""
     assert "coverage_quality_report" in REQUIRED_MARTS
     columns = set(MART_CONTENT_COLUMNS["coverage_quality_report"])
     assert {"source_snapshot_id", "mart_content_checksum"} <= columns
     assert {"dimension", "covered_count", "denominator", "percentage"} <= columns
+    registry, _ = write_registry(tmp_path)
+    fake_marts = {
+        mart: {
+            "row_count": 5 if mart == "coverage_quality_report" else 1,
+            "content_checksum": f"checksum-{mart}",
+            "content_columns": list(MART_CONTENT_COLUMNS[mart]),
+            "contract_version": 1,
+        }
+        for mart in REQUIRED_MARTS
+    }
+    monkeypatch.setattr("reproducibility_manifest.compute_mart_entries", lambda _: fake_marts)
+    manifest = build_manifest(registry, tmp_path / "fixture.duckdb", tmp_path / "manifest.json")
+    report_entry = manifest["marts"]["coverage_quality_report"]
+    assert report_entry["content_checksum"] == "checksum-coverage_quality_report"
+    assert set(report_entry["content_columns"]) == columns
 
 
 def write_registry(
