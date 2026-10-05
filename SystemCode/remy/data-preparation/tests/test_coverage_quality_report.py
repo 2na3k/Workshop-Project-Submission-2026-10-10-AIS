@@ -141,3 +141,11 @@ def test_uncomputable_coverage_report_publishes_no_report(tmp_path, monkeypatch)
             tmp_path / "registry.json", tmp_path / "database.duckdb", output
         )
     assert not output.exists()
+
+
+def test_missing_evidence_is_reported_as_uncovered():
+    """AC-12: null, unknown, unavailable, and false evidence never passes."""
+    assert "coalesce(nf.nutrition_status, 'missing')" in SQL
+    assert "coalesce(f.price_status, 'unavailable')" in SQL
+    assert "coalesce(f.cost_basis_compatible, false)" in SQL
+    assert "f.halal_status in" in SQL and "f.vegetarian_status in" in SQL

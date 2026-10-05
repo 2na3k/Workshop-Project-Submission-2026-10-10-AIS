@@ -375,6 +375,22 @@ def build_manifest(
 ) -> Manifest:
     sources = load_source_entries(registry_path)
     marts = compute_mart_entries(database_path)
+    missing = sorted(set(REQUIRED_MARTS) - set(marts))
+    unexpected = sorted(set(marts) - set(REQUIRED_MARTS))
+    if missing or unexpected:
+        raise ValueError(
+            "canonical mart contract is incomplete: "
+            f"missing={missing}, unexpected={unexpected}"
+        )
+    for mart in REQUIRED_MARTS:
+        entry = marts[mart]
+        if (
+            not isinstance(entry.get("row_count"), int)
+            or entry["row_count"] < 0
+            or not entry.get("content_checksum")
+            or set(MART_CONTENT_COLUMNS[mart]) - set(entry.get("content_columns", []))
+        ):
+            raise ValueError(f"canonical mart is invalid or uncomputable: {mart}")
     manifest: Manifest = {
         "schema_version": MANIFEST_SCHEMA_VERSION,
         "contract_version": CONTRACT_VERSION,

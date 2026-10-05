@@ -297,7 +297,7 @@ evidence, not a reason to split the feature.
     - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`
     - Done when: missing source snapshot, missing canonical mart, or an uncomputable dimension each cause the report generation to fail non-zero and publish no accepted report; the test asserts the absence of an output report, not only the raised error.
 
-- [ ] **T-10** Implement fail-closed behavior for missing or invalid inputs (AC-11, AC-12)
+- [x] **T-10** Implement fail-closed behavior for missing or invalid inputs (AC-11, AC-12)
     - Type: impl
     - Covers: AC-11, AC-12
     - Files: `SystemCode/remy/data-preparation/models/mart/coverage_quality_report.sql`, `SystemCode/remy/data-preparation/scripts/reproducibility_manifest.py`
