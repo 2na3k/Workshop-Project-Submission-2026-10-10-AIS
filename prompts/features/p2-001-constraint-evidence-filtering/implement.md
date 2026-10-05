@@ -1,17 +1,20 @@
 # Prompt — Implement
 
-Implement for feature **p1-003-coverage-quality-reporting**
+Implement for feature **p2-001-constraint-evidence-filtering**
 
-`<id>`: `p1-003-coverage-quality-reporting`
+`<id>`: `p2-001-constraint-evidence-filtering`
 
 ## Input
 - [AGENTS.md](../../../AGENTS.md)
-- [spec.md](../../../docs/sdd/features/p1-003-coverage-quality-reporting/spec.md)
-- [plan.md](../../../docs/sdd/features/p1-003-coverage-quality-reporting/plan.md)
+- [spec.md](../../../docs/sdd/features/p2-001-constraint-evidence-filtering/spec.md)
+- [plan.md](../../../docs/sdd/features/p2-001-constraint-evidence-filtering/plan.md)
 - [constitution.md](../../../docs/sdd/constitution.md)
-- current codebase: [SystemCode](../../../SystemCode)
 - [neo4j_db_design.md](../../../SystemCode/docs/neo4j_db_design.md)
 - [system_design_v3.md](../../../SystemCode/docs/system_design_v3.md)
+- current codebase: [SystemCode](../../../SystemCode)
+    - Backend:  [api](../../../SystemCode/remy/api)
+    - Domain: [domain](../../../SystemCode/remy/domain)
+    - Workflow (LangGraph,...): [workflows](../../../SystemCode/remy/workflows)
 - on a loop-back: archived review.rN.md (highest N) with findings routed to `implement`
 - Integration tests connect to a cloud Neo4j instance via p1-001b's
   `neo4j_driver` fixture, which reads `NEO4J_TEST_URI`,
