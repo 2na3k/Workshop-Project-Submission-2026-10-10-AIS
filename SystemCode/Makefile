@@ -1,7 +1,7 @@
 SHELL := /bin/sh
 
 UV ?= uv
-COMPOSE ?= docker compose --env-file .env.nonprod
+COMPOSE ?= REMY_API_ENV_FILE=.env.nonprod docker compose --env-file .env.nonprod
 API_PACKAGE := remy-api
 CRAWLER_PACKAGE := remy-data-crawler
 DBT_PACKAGE := remy-data-preparation
