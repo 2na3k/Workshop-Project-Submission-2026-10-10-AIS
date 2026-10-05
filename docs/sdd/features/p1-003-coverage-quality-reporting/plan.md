@@ -255,7 +255,7 @@ evidence, not a reason to split the feature.
     - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`
     - Done when: each test constructs a controlled fixture population and asserts the covered count, denominator, and percentage for its dimension; each fails because the report does not exist yet. Nutrition uses `nutrition_status = 'validated'`; price uses `price_status = 'estimated'`; conversion requires `cost_basis_compatible = true`; dietary uses the exact accepted sets; whole-recipe uses a distinct recipe denominator.
 
-- [ ] **T-3** Write failing tests for cross-dimension independence and empty populations (AC-7, AC-8)
+- [x] **T-3** Write failing tests for cross-dimension independence and empty populations (AC-7, AC-8)
     - Type: test
     - Covers: AC-7, AC-8
     - Files: `SystemCode/remy/data-preparation/tests/test_coverage_quality_report.py`
