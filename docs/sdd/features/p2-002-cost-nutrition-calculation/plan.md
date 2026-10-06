@@ -229,14 +229,21 @@ feature.
 - **F-4 (round 1)** → Cost is request-dependent. Design §3 states the condition
   (`request.budget is not None`) and AC-5 now has two test rows: the
   budget-present drop case and the budget-absent retain case.
-
+- **F-1 (round 2)** → Plan revision: T-1..T-13 reframed for the prove-and-fix
+  baseline. Existing calculator tests already cover AC-1, AC-2, and parts
+  of AC-3/AC-4; the tasks now say "confirm and extend" for those and
+  "implement" for the actual gaps (source precedence per nutrient,
+  confidence selection, request-dependent cost, unusable-price-evidence
+  rejection, invalid-request rejection, R-16 boundary assertion). Reason:
+  T-1 as written required a failing test against already-passing behavior;
+  the implement gate observed the baseline and stopped.
 ## Tasks
 
-- [ ] **T-1** Write failing tests for nutrition scaling and aggregation (AC-1, AC-2)
+- [x] **T-1** Confirm and extend tests for nutrition scaling and aggregation (AC-1, AC-2)
     - Type: test
     - Covers: AC-1, AC-2
     - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_nutrition.py`
-    - Done when: tests exist and fail because the calculation does not yet produce scaled totals or null-preserving aggregates.
+    - Done when: existing tests covering AC-1/AC-2 are identified and confirmed passing; any uncovered case (per the spec's edge cases for null-preserving aggregation) is added as a new test. If the baseline fully covers AC-1 and AC-2, this task ticks with no new test and the existing tests are cited as the evidence.
 
 - [ ] **T-2** Write failing tests for cost separation and eligibility (AC-3, AC-4, AC-5, Edge case: unusable price evidence)
     - Type: test
@@ -274,11 +281,11 @@ feature.
     - Files: `SystemCode/remy/api/tests/features/calculator/test_repository_integration.py`, `SystemCode/remy/api/tests/features/calculator/test_service_integration.py`
     - Done when: each integration test runs the real repository/service against a fixture producer and fails because the interface is not yet implemented. The p2-003 interface row is not written (deferred; see T-13).
 
-- [ ] **T-8** Implement source-aware nutrition selection and aggregation (AC-1, AC-2, AC-6, AC-7, AC-8)
+- [ ] **T-8** Implement or confirm source-aware nutrition selection and aggregation (AC-1, AC-2, AC-6, AC-7, AC-8)
     - Type: impl
     - Covers: AC-1, AC-2, AC-6, AC-7, AC-8, per-nutrient independence
     - Files: `SystemCode/remy/api/src/api/features/calculator/domain/nutrition.py`, `SystemCode/remy/api/src/api/features/calculator/models.py`
-    - Done when: T-1 and T-3 pass; per-nutrient deterministic precedence implemented and repeatable.
+    - Done when: T-1 and T-3 pass; AC-1/AC-2 behaviors confirmed present in the existing domain helpers; AC-6/AC-7/AC-8 (source precedence, tie-break, determinism, per-nutrient independence) implemented or confirmed present with new tests proving them.
 
 - [ ] **T-9** Implement cost eligibility, separation, and best-score selection (AC-3, AC-4, AC-5, AC-9, AC-10, AC-11, Edge case: unusable price evidence)
     - Type: impl
