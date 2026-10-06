@@ -13,7 +13,7 @@
 |---|---|---|---|
 | Proposal | Human | problem/context | `proposal.md` |
 | Constitution | Constitution agent | proposal, AGENTS.md, source material, architecture | `constitution.md` |
-| Roadmap + phases | Roadmap agent | proposal, constitution, AGENTS.md | `roadmap.md`, `roadmap-log.md` |
+| Roadmap + phases | Roadmap agent | proposal, constitution, AGENTS.md | `roadmap.md` |
 | Spec | Spec agent | roadmap, phase, constitution, AGENTS.md | `features/<id>/spec.md` |
 | Clarify | Spec agent + Human | spec questions, AGENTS.md | updated `spec.md` |
 | Plan | Plan agent | spec, codebase, constitution, AGENTS.md | `features/<id>/plan.md` |
@@ -25,7 +25,6 @@
 | Review | Reviewer | diff, spec, plan, CI, AGENTS.md | `review.md` |
 | Close | Implementation agent | approved implementation, review | `decisions.md`, `CHANGELOG.md`, `state.json` |
 | Phase Review | Human + Roadmap agent | completed phase | `phase-reviews/pN.md` |
-| Retro | Human + Roadmap agent | completed phase | `retros/pN.md` |
 | Amendment | Constitution agent + Human | phase findings, retro | `amendments/A-*.md` + updated `constitution.md` |
 
 Two structural rules: **the reviewer is never the author**, and **a stage may only
@@ -106,9 +105,9 @@ the changelog.
 The kit has templates, prompts, skills, scripts, and examples. The project has
 only the state it needs:
 
-    proposal, constitution, roadmap (+ phases + log), specs, plans (+ tasks),
+    proposal, constitution, roadmap (+ phases), specs, plans (+ tasks),
     reviews, machine evidence (CI, collisions), state (hashes + verdicts),
-    decisions, phase reviews, retros, amendments, changelog
+    decisions, phase reviews, amendments, changelog
 
 That keeps the SDD layer small while preserving approval boundaries, the audit
 trail, and the loop-back semantics that keep it agile rather than waterfall.
