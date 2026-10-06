@@ -315,7 +315,7 @@ later-feature work and are explicitly deferred.
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_nutrition.py`
   - Done when: existing tests for AC-1/AC-2 confirmed passing; no new test needed.
 
-- [ ] **T-2** Extend models, query, and schemas with the fields the tests need
+- [x] **T-2** Extend models, query, and schemas with the fields the tests need
   - Type: impl
   - Covers: prerequisite for AC-5, AC-6, AC-7, AC-8, AC-11, and the unusable-price-evidence edge case
   - Files: `models.py`, `repository.py`, `schemas.py`

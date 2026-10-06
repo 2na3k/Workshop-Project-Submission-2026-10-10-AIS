@@ -28,6 +28,7 @@ class IngredientRequest(BaseModel):
 class CostNutritionRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     servings: int = Field(ge=1, le=1000)
+    budget: float | None = None
     ingredients: list[IngredientRequest] = Field(min_length=1, max_length=100)
 
 

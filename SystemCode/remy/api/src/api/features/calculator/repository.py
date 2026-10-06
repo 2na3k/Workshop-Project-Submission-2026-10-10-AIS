@@ -36,6 +36,8 @@ RETURN canonical_key, toString(f.fdc_id) AS fdc_id, f.food_key AS food_key,
        f.carbohydrate_g AS carbohydrate_g, f.fat_g AS fat_g, f.fiber_g AS fiber_g,
        f.sugars_g AS sugars_g, f.sodium_mg AS sodium_mg, f.calcium_mg AS calcium_mg,
        f.iron_mg AS iron_mg, ful.candidate_key AS candidate_key,
+       f.nutrition_source AS nutrition_source, ful.observed_at AS observed_at,
+       ful.listing_key AS listing_key,
        ful.mapping_confidence AS confidence,
        ful.price_basis AS price_basis, ful.cost_basis_compatible AS cost_basis_compatible,
        ful.reference_price_minor AS reference_price_minor, ful.currency AS currency,
@@ -62,14 +64,14 @@ class CostNutritionRepository:
                     result[row["unresolved_name"]].append(row["canonical_key"])
         return dict(result)
 
-    def fetch_food_facts(self, canonical_keys: list[str]) -> dict[str, FoodFacts]:
+    def fetch_food_facts(self, canonical_keys: list[str]) -> dict[str, list[FoodFacts]]:
         with self.driver.session() as session:
             rows = session.run(QUERY_B, canonical_keys=list(dict.fromkeys(canonical_keys)))
-            grouped: dict[str, FoodFacts] = {}
+            grouped: dict[str, list[FoodFacts]] = defaultdict(list)
             for row in rows:
                 data = dict(row)
                 key = data["canonical_key"]
-                facts = grouped.setdefault(key, FoodFacts(
+                facts = FoodFacts(
                     canonical_key=key, canonical_name=key.replace("_", " "),
                     fdc_id=data.get("fdc_id"), description=data.get("description"),
                     nutrients=NutrientProfile(
@@ -78,7 +80,11 @@ class CostNutritionRepository:
                         fiber_g=data.get("fiber_g"), sugar_g=data.get("sugars_g"),
                         sodium_mg=data.get("sodium_mg"), calcium_mg=data.get("calcium_mg"),
                         iron_mg=data.get("iron_mg")),
-                ))
+                    source_kind=data.get("nutrition_source"),
+                    candidate_key=data.get("candidate_key"),
+                    observed_at=str(data["observed_at"]) if data.get("observed_at") is not None else None,
+                    product_id=data.get("listing_key"),
+                )
                 conversions = data.get("conversions") or []
                 for conversion in conversions:
                     facts.grams_per_tbsp = facts.grams_per_tbsp or conversion.get("grams_per_tbsp")
@@ -90,4 +96,5 @@ class CostNutritionRepository:
                         package_mass_g=data.get("package_mass_g"), package_count=data.get("package_count"),
                         price_basis=data.get("price_basis"), cost_basis_compatible=data.get("cost_basis_compatible"),
                         confidence=data.get("confidence"), fdc_id=str(data.get("fdc_id") or "")))
-            return grouped
+                grouped[key].append(facts)
+            return dict(grouped)
