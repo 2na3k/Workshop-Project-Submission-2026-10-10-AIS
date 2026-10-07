@@ -268,6 +268,10 @@ keep `budget` out of use.
   set, `MAX_REQUEST_INGREDIENTS`.
 - `SystemCode/remy/api/docs/API_doc.md` — correct the response shape in the
   same change (R-1: documentation corrected, not carried in parallel).
+- `SystemCode/remy/api/src/api/features/calculator/router.py` — unpack
+  `service.calculate`'s `(response, trace)` return; return only the response;
+  keep `response_model=CostNutritionResponse`. Do not add an exposure boundary
+  for the trace (p3-001 owns that).
 - Tests under `SystemCode/remy/api/tests/features/calculator/`:
   - **Existing, repaired/extended:**
     - `test_domain_cost.py` — R-8/R-11 named fixture; AC-3, AC-4, AC-5,
@@ -430,6 +434,16 @@ end-to-end data path is a recorded deferral, not work in this context.
   on `confidence`, `normalization_version`, and `source_*`/`*_id` fields. The
   constitution's check path should be corrected to the feature-local location
   (or R-16 should name both), via amendment. Recorded for phase review.
+- **F-E (route: plan; resolved by this revision)** — T-20 originally listed
+  only `service.py` and `trace.py` as editable files while its done-when
+  required the router to discard the trace. The existing router returns
+  `service.calculate()` directly, so after T-20's tuple-return change the
+  response would fail serialization against `response_model=CostNutritionResponse`.
+  This was a fold error: the earlier task review merged "T-27 Confirm router
+  discards trace" into T-20's done-when but dropped `router.py` from T-20's
+  `Files:`. This revision restores `router.py` to T-20's `Files:`, adds
+  `router.py` to `## Files to touch`, and sharpens T-20's done-when to name
+  the router unpack explicitly. No behavioral or AC-coverage change.
 
 ## Tasks
 
@@ -561,11 +575,11 @@ end-to-end data path is a recorded deferral, not work in this context.
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_conversion.py` (`test_nutrient_non_mass_unit_warns`)
   - Done when: nutrient non-mass unit emits `UNIT_ASSUMED_GRAMS`; passes or fails per current behavior, with intended behavior asserted
 
-- [ ] **T-20** Rewrite `service.calculate` for selection, warnings, payload, and trace
+- [x] **T-20** Rewrite `service.calculate` for selection, warnings, payload, and trace
   - Type: impl
   - Covers: AC-1..AC-13, AC-16, AC-18 (R-5, R-8, R-9, R-10, R-11, R-12, R-13, R-16); all interface rows
-  - Files: `SystemCode/remy/api/src/api/features/calculator/service.py`, `SystemCode/remy/api/src/api/features/calculator/trace.py` (new — `CalculationTrace` and `IngredientTrace` with the fields listed in the spec's `## Execution trace`)
-  - Done when: candidate-list selection; rejection on no accepted; per-nutrient profile via precedence; cost selection via corrected `select_package`; `MISSING_PACKAGE_DATA` and `PARTIAL_NUTRITION_DATA` (naming missing nutrients) emitted; AC-18 payload and parallel trace assembled; `calculate` returns `(CostNutritionResponse, CalculationTrace)`; router returns only the response (`response_model=CostNutritionResponse`), trace discarded — verified by T-18's serialization test
+  - Files: `SystemCode/remy/api/src/api/features/calculator/service.py`, `SystemCode/remy/api/src/api/features/calculator/trace.py` (new — `CalculationTrace` and `IngredientTrace`), `SystemCode/remy/api/src/api/features/calculator/router.py`
+  - Done when: candidate-list selection; rejection on no accepted; per-nutrient profile via precedence; cost selection via corrected `select_package`; `MISSING_PACKAGE_DATA` and `PARTIAL_NUTRITION_DATA` (naming missing nutrients) emitted; AC-18 payload and parallel trace assembled; `calculate` returns `(CostNutritionResponse, CalculationTrace)`; **the router unpacks the tuple and returns only the response (keeping `response_model=CostNutritionResponse`)**; the trace is not serialized — verified by T-18's serialization test
 
 - [ ] **T-21** Update schemas: field set, `MAX_REQUEST_INGREDIENTS`
   - Type: impl
