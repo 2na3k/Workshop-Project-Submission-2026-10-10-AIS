@@ -14,6 +14,12 @@ def test_component_units_require_positive_facts():
     assert to_grams(1, "pc") == (50, ["UNIT_ASSUMED_GRAMS"])
 
 
+def test_nutrient_non_mass_unit_warns():
+    grams, warnings = to_grams(10, "ml")
+    assert grams == 10
+    assert warnings == ["UNIT_ASSUMED_GRAMS"]
+
+
 def test_incompatible_unit_basis_is_excluded_and_drops_when_only_option():
     ingredient = Ingredient(1, "pc", nutrients={"protein_g": 1},
                             nutrition_basis="per serving",

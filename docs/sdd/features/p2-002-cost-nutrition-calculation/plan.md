@@ -555,7 +555,7 @@ end-to-end data path is a recorded deferral, not work in this context.
   - Files: `SystemCode/remy/api/tests/features/calculator/test_response_schema.py` (new; R-16 assertion at the feature-local path)
   - Done when: `test_user_payload_field_set` asserts the payload carries `canonical_key`, `listing_name`, `retailer`, costs, nutrients, warnings, and excludes `confidence`/`food_key`/`fdc_id`/`source_*`/versions/ranks/`approval_status`; `test_invalid_request_rejected_custom_envelope` asserts servings<1 / empty / `> MAX_REQUEST_INGREDIENTS` rejected pre-calc with the custom envelope; both fail against the current code
 
-- [ ] **T-19** Write failing test: nutrient non-mass unit warns
+- [x] **T-19** Write failing test: nutrient non-mass unit warns
   - Type: test
   - Covers: AC-14 (nutrient path)
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_conversion.py` (`test_nutrient_non_mass_unit_warns`)
