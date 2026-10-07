@@ -605,7 +605,7 @@ end-to-end data path is a recorded deferral, not work in this context.
 
 ### Group 9 — closing admin
 
-- [ ] **T-24** Record feature decisions and deferrals
+- [x] **T-24** Record feature decisions and deferrals
   - Type: admin
   - Covers: F-C; D-1/D-2/D-3; C-1..C-9 consequential flags; R-16 test-path divergence note
   - Files: `docs/sdd/features/p2-002-cost-nutrition-calculation/decisions.md`
