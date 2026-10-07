@@ -549,7 +549,7 @@ end-to-end data path is a recorded deferral, not work in this context.
   - Files: `SystemCode/remy/api/tests/features/calculator/test_service_errors.py` (`test_unsupported_unit_and_nonfinite_reject`, `test_unresolvable_and_no_accepted_reject`)
   - Done when: `to_grams` raising rejects the whole request; unresolved name / no accepted candidate rejects; the custom error envelope (`{"error": {code, message, details, timestamp}}`) is asserted; fails against the current service
 
-- [ ] **T-18** Create R-16 assertion at feature-local path; write payload and invalid-request tests
+- [x] **T-18** Create R-16 assertion at feature-local path; write payload and invalid-request tests
   - Type: test
   - Covers: AC-18, AC-19; interface service→router
   - Files: `SystemCode/remy/api/tests/features/calculator/test_response_schema.py` (new; R-16 assertion at the feature-local path)
