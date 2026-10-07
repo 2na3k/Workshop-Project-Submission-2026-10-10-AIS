@@ -509,7 +509,7 @@ end-to-end data path is a recorded deferral, not work in this context.
 
 ### Group 4 — per-nutrient precedence (R-12)
 
-- [ ] **T-12** Write failing tests: branded-over-generic and same-source tie-break
+- [x] **T-12** Write failing tests: branded-over-generic and same-source tie-break
   - Type: test
   - Covers: AC-6, AC-7
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_nutrition.py` (`test_branded_over_generic`, `test_same_source_tie_break`)
