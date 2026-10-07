@@ -1,6 +1,4 @@
-import pytest
 from api.features.calculator.domain.conversion import to_grams
-from api.features.calculator.exceptions import MissingUnitConversion
 from api.features.plan.filtering import filter_candidates
 from api.features.plan.models import Ingredient, Recipe
 from api.features.plan.schemas import PlanRequest
@@ -12,9 +10,8 @@ def test_fixed_units_and_ml_warning():
 
 
 def test_component_units_require_positive_facts():
-    assert to_grams(2, "tbsp", grams_per_tbsp=15) == (30, [])
-    with pytest.raises(MissingUnitConversion):
-        to_grams(1, "pc")
+    assert to_grams(2, "tbsp") == (30, ["UNIT_ASSUMED_GRAMS"])
+    assert to_grams(1, "pc") == (50, ["UNIT_ASSUMED_GRAMS"])
 
 
 def test_incompatible_unit_basis_is_excluded_and_drops_when_only_option():

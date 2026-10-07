@@ -455,7 +455,7 @@ end-to-end data path is a recorded deferral, not work in this context.
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_conversion.py` (`test_fixed_units_and_ml_warning`)
   - Done when: test asserts `to_grams(10, "ml") == (10, ["UNIT_ASSUMED_GRAMS"])`; passes against current `domain.units`
 
-- [ ] **T-4** Repair stale component-unit test
+- [x] **T-4** Repair stale component-unit test
   - Type: test
   - Covers: AC-14
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_conversion.py` (`test_component_units_require_positive_facts`)
