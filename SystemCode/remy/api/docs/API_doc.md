@@ -128,7 +128,9 @@ from **whole-package retail pricing** based on grocery data.
       "sugar_g": 0.0,
       "sodium_mg": 429.0,
       "calcium_mg": null,
-      "iron_mg": null
+      "iron_mg": null,
+      "saturated_fat_g": 20.0,
+      "cholesterol_mg": 10.0
     },
     "nutrients_per_serving": {
       "calories_kcal": 389.5,
@@ -139,7 +141,9 @@ from **whole-package retail pricing** based on grocery data.
       "sugar_g": 0.0,
       "sodium_mg": 215.0,
       "calcium_mg": null,
-      "iron_mg": null
+      "iron_mg": null,
+      "saturated_fat_g": 10.0,
+      "cholesterol_mg": 5.0
     }
   },
   "itemized": [
@@ -166,7 +170,9 @@ from **whole-package retail pricing** based on grocery data.
         "sugar_g": 0.0,
         "sodium_mg": 429.0,
         "calcium_mg": null,
-        "iron_mg": null
+        "iron_mg": null,
+        "saturated_fat_g": 10.0,
+        "cholesterol_mg": 5.0
       },
       "warnings": [
         {
@@ -192,7 +198,9 @@ from **whole-package retail pricing** based on grocery data.
         "sugar_g": 0.0,
         "sodium_mg": 0.0,
         "calcium_mg": null,
-        "iron_mg": null
+        "iron_mg": null,
+        "saturated_fat_g": 0.0,
+        "cholesterol_mg": 0.0
       },
       "warnings": [
         {

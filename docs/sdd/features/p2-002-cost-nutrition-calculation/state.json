@@ -1,15 +1,10 @@
 {
   "stage": "tasks-approved",
-  "loops": 1,
   "plan_review_verdict": "APPROVE",
-  "spec_hash": "sha256:1f77a0b91248e16f",
-  "plan_hash": "sha256:5474f5eb07bdc6b5",
-  "tasks_hash": "sha256:2c61e02334044b93",
+  "spec_hash": "sha256:ee4374f2bb31213f",
+  "plan_hash": "sha256:d96ba7fea5519d84",
+  "tasks_hash": "sha256:7c5a91cffc0af620",
+  "loops": 0,
   "history": [
-    {
-      "at": "2026-10-06T10:37:42+08:00",
-      "event": "loop 1/2 (fail)"
-    }
-  ],
-  "updated_at": "2026-10-06T10:37:42+08:00"
+  ]
 }

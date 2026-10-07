@@ -42,12 +42,28 @@ Fits one working context: yes | no
 <!-- Added only after plan review returns APPROVE or APPROVE-WITH-NITS.
      Tasks are hashed into state.json (tasks_hash) and are frozen for this
      implementation loop. Do not edit after approval without a loop-back. -->
+
+### Group 1 - Task Group short description
+
 - [ ] **T-1** Write failing tests for AC-1, AC-2
   - Type: test
   - Covers: AC-1, AC-2
   - Files:
   - Done when:
 - [ ] **T-2** …
+  - Type: impl
+  - Covers:
+  - Files:
+  - Done when:
+
+### Group 2 - Task Group short description
+
+- [ ] **T-3** Write failing tests for AC-1, AC-2
+  - Type: test
+  - Covers: AC-1, AC-2
+  - Files:
+  - Done when:
+- [ ] **T-4** …
   - Type: impl
   - Covers:
   - Files:

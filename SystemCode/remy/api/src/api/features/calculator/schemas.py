@@ -37,9 +37,11 @@ class Nutrients(BaseModel):
     protein_g: float | None = None
     carbs_g: float | None = None
     fat_g: float | None = None
+    saturated_fat_g: float | None = None
     fiber_g: float | None = None
     sugar_g: float | None = None
     sodium_mg: float | None = None
+    cholesterol_mg: float | None = None
     calcium_mg: float | None = None
     iron_mg: float | None = None
 

@@ -5,13 +5,10 @@ Spec for feature **p2-002-cost-nutrition-calculation**
 `<id>`: `p2-002-cost-nutrition-calculation`
 
 ## Input
-- [roadmap.md](../../../docs/sdd/roadmap.md)
+- MUST read: [AGENTS.md](../../../AGENTS.md)
 - [constitution.md](../../../docs/sdd/constitution.md)
-- [AGENTS.md](../../../AGENTS.md)
+- [roadmap.md](../../../docs/sdd/roadmap.md)
 - current codebase: [SystemCode](../../../SystemCode)
-   - Backend:  [api](../../../SystemCode/remy/api)
-   - Domain: [domain](../../../SystemCode/remy/domain)
-   - Workflow (LangGraph,...): [workflows](../../../SystemCode/remy/workflows)
 - on a loop-back: the archived review.rN.md (highest N) with findings routed to `spec`
 
 ## Output

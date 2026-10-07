@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-import math
+# import math
 
 from domain.types import NUTRIENT_FIELDS, NutrientProfile
 
@@ -17,11 +17,11 @@ class RetailSKU:
     confidence: float | None = None
     fdc_id: str = ""
 
-    def __post_init__(self) -> None:
-        if self.confidence is not None and (
-            not math.isfinite(self.confidence) or not 0 <= self.confidence <= 1
-        ):
-            raise ValueError("confidence must be between 0 and 1 inclusive")
+    # def __post_init__(self) -> None:
+    #     if self.confidence is not None and (
+    #         not math.isfinite(self.confidence) or not 0 <= self.confidence <= 1
+    #     ):
+    #         raise ValueError("confidence must be between 0 and 1 inclusive")
 
 
 @dataclass

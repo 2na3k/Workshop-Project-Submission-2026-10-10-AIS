@@ -1,18 +1,19 @@
 # Prompt — Implement
 
-Implement for feature **p2-001-constraint-evidence-filtering**
+Implement for feature **p2-002-cost-nutrition-calculation**
 
-`<id>`: `p2-001-constraint-evidence-filtering`
+`<id>`: `p2-002-cost-nutrition-calculation`
 
 ## Input
-- [AGENTS.md](../../../AGENTS.md)
-- [spec.md](../../../docs/sdd/features/p2-001-constraint-evidence-filtering/spec.md)
-- [plan.md](../../../docs/sdd/features/p2-001-constraint-evidence-filtering/plan.md)
+- MUST read: [AGENTS.md](../../../AGENTS.md)
 - [constitution.md](../../../docs/sdd/constitution.md)
+- [spec.md](../../../docs/sdd/features/p2-002-cost-nutrition-calculation/spec.md)
+- [plan.md](../../../docs/sdd/features/p2-002-cost-nutrition-calculation/plan.md)
 - [neo4j_db_design.md](../../../SystemCode/docs/neo4j_db_design.md)
 - [system_design_v3.md](../../../SystemCode/docs/system_design_v3.md)
 - current codebase: [SystemCode](../../../SystemCode)
     - Backend:  [api](../../../SystemCode/remy/api)
+      - [fastapi_project_structure.md](../../../SystemCode/remy/api/docs/fastapi_project_structure.md)
     - Domain: [domain](../../../SystemCode/remy/domain)
     - Workflow (LangGraph,...): [workflows](../../../SystemCode/remy/workflows)
 - on a loop-back: archived review.rN.md (highest N) with findings routed to `implement`
