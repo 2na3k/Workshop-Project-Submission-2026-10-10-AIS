@@ -2,6 +2,8 @@ import math
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, field_validator
 
+MAX_REQUEST_INGREDIENTS = 100
+
 
 class IngredientRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -29,7 +31,9 @@ class CostNutritionRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     servings: int = Field(ge=1, le=1000)
     budget: float | None = None
-    ingredients: list[IngredientRequest] = Field(min_length=1, max_length=100)
+    ingredients: list[IngredientRequest] = Field(
+        min_length=1, max_length=MAX_REQUEST_INGREDIENTS
+    )
 
 
 class Nutrients(BaseModel):
@@ -46,14 +50,6 @@ class Nutrients(BaseModel):
     iron_mg: float | None = None
 
 
-class MatchedPackage(BaseModel):
-    retailer: str | None = None
-    package_title: str | None = None
-    package_price_sgd: float | None = None
-    package_amount_g: float | None = None
-    package_count: int | None = None
-
-
 class ItemWarning(BaseModel):
     code: str
     message: str
@@ -61,12 +57,12 @@ class ItemWarning(BaseModel):
 
 class ItemizedCalculation(BaseModel):
     ingredient: str
-    canonical_name: str
-    fdc_id: str | None
+    canonical_key: str
+    listing_name: str | None = None
+    retailer: str | None = None
     consumed_amount_g: float | None
     consumed_cost_sgd: float | None
     retail_package_cost_sgd: float | None
-    matched_package: MatchedPackage | None
     nutrients: Nutrients
     warnings: list[ItemWarning] = Field(default_factory=list)
 

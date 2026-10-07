@@ -581,7 +581,7 @@ end-to-end data path is a recorded deferral, not work in this context.
   - Files: `SystemCode/remy/api/src/api/features/calculator/service.py`, `SystemCode/remy/api/src/api/features/calculator/trace.py` (new — `CalculationTrace` and `IngredientTrace`), `SystemCode/remy/api/src/api/features/calculator/router.py`
   - Done when: candidate-list selection; rejection on no accepted; per-nutrient profile via precedence; cost selection via corrected `select_package`; `MISSING_PACKAGE_DATA` and `PARTIAL_NUTRITION_DATA` (naming missing nutrients) emitted; AC-18 payload and parallel trace assembled; `calculate` returns `(CostNutritionResponse, CalculationTrace)`; **the router unpacks the tuple and returns only the response (keeping `response_model=CostNutritionResponse`)**; the trace is not serialized — verified by T-18's serialization test
 
-- [ ] **T-21** Update schemas: field set, `MAX_REQUEST_INGREDIENTS`
+- [x] **T-21** Update schemas: field set, `MAX_REQUEST_INGREDIENTS`
   - Type: impl
   - Covers: AC-18, AC-19; interface service→router
   - Files: `SystemCode/remy/api/src/api/features/calculator/schemas.py`
