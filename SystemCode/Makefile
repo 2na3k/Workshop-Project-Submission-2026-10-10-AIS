@@ -1,7 +1,7 @@
 SHELL := /bin/sh
 
 UV ?= uv
-COMPOSE ?= docker compose --env-file .env.nonprod
+COMPOSE ?= REMY_API_ENV_FILE=.env.nonprod docker compose --env-file .env.nonprod
 API_PACKAGE := remy-api
 CRAWLER_PACKAGE := remy-data-crawler
 DBT_PACKAGE := remy-data-preparation
@@ -26,7 +26,7 @@ help:
 		'make serve-neo4j      Load built marts into Neo4j' \
 		'make serve-neo4j-replace  Replace the existing Neo4j recipe graph' \
 		'make build            Build the API image' \
-		'make build-all        Build API, jobs, and optional frontend images' \
+		'make build-all        Build every image, including the jobs' \
 		'make up               Start API and Neo4j' \
 		'make up-all           Start all Compose profiles' \
 		'make down             Stop Compose services' \
@@ -69,13 +69,13 @@ build:
 	$(COMPOSE) build api
 
 build-all:
-	$(COMPOSE) --profile frontend --profile jobs build
+	$(COMPOSE) --profile neo4j --profile jobs build
 
 up:
 	$(COMPOSE) up --build api neo4j
 
 up-all:
-	$(COMPOSE) --profile frontend --profile jobs up --build
+	$(COMPOSE) --profile neo4j --profile jobs up --build
 
 down:
 	$(COMPOSE) down

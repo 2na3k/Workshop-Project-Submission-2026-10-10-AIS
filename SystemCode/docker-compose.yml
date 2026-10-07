@@ -1,17 +1,42 @@
 services:
-  api:
+  postgres:
+    image: postgres:17-alpine
+    # POSTGRES_PASSWORD comes from remy/backend/.env, shared with the backend.
+    env_file:
+      - path: remy/backend/.env
+        required: false
+    environment:
+      POSTGRES_USER: remy
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      # Also require it inside the container, which the image trusts by default.
+      POSTGRES_INITDB_ARGS: --auth-local=scram-sha-256 --auth-host=scram-sha-256
+    volumes:
+      - remy_postgres_data:/var/lib/postgresql/data
+      - ./remy/backend/db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    healthcheck:
+      # -h forces TCP, which only opens after the init script has finished.
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "remy", "-d", "remy_main"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
     build:
       context: .
-      dockerfile: remy/api/Dockerfile
+      dockerfile: remy/backend/Dockerfile
     env_file:
-      - .env.nonprod
+      - path: remy/backend/.env
+        required: false
     environment:
       PYTHONUNBUFFERED: "1"
+      # The password comes from POSTGRES_PASSWORD in remy/backend/.env.
+      REMY_DATABASE_URL: postgresql://remy@postgres:5432/remy_main
+      REMY_CORS_ORIGINS: http://localhost:${FRONTEND_PORT:-3000},http://127.0.0.1:${FRONTEND_PORT:-3000}
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8010}:8000"
     depends_on:
-      neo4j:
-        condition: service_started
+      postgres:
+        condition: service_healthy
     healthcheck:
       test:
         - CMD
@@ -24,50 +49,63 @@ services:
       timeout: 5s
       retries: 5
 
-  app:
-    profiles: [frontend]
+  api:
     build:
       context: .
-      dockerfile: remy/app/Dockerfile
+      dockerfile: remy/api/Dockerfile
+    env_file:
+      - path: ${REMY_API_ENV_FILE:-remy/api/.env}
+        required: false
     environment:
-      VITE_API_URL: http://localhost:8000
+      PYTHONUNBUFFERED: "1"
     ports:
-      - "5173:5173"
+      - "${API_PORT:-8081}:8000"
     depends_on:
+      neo4j:
+        condition: service_started
+        required: false
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://localhost:8000/health')
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: remy/frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:${BACKEND_PORT:-8010}
+        REMY_API_URL: http://api:8000
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
       api:
         condition: service_healthy
-
-  data-crawler:
-    profiles: [jobs]
-    build:
-      context: .
-      dockerfile: remy/data-crawler/Dockerfile
-    env_file:
-      - .env.nonprod
-    environment:
-      PYTHONUNBUFFERED: "1"
-    restart: "no"
-
-  data-preparation:
-    profiles: [jobs]
-    build:
-      context: .
-      dockerfile: remy/data-preparation/Dockerfile
-    env_file:
-      - .env.nonprod
-    environment:
-      PYTHONUNBUFFERED: "1"
-    restart: "no"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/signin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   neo4j:
+    profiles: [neo4j]
     image: neo4j:5-community
     container_name: remy-neo4j
     restart: unless-stopped
     ports:
+      # if run neo4j local
       - "7474:7474"
       - "7687:7687"
     environment:
-      NEO4J_AUTH: ${NEO4J_USERNAME:-neo4j}/${NEO4J_PASSWORD:?NEO4J_PASSWORD must be set}
+      NEO4J_AUTH: ${NEO4J_USERNAME:-neo4j}/${NEO4J_PASSWORD:-}
       NEO4J_server_memory_heap_initial__size: 1g
       NEO4J_server_memory_heap_max__size: 5g
       NEO4J_server_memory_pagecache_size: 1g
@@ -77,5 +115,6 @@ services:
       - remy_neo4j_logs:/logs
 
 volumes:
+  remy_postgres_data:
   remy_neo4j_data:
   remy_neo4j_logs:

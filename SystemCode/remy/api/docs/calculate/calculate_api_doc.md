@@ -80,6 +80,9 @@ Calculates total + per-serving nutrition, consumed cost vs. retail package cost 
 | `ingredients[].quantity` | `number`        | ✅ Required | must be `> 0`                               | Numeric quantity                           |
 | `ingredients[].unit`     | `string`        | ✅ Required | enum: `g` \| `kg` \| `ml` \| `tbsp` \| `pc` | Unit of measure                            |
 
+> `name` can be singular or plural, in any case: `"Tomatoes"`, `"tomato"` and `"TOMATO"` all match the
+> same food. The API singularizes the name itself, so the client does not need to.
+
 ### Request Example
 
 ```json
@@ -133,8 +136,6 @@ Calculates total + per-serving nutrition, consumed cost vs. retail package cost 
 | `fiber_g`       | `number` | ✅ Yes   | grams      |
 | `sugar_g`       | `number` | ✅ Yes   | grams      |
 | `sodium_mg`     | `number` | ✅ Yes   | milligrams |
-| `calcium_mg`    | `number` | ✅ Yes   | milligrams |
-| `iron_mg`       | `number` | ✅ Yes   | milligrams |
 
 > ⚠️ **Note:** Individual nutrient values can be `null` when data is unavailable. Always null-check
 > before arithmetic.
@@ -190,9 +191,7 @@ Calculates total + per-serving nutrition, consumed cost vs. retail package cost 
       "fat_g": 27.67,
       "fiber_g": 10.0,
       "sugar_g": 0.0,
-      "sodium_mg": 429.0,
-      "calcium_mg": null,
-      "iron_mg": null
+      "sodium_mg": 429.0
     },
     "nutrients_per_serving": {
       "calories_kcal": 389.5,
@@ -201,9 +200,7 @@ Calculates total + per-serving nutrition, consumed cost vs. retail package cost 
       "fat_g": 13.84,
       "fiber_g": 5.0,
       "sugar_g": 0.0,
-      "sodium_mg": 215.0,
-      "calcium_mg": null,
-      "iron_mg": null
+      "sodium_mg": 215.0
     }
   },
   "itemized": [
@@ -228,9 +225,7 @@ Calculates total + per-serving nutrition, consumed cost vs. retail package cost 
         "fat_g": 21.42,
         "fiber_g": 0.0,
         "sugar_g": 0.0,
-        "sodium_mg": 429.0,
-        "calcium_mg": null,
-        "iron_mg": null
+        "sodium_mg": 429.0
       },
       "warnings": [
         {
@@ -254,9 +249,7 @@ Calculates total + per-serving nutrition, consumed cost vs. retail package cost 
         "fat_g": 6.25,
         "fiber_g": 10.0,
         "sugar_g": 0.0,
-        "sodium_mg": 0.0,
-        "calcium_mg": null,
-        "iron_mg": null
+        "sodium_mg": 0.0
       },
       "warnings": [
         {

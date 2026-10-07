@@ -22,7 +22,88 @@ TBU
 ---
 
 ## USER GUIDE
-TBU
+
+### Run Remy on your computer
+
+One command starts the whole app in Docker: the database, the sign-in service,
+the Remy API and the web app.
+
+**You need**
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/), open and running.
+  On Windows, run the commands below in WSL.
+- Git.
+- The connection details for the Neo4j recipe database (ask the team).
+
+**1. Get the code**
+
+```bash
+git clone https://github.com/2na3k/Workshop-Project-Submission-2026-10-10-AIS.git
+cd Workshop-Project-Submission-2026-10-10-AIS/SystemCode
+```
+
+**2. Create the settings files**
+
+```bash
+cp remy/api/.env.example remy/api/.env
+cp remy/backend/.env.example remy/backend/.env
+```
+
+Then fill them in:
+
+- `remy/api/.env`: `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD` and `NEO4J_DATABASE`.
+- `remy/backend/.env`: set `REMY_JWT_SECRET` to the output of `openssl rand -base64 48`,
+  and `POSTGRES_PASSWORD` (the database password) to the output of `openssl rand -hex 24`.
+
+Git ignores both files, so the passwords stay on your machine.
+
+**3. Build and start with Docker Compose**
+
+Run these from `SystemCode/`:
+
+```bash
+docker compose build        # build the images (a few minutes the first time)
+docker compose up -d --wait # start everything and wait until it is ready
+```
+
+`docker compose up` starts four containers: PostgreSQL, the sign-in service, the
+Remy API and the web app. With `--wait` it returns once all of them pass their
+health checks. Check them any time with `docker compose ps`; each should show
+`(healthy)`.
+
+Then open the web app:
+
+| What                 | Address                    |
+|:---------------------|:---------------------------|
+| Web app              | http://localhost:3000      |
+| Remy API docs        | http://localhost:8081/docs |
+| Sign-in service docs | http://localhost:8010/docs |
+
+```bash
+docker compose logs -f      # follow the logs of all services
+docker compose down         # stop Remy; accounts are kept for the next start
+```
+
+Shortcut: `./remy/start-all.sh` does the build and start, opens the browser when
+everything is ready, and shows the logs. Press Ctrl+C to stop it.
+
+**4. Use it**
+
+Create an account, set your diet and goals under **Your preferences**, then build a
+weekly plan on the **Meal plan** page. The **Discover** page suggests meals from a
+short request such as "something filling, no dairy" and calculates the cost and
+nutrition of an ingredient.
+
+**If something goes wrong**
+
+- *A port is already in use*: close whatever uses it, or pick other ports, for example
+  `FRONTEND_PORT=3001 docker compose up -d --wait`.
+- *Plans or the calculator show an error*: check the Neo4j details in `remy/api/.env`,
+  then read `docker compose logs api`.
+- *Docker is not running*: open Docker Desktop and run the command again.
+
+More detail, including everyday commands, settings and troubleshooting:
+[SystemCode/docs/docker_compose.md](SystemCode/docs/docker_compose.md).
 
 ---
 ## PROJECT REPORT / PAPER

@@ -5,7 +5,7 @@ from domain.types import NutrientProfile
 from domain.units import to_grams
 from .domain.cost import consumed_cost, round_money, round_nutrient, select_package
 from .exceptions import UnresolvableIngredient
-from .resolver import normalize_name, resolve
+from .resolver import resolve, search_terms
 from .schemas import (CalculationSummary, CostNutritionRequest, CostNutritionResponse,
                       ItemWarning, ItemizedCalculation, MatchedPackage, Nutrients)
 
@@ -20,11 +20,12 @@ class CostNutritionService:
 
     def calculate(self, request: CostNutritionRequest) -> CostNutritionResponse:
         names = [item.name for item in request.ingredients]
-        candidates = self.repository.resolve_candidates(names)
+        terms = {name: search_terms(name) for name in names}
+        candidates = self.repository.resolve_candidates(list(dict.fromkeys(t for ts in terms.values() for t in ts)))
         canonical_keys: list[str] = []
         resolved: list[str] = []
         for name in names:
-            key_candidates = candidates.get(normalize_name(name), [])
+            key_candidates = list(dict.fromkeys(key for term in terms[name] for key in candidates.get(term, [])))
             if not key_candidates:
                 raise UnresolvableIngredient(f"Ingredient '{name}' could not be resolved")
             key, _, _ = resolve(name, key_candidates, key_candidates)
@@ -55,7 +56,7 @@ class CostNutritionService:
                     package_amount_g=selected[0].package_mass_g, package_count=selected[1])
             else:
                 warnings.append(ItemWarning(code="MISSING_PACKAGE_DATA", message="No usable SGD package was found"))
-            if any(getattr(food.nutrients, field) is None for field in food.nutrients.__dict__):
+            if any(getattr(food.nutrients, field) is None for field in Nutrients.model_fields):
                 warnings.append(ItemWarning(code="PARTIAL_NUTRITION_DATA", message="Some nutrient facts are missing"))
             consumed_values.append(item_consumed)
             retail_values.append(item_retail)

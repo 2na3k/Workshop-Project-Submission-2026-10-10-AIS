@@ -1,7 +1,6 @@
 from collections import defaultdict
 from typing import Any
 from .models import FoodFacts, NutrientProfile, RetailSKU
-from .resolver import normalize_name
 
 QUERY_A = """
 UNWIND $normalized_names AS normalized_name
@@ -34,8 +33,8 @@ CALL {
 RETURN canonical_key, toString(f.fdc_id) AS fdc_id, f.food_key AS food_key,
        f.description AS description, f.energy_kcal AS energy_kcal, f.protein_g AS protein_g,
        f.carbohydrate_g AS carbohydrate_g, f.fat_g AS fat_g, f.fiber_g AS fiber_g,
-       f.sugars_g AS sugars_g, f.sodium_mg AS sodium_mg, f.calcium_mg AS calcium_mg,
-       f.iron_mg AS iron_mg, ful.candidate_key AS candidate_key, ful.confidence AS confidence,
+       f.sugars_g AS sugars_g, f.sodium_mg AS sodium_mg,
+       ful.candidate_key AS candidate_key, ful.confidence AS confidence,
        ful.price_basis AS price_basis, ful.cost_basis_compatible AS cost_basis_compatible,
        ful.reference_price_minor AS reference_price_minor, ful.currency AS currency,
        ful.package_mass_g AS package_mass_g, ful.package_count AS package_count,
@@ -47,8 +46,8 @@ class CostNutritionRepository:
     def __init__(self, driver):
         self.driver = driver
 
-    def resolve_candidates(self, names: list[str]) -> dict[str, list[str]]:
-        normalized = [normalize_name(name) for name in names]
+    def resolve_candidates(self, normalized: list[str]) -> dict[str, list[str]]:
+        """Find FoodConcept keys for each already-normalized search term."""
         with self.driver.session() as session:
             rows = session.run(QUERY_A, normalized_names=normalized)
             result = defaultdict(list)
@@ -75,8 +74,7 @@ class CostNutritionRepository:
                         calories_kcal=data.get("energy_kcal"), protein_g=data.get("protein_g"),
                         carbs_g=data.get("carbohydrate_g"), fat_g=data.get("fat_g"),
                         fiber_g=data.get("fiber_g"), sugar_g=data.get("sugars_g"),
-                        sodium_mg=data.get("sodium_mg"), calcium_mg=data.get("calcium_mg"),
-                        iron_mg=data.get("iron_mg")),
+                        sodium_mg=data.get("sodium_mg")),
                 ))
                 conversions = data.get("conversions") or []
                 for conversion in conversions:

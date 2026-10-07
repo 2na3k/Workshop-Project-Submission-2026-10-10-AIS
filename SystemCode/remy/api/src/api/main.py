@@ -15,7 +15,25 @@ from .core.exceptions import AppError
 from .features.calculator.router import router as calculator_router
 from .features.plan.router import router as plan_router
 
-app = FastAPI(title="Remy API", lifespan=lifespan)
+app = FastAPI(
+    title="Remy API",
+    version="0.1.0",
+    description=(
+        "Calculate nutrition profiles and ingredient costs in Singapore dollars. "
+        "API base path: `/api/v1`. Requests and responses use `application/json`. "
+        "Calculator errors use the shared `error` envelope with a code, message, "
+        "field-level details, and an ISO 8601 timestamp."
+    ),
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    openapi_tags=[{
+        "name": "calculator",
+        "description": "Nutrition totals, per-serving nutrition, and consumed versus retail package costs.",
+    }],
+    swagger_ui_parameters={"displayRequestDuration": True},
+    lifespan=lifespan,
+)
 app.include_router(calculator_router, prefix="/api/v1/calculate", tags=["calculator"])
 app.include_router(plan_router, prefix="/api/v1/plan", tags=["plan"])
 
@@ -53,3 +71,9 @@ async def unexpected_error_handler(_: Request, exc: Exception):
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("api.main:app", host="127.0.0.1", port=8081)

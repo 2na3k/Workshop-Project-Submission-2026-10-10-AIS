@@ -179,6 +179,16 @@ Environment files are local and not committed:
 
 Neo4j requires `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, and `NEO4J_DATABASE`.
 
+## Run the app with Docker
+
+```bash
+./remy/start-all.sh
+```
+
+Starts PostgreSQL, the auth backend, the Remy API and the frontend with Docker
+Compose. See [docs/docker_compose.md](docs/docker_compose.md) for setup,
+checks and troubleshooting.
+
 ## Common commands
 
 ```bash
