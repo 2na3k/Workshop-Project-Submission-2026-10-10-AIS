@@ -449,7 +449,7 @@ end-to-end data path is a recorded deferral, not work in this context.
 
 ### Group 1 — stale test repairs
 
-- [ ] **T-3** Repair stale `ml` warning-code test
+- [x] **T-3** Repair stale `ml` warning-code test
   - Type: test
   - Covers: AC-14
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_conversion.py` (`test_fixed_units_and_ml_warning`)
