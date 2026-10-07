@@ -167,8 +167,14 @@ class CostNutritionService:
             ))
 
         total_nutrients = sum_nutrients(nutrient_values)
-        total_consumed = sum(consumed_values) if all(value is not None for value in consumed_values) else None
-        total_retail = sum(retail_values) if all(value is not None for value in retail_values) else None
+        total_consumed = (
+            sum(value for value in consumed_values if value is not None)
+            if all(value is not None for value in consumed_values) else None
+        )
+        total_retail = (
+            sum(value for value in retail_values if value is not None)
+            if all(value is not None for value in retail_values) else None
+        )
         response = CostNutritionResponse(
             servings=request.servings,
             summary=CalculationSummary(

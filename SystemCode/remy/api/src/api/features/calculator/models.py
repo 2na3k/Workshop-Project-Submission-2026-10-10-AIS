@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 # import math
 
-from domain.types import NUTRIENT_FIELDS, NutrientProfile
+from domain.types import NutrientProfile
 
 
 @dataclass(frozen=True)

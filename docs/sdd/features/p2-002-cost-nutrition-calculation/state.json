@@ -1,5 +1,5 @@
 {
-  "stage": "implemented",
+  "stage": "ci-passed",
   "plan_review_verdict": "APPROVE",
   "spec_hash": "sha256:ee4374f2bb31213f",
   "plan_hash": "sha256:6ce28cd2401b9fcd",
@@ -21,8 +21,20 @@
     {
       "at": "2026-10-07T20:42:16+08:00",
       "event": "ci-passed -> implemented"
+    },
+    {
+      "at": "2026-10-07T21:07:42+08:00",
+      "event": "ci FAIL"
+    },
+    {
+      "at": "2026-10-07T21:10:26+08:00",
+      "event": "ci FAIL"
+    },
+    {
+      "at": "2026-10-07T21:16:29+08:00",
+      "event": "ci PASS"
     }
   ],
-  "updated_at": "2026-10-07T20:42:16+08:00",
+  "updated_at": "2026-10-07T21:16:29+08:00",
   "ci_overall": "PASS"
 }

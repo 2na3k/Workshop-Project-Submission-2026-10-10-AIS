@@ -1,5 +1,4 @@
 from collections import defaultdict
-from typing import Any
 from .models import FoodFacts, NutrientProfile, RetailSKU
 from .resolver import normalize_name
 

@@ -1,6 +1,6 @@
 """Calculator nutrient operations over the canonical nine nutrient fields."""
 
-from domain.nutrients import per_serving, scale_nutrients
+from domain.nutrients import per_serving as per_serving, scale_nutrients as scale_nutrients
 from domain.types import NUTRIENT_FIELDS, NutrientProfile
 
 
