@@ -1,6 +1,6 @@
 # Project Constitution
 
-Version: 1.0
+Version: 1.4
 Status: approved
 
 Long-lived, project-level. Changes only via `amendments/`. This file has no
@@ -50,13 +50,19 @@ layers must comply or the constitution must be amended.
 
 ### R-4 Graph provenance preserved on every linking record
 - Rule: Every linking record must preserve provenance — source, source ID /
-  snapshot, mapping confidence, mapping/normalization version, and freshness
-  timestamp — on the `REQUIRES` and `FULFILLS` edges that connect recipes, food
-  concepts, nutrition profiles, and offers.
-- Why: Proposal G-4, G-7; Neo4j design doc.
+  snapshot, mapping confidence, mapping/normalization version, and the
+  freshness signal declared by the deployed schema — on the `REQUIRES` and
+  `FULFILLS` edges that connect recipes, food concepts, nutrition profiles,
+  and offers. The freshness signal is `freshness_status` on the `FULFILLS`
+  edge, with the value set declared by the deployed graph design. A future
+  timestamp-based signal requires a further amendment and a producer that
+  writes it.
+- Why: Proposal G-4, G-7; Neo4j design doc; deployed `FULFILLS` schema.
 - Check: Named test fixture — `tests/graph/test_edge_provenance.py` writes a
-  populated `REQUIRES` and `FULFILLS` edge through the code path that creates them
-  and asserts every provenance property is non-null on read.
+  populated `REQUIRES` and `FULFILLS` edge through the code path that creates
+  them and asserts every declared provenance property is non-null on read,
+  including `freshness_status` on `FULFILLS`. A separate assertion confirms
+  the value of `freshness_status` is drawn from the declared value set.
 
 ## Reasoning safety
 
@@ -91,38 +97,88 @@ layers must comply or the constitution must be amended.
   asserts `unknown` status produces a drop and that only an explicit compliant
   value retains.
 
-### R-8 Stale price offers are unavailable
-- Rule: A retail price offer past its freshness threshold must be treated as
-  unavailable and must never be used, with or without a flag. If no fresh offer
-  exists for a requirement, the recipe must be dropped as evidence-absent. The
-  threshold value is set in the spec, not here.
-- Why: Q3; Behavioral Rule Price Snapshot Staleness; known temporal degradation of
-  retail data.
-- Check: Named test fixture — `tests/features/calculator/test_domain_cost.py`
-  parameterized over the spec threshold asserts an offer past the threshold is
-  excluded and that no fresh offer drops the recipe with an evidence-absent cause.
+### R-8 Non-fresh price offers are unavailable
+- Rule: A retail price offer whose freshness signal is not positive must be
+  treated as unavailable and must never be used, with or without a flag. The
+  freshness signal is `freshness_status` on the `FULFILLS` edge; the positive
+  value is `fresh`. Any other value (including `unknown`) is treated as
+  unavailable. The freshness filter is applied at every layer that consumes
+  the offer: the constraint-evidence-filtering layer (p2-001) filters the
+  candidate pool it sees, and the cost calculation layer filters the packages
+  it selects from, so that a non-fresh offer cannot reach cost output by any
+  path. If no fresh offer exists for a requirement, the requirement's cost
+  cannot be computed and the recipe must be dropped as evidence-absent. The
+  check is a status comparison, not a timestamp comparison; a future
+  timestamp-based freshness signal requires a further amendment and a
+  producer that writes it.
+- Why: Q3; Behavioral Rule Price Snapshot Staleness; known temporal
+  degradation of retail data; deployed `FULFILLS` schema carries a status, not
+  a timestamp; the calculation API resolves ingredient names directly and
+  therefore cannot rely on an upstream filter.
+- Check: Named test fixtures, at both layers. The filtering layer's fixture
+  asserts an offer whose `freshness_status` is not `fresh` is excluded from
+  the filtered pool. The calculator layer's fixture
+  (`tests/features/calculator/test_domain_cost.py`) asserts a package whose
+  `freshness_status` is not `fresh` is not selected, and that a requirement
+  left with no fresh package carries the calculator's evidence-absent signal
+  (`MISSING_PACKAGE_DATA`) with absent cost fields. The two layers are checked
+  separately because they enforce the same rule at different boundaries.
 
 ### R-9 Nutrient constraints require a profile
-- Rule: A candidate with no nutrition profile must not satisfy any nutrient
-  constraint it would serve and must not be treated as zero. If no candidate for a
-  requirement has a profile, the nutrient constraint cannot be evaluated and the
-  recipe must be dropped as evidence-absent.
-- Why: Behavioral Rule Missing Nutrition Profile.
-- Check: Named test fixture —
+- Rule: A nutrient constraint is evaluable only when every contributing
+  ingredient carries a non-null value for that nutrient. A candidate with no
+  nutrition profile must not satisfy any nutrient constraint it would serve
+  and must not be treated as zero. At the calculator layer, an ingredient
+  whose resolved candidates carry no usable nutrient value remains in the
+  itemized result with null nutrient fields (never zero) and carries a
+  `PARTIAL_NUTRITION_DATA` warning. The recipe-level drop is **p2-003's**
+  responsibility: for each nutrient independently, if any contributing
+  ingredient lacks a value, the recipe is dropped from the eligible pool for
+  that nutrient's constraint with an evidence-absent cause, reading the
+  calculator's `PARTIAL_NUTRITION_DATA` signal as that evidence. A recipe may
+  be evaluable for one nutrient and not another; the drop applies to the
+  affected constraint, not the whole recipe.
+- Why: Behavioral Rule Missing Nutrition Profile; an upper-bound constraint
+  evaluated against an undercounted total would pass on incomplete data,
+  which is the failure R-5 forbids.
+- Check: Named test fixtures, at both layers.
   `tests/features/calculator/test_domain_nutrition.py` asserts a profile-less
-  candidate contributes no value (not zero) and that a requirement with no
-  profiled candidate drops with an evidence-absent cause.
+  candidate contributes no value (not zero) and that the item carries
+  `PARTIAL_NUTRITION_DATA`. p2-003's fixture asserts that for a nutrient whose
+  contributing set is incomplete, the nutrient constraint is treated as
+  evidence-absent and the recipe is dropped for that constraint only, while a
+  nutrient whose contributing set is complete remains evaluable.
 
-### R-10 Compatible unit basis required for cost
-- Rule: Consumed-ingredient cost must be computed only when package size and
-  recipe quantity share a compatible unit basis. A product with an incompatible
-  basis must not be used for cost; if no compatible product remains for a
-  requirement, the recipe must be dropped as evidence-absent.
-- Why: Q2; Behavioral Rule Compatible Unit Basis Required.
-- Check: Named test fixture —
-  `tests/features/calculator/test_domain_conversion.py` asserts incompatible-basis
-  products are excluded from cost and that a requirement left with no compatible
-  product drops with an evidence-absent cause.
+### R-10 Cost eligibility requires a convertible price basis
+- Rule: Consumed-ingredient cost must be computed only from a package whose
+  `FULFILLS` edge declares all of:
+  `price_status == "estimated"`, `price_match_status == "accepted"`, and a
+  `price_basis` in the cost-convertible set (`package_mass` or
+  `package_volume`). A `package_volume` price is converted to grams using the
+  domain units converter. A `price_basis` of `package_unresolved`,
+  `span_reference`, `nutrition_only`, or any other value is ineligible.
+  `cost_basis_compatible` is **not** part of the eligibility rule; the flag is
+  informational and may be false on eligible packages.
+  At the calculator layer, an ingredient whose resolved key has no eligible
+  package remains in the itemized result with null cost fields and carries a
+  `MISSING_PACKAGE_DATA` warning. The recipe-level drop is **p2-003's**
+  responsibility: when p2-003 determines that a requirement has no eligible
+  package, the recipe is dropped from the eligible pool with an evidence-absent
+  cause, reading the calculator's `MISSING_PACKAGE_DATA` signal as that
+  evidence.
+- Why: Q2; Behavioral Rule Compatible Unit Basis Required; deployed `FULFILLS`
+  schema declares eligibility via `price_status`, `price_match_status`, and
+  `price_basis`, not via `cost_basis_compatible`.
+- Check: Named test fixtures, at both layers.
+  `tests/features/calculator/test_domain_cost.py` asserts a package whose
+  `price_status` is not `estimated`, whose `price_match_status` is not
+  `accepted`, or whose `price_basis` is not in the cost-convertible set, is
+  excluded from cost; that a `package_volume` package is eligible and
+  converted; and that a package with `cost_basis_compatible = FALSE` and an
+  otherwise-convertible basis is eligible.
+  p2-003's fixture asserts that a requirement left with no eligible package
+  drops with an evidence-absent cause, consuming the calculator's
+  `MISSING_PACKAGE_DATA` signal.
 
 ## Cost & nutrition correctness
 
