@@ -597,7 +597,7 @@ end-to-end data path is a recorded deferral, not work in this context.
 
 ### Group 8 — integration test (one, end-to-end)
 
-- [ ] **T-23** Service → router end-to-end integration test (single, absorbs repo→service and trace-discard assertions)
+- [x] **T-23** Service → router end-to-end integration test (single, absorbs repo→service and trace-discard assertions)
   - Type: integration
   - Covers: interface repo→service, service→router, service→trace; AC-5, AC-6, AC-7, AC-9, AC-10, AC-11, AC-13, AC-16, AC-18, AC-19, AC-20
   - Files: `SystemCode/remy/api/tests/features/calculator/test_calculator_integration.py` (`test_end_to_end_repo_to_serialized_payload`)
