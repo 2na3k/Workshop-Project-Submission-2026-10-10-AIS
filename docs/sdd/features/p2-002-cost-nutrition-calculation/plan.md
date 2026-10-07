@@ -435,7 +435,7 @@ end-to-end data path is a recorded deferral, not work in this context.
 
 ### Group 0 — pre-task admin
 
-- [ ] **T-1** Verify rule IDs and AC numbers against the approved artifacts before writing code
+- [x] **T-1** Verify rule IDs and AC numbers against the approved artifacts before writing code
   - Type: admin
   - Covers: F-1
   - Files: `docs/sdd/features/p2-002-cost-nutrition-calculation/plan.md` (Design §0, Constitution alignment) — edit only if a citation is wrong
