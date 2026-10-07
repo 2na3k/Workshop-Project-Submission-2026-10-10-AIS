@@ -469,7 +469,7 @@ end-to-end data path is a recorded deferral, not work in this context.
 
 ### Group 2 — repository canonicalisation (R-1) and evidence contract
 
-- [ ] **T-6** Write failing test: `QUERY_B` reads deployed property names and full evidence contract
+- [x] **T-6** Write failing test: `QUERY_B` reads deployed property names and full evidence contract
   - Type: test
   - Covers: AC-5, AC-6, AC-7, AC-9, AC-13, AC-16, AC-20 (R-1); interface repo→service
   - Files: `SystemCode/remy/api/tests/features/calculator/test_repository_integration.py` (`test_query_b_reads_deployed_names_and_full_contract`)
