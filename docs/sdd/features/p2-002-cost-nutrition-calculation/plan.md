@@ -489,7 +489,7 @@ end-to-end data path is a recorded deferral, not work in this context.
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_cost.py` (`test_ineligible_excluded_missing_package_warning`, `test_each_eligibility_condition_excludes`)
   - Done when: ineligible edge (any of `price_status`/`price_match_status`/`freshness_status`/`price_basis`/`currency`/amount) is excluded; no eligible package → `MISSING_PACKAGE_DATA` with null cost fields and absent summary totals; each condition excludes independently; fails on the current `select_package`
 
-- [ ] **T-9** Write failing test: `package_volume` eligibility, silent conversion, and no user-visible warning
+- [x] **T-9** Write failing test: `package_volume` eligibility, silent conversion, and no user-visible warning
   - Type: test
   - Covers: AC-13, AC-11 (volume unit-price clause), AC-14 (cost-path non-applicability)
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_cost.py` (`test_package_volume_eligible_and_converted_silently`)

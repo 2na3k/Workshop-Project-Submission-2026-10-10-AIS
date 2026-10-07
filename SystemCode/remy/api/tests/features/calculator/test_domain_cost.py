@@ -68,3 +68,17 @@ def test_ineligible_excluded_missing_package_warning():
 ])
 def test_each_eligibility_condition_excludes(changes):
     assert select_package([_package(**changes)], 50) is None
+
+
+def test_package_volume_eligible_and_converted_silently():
+    volume = _package(
+        retailer="volume", price_basis="package_volume", package_mass_g=None,
+        package_volume_ml=100,
+    )
+    mass = _package(
+        retailer="mass", reference_price_minor=200, package_mass_g=150,
+    )
+    chosen = select_package([mass, volume], 50)
+    assert chosen is not None
+    assert chosen[0] is volume
+    assert round_money(consumed_cost(chosen[0], 50)) == 0.5
