@@ -82,3 +82,22 @@ def test_package_volume_eligible_and_converted_silently():
     assert chosen is not None
     assert chosen[0] is volume
     assert round_money(consumed_cost(chosen[0], 50)) == 0.5
+
+
+def test_consumed_vs_retail_distinct_sub_package():
+    package = _package()
+    selected = select_package([package], 20)
+    assert selected is not None
+    consumed = consumed_cost(selected[0], 20)
+    retail = selected[1] * selected[2]
+    assert round_money(consumed) == 0.2
+    assert round_money(retail) == 1.0
+    assert consumed != retail
+
+
+def test_multi_package_ceil():
+    package = _package()
+    selected = select_package([package], 300.00000001)
+    assert selected is not None
+    assert selected[1] == 3
+    assert round_money(selected[1] * selected[2]) == 3.0

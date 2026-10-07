@@ -495,7 +495,7 @@ end-to-end data path is a recorded deferral, not work in this context.
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_cost.py` (`test_package_volume_eligible_and_converted_silently`)
   - Done when: volume basis is eligible; grams come from `to_grams(amount, "ml")`; no user-visible warning is emitted (the `UNIT_ASSUMED_GRAMS` warning is not present on the cost path); unit price compares like-with-like against mass packages; fails on the current `select_package`
 
-- [ ] **T-10** Write failing tests: consumed vs retail and multi-package ceil
+- [x] **T-10** Write failing tests: consumed vs retail and multi-package ceil
   - Type: test
   - Covers: AC-3, AC-4
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_cost.py` (`test_consumed_vs_retail_distinct_sub_package`, `test_multi_package_ceil`)
