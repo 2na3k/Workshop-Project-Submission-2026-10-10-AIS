@@ -5,14 +5,15 @@
 From `SystemCode/`, with production Neo4j credentials already in `.env.prod`:
 
 ```sh
-make up-prod API_PORT=8003
+make up-prod API_PORT=8003 FRONTEND_PORT=3100 BACKEND_PORT=8010
 ```
 
 This generates private backend credentials once, starts **Langfuse web + worker,
 passwordless gateway, PostgreSQL, ClickHouse, Redis, and MinIO**, waits for dashboard health, then builds
-and starts the API against production Neo4j. It does not start a local Neo4j or
+and starts the real frontend, auth/preferences backend, and API against production Neo4j. It does not start a local Neo4j or
 change your production credentials. Subsequent runs reuse the credentials and data.
 
+- **Application: `http://localhost:3100`** (the merged Next.js frontend, not a placeholder)
 - API: `http://localhost:8003/docs`
 - Dashboard: `http://localhost:<LANGFUSE_PORT>` from `.env.langfuse`
 - **No login/password prompt**: the localhost gateway establishes the operator session internally.
@@ -54,7 +55,7 @@ uv run --frozen --package remy-api python scripts/init_langfuse.py
 DBT_TARGET=prod API_PORT=8003 docker compose \
   --env-file .env.prod --env-file .env.langfuse up -d --build --wait langfuse-gateway langfuse-worker
 DBT_TARGET=prod API_PORT=8003 docker compose \
-  --env-file .env.prod --env-file .env.langfuse up -d --build --no-deps api
+  --env-file .env.prod --env-file .env.langfuse up -d --build --wait frontend
 ```
 
 Named volumes retain Langfuse databases/event storage and local evaluation snapshots.
@@ -158,9 +159,12 @@ local Langfuse, and the protected blind-grading endpoint working. Its actual hum
 grades remain pending. Passwordless dashboard access was verified from a fresh HTTP
 client without supplying credentials or cookies; foreign Host/Origin requests are blocked.
 
-All **8 monitoring checks plus initialization and gateway checks pass**. The broader
-existing API/domain suite has **5 pre-existing failures** (unit conversions and oatmeal
-alias), reproduced against unmodified `HEAD`. Architecture lint is blocked by the
+The merged frontend's real Chromium E2E passes: signup, saved preferences, logout/login,
+streamed planning through the frontend proxy, all six Langfuse spans, and protected
+candidate review. Evidence: `SystemCode/target/e2e/meal-plan.png` and `result.json`.
+Frontend unit tests: **22 passed**; lint clean; production npm audit clean after the
+Next.js 16.4.0 security patch. API/domain suite: **34 passed, 4 pre-existing conversion
+failures**. The PR fixed the former oatmeal-alias failure. Architecture lint is blocked by the
 existing `.importlinter` file's invalid `[[contracts]]` syntax. Those are unchanged.
 
 ## Privacy and limitations
@@ -173,8 +177,9 @@ volume/backups and grading files, and apply retention. SQLite is intentionally
 single-deployment; use shared PostgreSQL before scaling API replicas.
 
 Ranking evaluation does not establish dietary safety. Existing allergen/dietary
-checks are commented out in `filtering.py`; this change preserves planner behavior
-and does not resolve that safety gap. No LLM/LangGraph rebuild, token-cost tracking,
+checks are commented out in `filtering.py`; restricted requests now fail closed with
+`503 DIETARY_SCREENING_UNAVAILABLE` until screening is restored. Unrestricted plans
+remain available. No LLM/LangGraph rebuild, token-cost tracking,
 automatic grading, click/save tracking, or grading UI is added.
 
 For non-Docker API use, tracing still defaults off. Configure the optional Cloud or

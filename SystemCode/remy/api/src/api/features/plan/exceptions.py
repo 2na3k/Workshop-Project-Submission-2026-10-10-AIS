@@ -8,6 +8,7 @@ class UnknownAllergen(PlanError): status_code, code = 400, "UNKNOWN_ALLERGEN"
 
 
 class UnknownDietary(PlanError): status_code, code = 400, "UNKNOWN_DIETARY"
+class DietaryScreeningUnavailable(PlanError): status_code, code = 503, "DIETARY_SCREENING_UNAVAILABLE"
 class UnknownNutrient(PlanError): status_code, code = 400, "UNKNOWN_NUTRIENT"
 
 

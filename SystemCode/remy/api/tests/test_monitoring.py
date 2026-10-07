@@ -150,6 +150,12 @@ class WorkflowTests(unittest.TestCase):
         changed = {"grades": {"b": 0, "a": 2, "d": 1, "c": 0}}
         self.assertEqual(self.http.post(route + "/grades", headers=self.headers, json=changed).status_code, 409)
 
+    def test_unimplemented_dietary_screening_fails_closed(self):
+        for restriction in ({"allergies": [{"code": "peanut"}]}, {"dietary": [{"code": "halal"}]}):
+            response = self.http.post("/api/v1/plan", json={**self.request.model_dump(), **restriction})
+            self.assertEqual(response.status_code, 503)
+            self.assertEqual(response.json()["error"]["code"], "DIETARY_SCREENING_UNAVAILABLE")
+
     def test_grading_validation(self):
         route = "/api/v1/evaluations/" + self.create()["evaluation_id"] + "/grades"
         for body in [{"grades": {"b": 3}}, {"grades": {"b": 3, "a": 2, "d": 1, "c": 0, "unknown": 3}},

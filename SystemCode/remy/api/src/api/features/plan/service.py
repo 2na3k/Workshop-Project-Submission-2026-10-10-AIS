@@ -11,7 +11,7 @@ from .repository import PlanRepository
 from .solver_v2 import solve_v2
 from .aggregation import aggregate
 from .schemas import PlanResponse, DayResponse, MealResponse, MealIngredientResponse
-from .exceptions import InvalidNutrientRange, UnknownAllergen, UnknownDietary, UnknownNutrient
+from .exceptions import InvalidNutrientRange, UnknownAllergen, UnknownDietary, UnknownNutrient, DietaryScreeningUnavailable
 
 logger = logging.getLogger(__name__)
 SUPPORTED_DIETARY = {"halal", "vegetarian"}
@@ -60,6 +60,9 @@ class PlanService:
         for d in request.dietary or []:
             if d.code not in SUPPORTED_DIETARY:
                 raise UnknownDietary(f"Unknown dietary code: {d.code}")
+        # The existing filter has dietary/allergen screening commented out. Never claim safety.
+        if request.allergies or request.dietary:
+            raise DietaryScreeningUnavailable("Allergen/dietary safety cannot currently be verified; restricted plans are unavailable.")
 
     def fetch_candidates(self):
         with observation("retrieve-candidates") as span:
