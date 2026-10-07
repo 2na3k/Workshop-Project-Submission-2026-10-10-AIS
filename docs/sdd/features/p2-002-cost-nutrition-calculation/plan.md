@@ -501,7 +501,7 @@ end-to-end data path is a recorded deferral, not work in this context.
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_cost.py` (`test_consumed_vs_retail_distinct_sub_package`, `test_multi_package_ceil`)
   - Done when: consumed = P·Q/S and retail = P are distinct; multi-package retail = `ceil(Q/S)·P`; a float artefact (`Q/S = 3.0000000001`) adds no spurious package
 
-- [ ] **T-11** Rewrite `select_package` eligibility, ranking, and ceil
+- [x] **T-11** Rewrite `select_package` eligibility, ranking, and ceil
   - Type: impl
   - Covers: AC-3, AC-4, AC-5, AC-11, AC-13, AC-20 (R-8, R-10, R-11, R-13)
   - Files: `SystemCode/remy/api/src/api/features/calculator/domain/cost.py`

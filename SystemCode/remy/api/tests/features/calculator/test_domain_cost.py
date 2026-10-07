@@ -22,8 +22,10 @@ def _package(**overrides):
 
 def test_selects_lowest_price_per_gram_and_covers_amount():
     packages = [
-        RetailSKU("A", "small", 100, "SGD", 100, 1, "package_mass", True, fdc_id="2"),
-        RetailSKU("B", "large", 250, "SGD", 500, 1, "package_mass", True, fdc_id="1"),
+        _package(retailer="A", listing_name="small", reference_price_minor=100,
+                 package_mass_g=100, food_key="fdc:2", fdc_id="2"),
+        _package(retailer="B", listing_name="large", reference_price_minor=250,
+                 package_mass_g=500, food_key="fdc:1", fdc_id="1"),
     ]
     chosen = select_package(packages, 150)
     assert chosen[0].retailer == "B"
