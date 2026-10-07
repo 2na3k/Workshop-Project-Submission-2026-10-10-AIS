@@ -441,7 +441,7 @@ end-to-end data path is a recorded deferral, not work in this context.
   - Files: `docs/sdd/features/p2-002-cost-nutrition-calculation/plan.md` (Design §0, Constitution alignment) — edit only if a citation is wrong
   - Done when: every cited rule (R-1, R-2, R-5, R-8, R-9, R-10, R-11, R-12, R-13, R-16) and every AC (AC-1..AC-20) is confirmed present in the current approved `constitution.md` and `spec.md`; any mismatch is corrected in the plan before proceeding
 
-- [ ] **T-2** File p2-001 findings F-A and F-B as open follow-ups
+- [x] **T-2** File p2-001 findings F-A and F-B as open follow-ups
   - Type: admin
   - Covers: F-2 (routed findings)
   - Files: `docs/sdd/features/p2-001-constraint-evidence-filtering/decisions.md`

@@ -36,3 +36,24 @@
 
 ## Overrides
 None.
+
+## Open follow-ups
+
+### F-A — Freshness predicate uses a timestamp
+- Status: open follow-up
+- Date: 2026-10-07
+- Finding: `plan/filtering.py::_evaluate_freshness` applies a 24-hour timestamp
+  comparison when `offer_observed_at` is present. Amended R-8 defines freshness
+  by `freshness_status == "fresh"` and does not authorize timestamp comparison.
+- Route: p2-001 implementation
+- Source: p2-002 plan, Design §0 / Revision notes F-A.
+
+### F-B — Cost eligibility gates on `cost_basis_compatible`
+- Status: open follow-up
+- Date: 2026-10-07
+- Finding: `plan/filtering.py::_evaluate_cost_basis` requires
+  `cost_basis_compatible is True`. Amended R-10 defines eligibility through
+  `price_status`, `price_match_status`, and a convertible `price_basis`; the
+  compatibility flag is informational.
+- Route: p2-001 implementation
+- Source: p2-002 plan, Design §0 / Revision notes F-B.
