@@ -475,7 +475,7 @@ end-to-end data path is a recorded deferral, not work in this context.
   - Files: `SystemCode/remy/api/tests/features/calculator/test_repository_integration.py` (`test_query_b_reads_deployed_names_and_full_contract`)
   - Done when: with a mocked driver replaying recorded `FULFILLS` rows, the returned row-shape exposes `confidence` (not `mapping_confidence`), `price_status`, `price_match_status`, `freshness_status`, `price_basis`, `package_mass_g`, `package_volume_ml`, `nutrition_rank`, `selection_priority`, `food_key`, and the nine canonical nutrients (including `saturated_fat_g`, `cholesterol_mg`); a missing key yields an empty list, distinguishing "no accepted edge" from "no key"; fails on the current repository. Assert on returned row shape, not on SQL text.
 
-- [ ] **T-7** Fix `QUERY_B` and `fetch_food_facts` to the canonical shape
+- [x] **T-7** Fix `QUERY_B` and `fetch_food_facts` to the canonical shape
   - Type: impl
   - Covers: AC-5, AC-6, AC-7, AC-9, AC-13, AC-16, AC-20 (R-1); interface repo→service
   - Files: `SystemCode/remy/api/src/api/features/calculator/repository.py`

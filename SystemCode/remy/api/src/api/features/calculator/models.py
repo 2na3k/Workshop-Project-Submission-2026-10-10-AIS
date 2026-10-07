@@ -16,6 +16,14 @@ class RetailSKU:
     cost_basis_compatible: bool | None
     confidence: float | None = None
     fdc_id: str = ""
+    price_status: str | None = None
+    price_match_status: str | None = None
+    freshness_status: str | None = None
+    package_volume_ml: float | None = None
+    food_key: str | None = None
+    nutrition_rank: int | None = None
+    selection_priority: int | None = None
+    approval_status: str | None = None
 
     # def __post_init__(self) -> None:
     #     if self.confidence is not None and (
@@ -33,6 +41,10 @@ class FoodFacts:
     nutrients: NutrientProfile
     source_kind: str | None = None
     candidate_key: str | None = None
+    nutrition_rank: int | None = None
+    selection_priority: int | None = None
+    food_key: str | None = None
+    approval_status: str | None = None
     observed_at: str | None = None
     product_id: str | None = None
     packages: list[RetailSKU] = field(default_factory=list)

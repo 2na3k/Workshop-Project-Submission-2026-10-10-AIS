@@ -33,15 +33,21 @@ CALL {
 }
 RETURN canonical_key, toString(f.fdc_id) AS fdc_id, f.food_key AS food_key,
        f.description AS description, f.energy_kcal AS energy_kcal, f.protein_g AS protein_g,
-       f.carbohydrate_g AS carbohydrate_g, f.fat_g AS fat_g, f.fiber_g AS fiber_g,
+       f.carbohydrate_g AS carbohydrate_g, f.fat_g AS fat_g,
+       f.saturated_fat_g AS saturated_fat_g, f.fiber_g AS fiber_g,
        f.sugars_g AS sugars_g, f.sodium_mg AS sodium_mg, f.calcium_mg AS calcium_mg,
-       f.iron_mg AS iron_mg, ful.candidate_key AS candidate_key,
-       f.nutrition_source AS nutrition_source, ful.observed_at AS observed_at,
+       f.cholesterol_mg AS cholesterol_mg, ful.candidate_key AS candidate_key,
+       f.nutrition_source AS nutrition_source,
        ful.listing_key AS listing_key,
-       ful.mapping_confidence AS confidence,
+       ful.confidence AS confidence, ful.approval_status AS approval_status,
+       ful.price_status AS price_status,
+       ful.price_match_status AS price_match_status,
+       ful.freshness_status AS freshness_status,
        ful.price_basis AS price_basis, ful.cost_basis_compatible AS cost_basis_compatible,
        ful.reference_price_minor AS reference_price_minor, ful.currency AS currency,
-       ful.package_mass_g AS package_mass_g, ful.package_count AS package_count,
+       ful.package_mass_g AS package_mass_g, ful.package_volume_ml AS package_volume_ml,
+       ful.package_count AS package_count, ful.nutrition_rank AS nutrition_rank,
+       ful.selection_priority AS selection_priority,
        ful.retailer AS retailer, ful.listing_name AS listing_name, conversions
 """
 
@@ -77,11 +83,16 @@ class CostNutritionRepository:
                     nutrients=NutrientProfile(
                         calories_kcal=data.get("energy_kcal"), protein_g=data.get("protein_g"),
                         carbs_g=data.get("carbohydrate_g"), fat_g=data.get("fat_g"),
+                        saturated_fat_g=data.get("saturated_fat_g"),
                         fiber_g=data.get("fiber_g"), sugar_g=data.get("sugars_g"),
-                        sodium_mg=data.get("sodium_mg")),
+                        sodium_mg=data.get("sodium_mg"),
+                        cholesterol_mg=data.get("cholesterol_mg")),
                     source_kind=data.get("nutrition_source"),
                     candidate_key=data.get("candidate_key"),
-                    observed_at=str(data["observed_at"]) if data.get("observed_at") is not None else None,
+                    nutrition_rank=data.get("nutrition_rank"),
+                    selection_priority=data.get("selection_priority"),
+                    food_key=data.get("food_key"),
+                    approval_status=data.get("approval_status"),
                     product_id=data.get("listing_key"),
                 )
                 conversions = data.get("conversions") or []
@@ -94,6 +105,14 @@ class CostNutritionRepository:
                         reference_price_minor=data.get("reference_price_minor"), currency=data.get("currency"),
                         package_mass_g=data.get("package_mass_g"), package_count=data.get("package_count"),
                         price_basis=data.get("price_basis"), cost_basis_compatible=data.get("cost_basis_compatible"),
-                        confidence=data.get("confidence"), fdc_id=str(data.get("fdc_id") or "")))
-                grouped[key].append(facts)
+                        confidence=data.get("confidence"), fdc_id=str(data.get("fdc_id") or ""),
+                        price_status=data.get("price_status"),
+                        price_match_status=data.get("price_match_status"),
+                        freshness_status=data.get("freshness_status"),
+                        package_volume_ml=data.get("package_volume_ml"),
+                        food_key=data.get("food_key"),
+                        nutrition_rank=data.get("nutrition_rank"),
+                        selection_priority=data.get("selection_priority"),
+                        approval_status=data.get("approval_status")))
+                    grouped[key].append(facts)
             return dict(grouped)
