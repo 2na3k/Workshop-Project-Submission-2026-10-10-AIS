@@ -461,7 +461,7 @@ end-to-end data path is a recorded deferral, not work in this context.
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_conversion.py` (`test_component_units_require_positive_facts`)
   - Done when: test asserts `to_grams(2, "tbsp") == (30, ["UNIT_ASSUMED_GRAMS"])` (deprecated kwargs removed), and `pc` converts without raising; passes
 
-- [ ] **T-5** Repair stale resolver alias test
+- [x] **T-5** Repair stale resolver alias test
   - Type: test
   - Covers: AC-17
   - Files: `SystemCode/remy/api/tests/features/calculator/test_resolver.py` (`test_normalization_and_alias`)
