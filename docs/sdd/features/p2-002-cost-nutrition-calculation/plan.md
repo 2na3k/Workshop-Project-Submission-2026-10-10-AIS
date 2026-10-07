@@ -543,7 +543,7 @@ end-to-end data path is a recorded deferral, not work in this context.
 
 ### Group 6 — service orchestration, trace, payload
 
-- [ ] **T-17** Write failing tests: rejection paths (unit, unresolved, invalid request)
+- [x] **T-17** Write failing tests: rejection paths (unit, unresolved, invalid request)
   - Type: test
   - Covers: AC-15, AC-16, AC-19
   - Files: `SystemCode/remy/api/tests/features/calculator/test_service_errors.py` (`test_unsupported_unit_and_nonfinite_reject`, `test_unresolvable_and_no_accepted_reject`)
