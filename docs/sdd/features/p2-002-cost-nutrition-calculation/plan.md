@@ -589,7 +589,7 @@ end-to-end data path is a recorded deferral, not work in this context.
 
 ### Group 7 — API doc correction (R-1)
 
-- [ ] **T-22** Correct API doc response example
+- [x] **T-22** Correct API doc response example
   - Type: impl
   - Covers: AC-18 (R-1)
   - Files: `SystemCode/remy/api/docs/API_doc.md` (`/cost-and-nutrition` section)

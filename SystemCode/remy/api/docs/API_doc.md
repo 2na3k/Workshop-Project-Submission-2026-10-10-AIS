@@ -129,8 +129,8 @@ from **whole-package retail pricing** based on grocery data.
       "sodium_mg": 429.0,
       "calcium_mg": null,
       "iron_mg": null,
-      "saturated_fat_g": 20.0,
-      "cholesterol_mg": 10.0
+      "saturated_fat_g": null,
+      "cholesterol_mg": null
     },
     "nutrients_per_serving": {
       "calories_kcal": 389.5,
@@ -142,25 +142,19 @@ from **whole-package retail pricing** based on grocery data.
       "sodium_mg": 215.0,
       "calcium_mg": null,
       "iron_mg": null,
-      "saturated_fat_g": 10.0,
-      "cholesterol_mg": 5.0
+      "saturated_fat_g": null,
+      "cholesterol_mg": null
     }
   },
   "itemized": [
     {
       "ingredient": "Chicken Breast",
-      "canonical_name": "chicken breast",
-      "fdc_id": "360997",
+      "canonical_key": "chicken breast",
+      "listing_name": "FarmFresh X Olagud RTE Chicken Breast (Peri Peri)",
+      "retailer": "fairprice",
       "consumed_amount_g": 300.0,
       "consumed_cost_sgd": 7.87,
       "retail_package_cost_sgd": 9.44,
-      "matched_package": {
-        "retailer": "fairprice",
-        "package_title": "FarmFresh X Olagud  RTE Chicken Breast (Peri Peri)",
-        "package_price_sgd": 2.36,
-        "package_amount_g": 90.0,
-        "package_count": 4
-      },
       "nutrients": {
         "calories_kcal": 429.0,
         "protein_g": 53.58,
@@ -171,24 +165,24 @@ from **whole-package retail pricing** based on grocery data.
         "sodium_mg": 429.0,
         "calcium_mg": null,
         "iron_mg": null,
-        "saturated_fat_g": 10.0,
+        "saturated_fat_g": null,
         "cholesterol_mg": 5.0
       },
       "warnings": [
         {
           "code": "PARTIAL_NUTRITION_DATA",
-          "message": "Some nutrient facts are missing"
+          "message": "Missing nutrients: saturated_fat_g"
         }
       ]
     },
     {
       "ingredient": "Rolled Oats",
-      "canonical_name": "rolled oats",
-      "fdc_id": "1136417",
+      "canonical_key": "rolled oats",
+      "listing_name": null,
+      "retailer": null,
       "consumed_amount_g": 100.0,
       "consumed_cost_sgd": null,
       "retail_package_cost_sgd": null,
-      "matched_package": null,
       "nutrients": {
         "calories_kcal": 350.0,
         "protein_g": 12.5,
@@ -200,16 +194,16 @@ from **whole-package retail pricing** based on grocery data.
         "calcium_mg": null,
         "iron_mg": null,
         "saturated_fat_g": 0.0,
-        "cholesterol_mg": 0.0
+        "cholesterol_mg": null
       },
       "warnings": [
         {
           "code": "MISSING_PACKAGE_DATA",
-          "message": "No usable SGD package was found"
+          "message": "No cost-eligible fresh package was found"
         },
         {
           "code": "PARTIAL_NUTRITION_DATA",
-          "message": "Some nutrient facts are missing"
+          "message": "Missing nutrients: cholesterol_mg"
         }
       ]
     }
