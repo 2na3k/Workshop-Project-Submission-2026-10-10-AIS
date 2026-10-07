@@ -24,13 +24,13 @@ def _recipe(nutrients=None):
                                                   nutrition_basis="per 100 g")])
 
 
-def test_scaling_preserves_nulls_and_sums_values():
+def test_scaling_preserves_nulls_and_only_sums_complete_columns():
     first = scale_nutrients(NutrientProfile(protein_g=10, fiber_g=None), 200)
     second = scale_nutrients(NutrientProfile(protein_g=None, fiber_g=3), 100)
     total = sum_nutrients([first, second])
-    assert total.protein_g == 20
-    assert total.fiber_g == 3
-    assert per_serving(total, 2).protein_g == 10
+    assert total.protein_g is None
+    assert total.fiber_g is None
+    assert per_serving(total, 2).protein_g is None
 
 
 def test_profileless_candidate_is_not_zero_and_drops_when_required():
@@ -56,9 +56,9 @@ def test_branded_over_generic():
     branded = _candidate(food_key="brand:1", value=8,
                          source_kind="crawler_fdc_profile", rank=9)
     generic = _candidate(food_key="fdc:1", value=4, rank=0)
-    unknown = _candidate(food_key="other:1", value=2, source_kind="other")
+    unknown = _candidate(food_key="other:1", value=2, source_kind="other", rank=-1)
     assert select_nutrient_value([generic, branded], "protein_g") == (8, branded)
-    assert select_nutrient_value([generic, unknown], "protein_g") == (2, unknown)
+    assert select_nutrient_value([unknown, branded], "protein_g") == (8, branded)
 
 
 def test_same_source_tie_break():

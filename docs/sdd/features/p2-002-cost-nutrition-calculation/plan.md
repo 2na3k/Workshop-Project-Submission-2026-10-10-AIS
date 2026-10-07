@@ -521,7 +521,7 @@ end-to-end data path is a recorded deferral, not work in this context.
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_nutrition.py` (`test_order_independent_determinism`, `test_nutrient_null_when_any_missing_and_warning_names`, `test_scale_total_per_serving`)
   - Done when: shuffled inputs give identical selections and totals, twice; a nutrient missing from any contributing ingredient nulls that nutrient's recipe and per-serving total; `PARTIAL_NUTRITION_DATA` names the missing canonical nutrients; no zero-fill; `test_scale_total_per_serving` formalizes AC-1 (scale by g/100, recipe total, per-serving = total/servings) — this one passes immediately; the others fail against the current code
 
-- [ ] **T-14** Add per-nutrient selection and fix `sum_nutrients` semantics
+- [x] **T-14** Add per-nutrient selection and fix `sum_nutrients` semantics
   - Type: impl
   - Covers: AC-1, AC-2, AC-6, AC-7, AC-8 (R-9, R-12)
   - Files: `SystemCode/remy/api/src/api/features/calculator/domain/nutrition_select.py` (new), `SystemCode/remy/api/src/api/features/calculator/domain/nutrition.py`
