@@ -11,7 +11,7 @@ from .repository import PlanRepository
 from .solver_v2 import solve_v2
 from .aggregation import aggregate
 from .schemas import PlanResponse, DayResponse, MealResponse, MealIngredientResponse
-from .exceptions import InvalidNutrientRange, UnknownAllergen, UnknownDietary, UnknownNutrient, DietaryScreeningUnavailable
+from .exceptions import InvalidNutrientRange, UnknownAllergen, UnknownDietary, UnknownNutrient
 
 logger = logging.getLogger(__name__)
 SUPPORTED_DIETARY = {"halal", "vegetarian"}
@@ -60,9 +60,6 @@ class PlanService:
         for d in request.dietary or []:
             if d.code not in SUPPORTED_DIETARY:
                 raise UnknownDietary(f"Unknown dietary code: {d.code}")
-        # The existing filter has dietary/allergen screening commented out. Never claim safety.
-        if request.allergies or request.dietary:
-            raise DietaryScreeningUnavailable("Allergen/dietary safety cannot currently be verified; restricted plans are unavailable.")
 
     def fetch_candidates(self):
         with observation("retrieve-candidates") as span:
@@ -110,11 +107,11 @@ class PlanService:
                     ) for i, r in enumerate(meals, 1)
                 ]))
             return PlanResponse(plan_id="plan_" + secrets.token_hex(5),
-                                status="partial" if relaxations else "complete",
+                                status="partial" if relaxations or request.allergies or request.dietary else "complete",
                                 message=f"Successfully generated a {request.horizon_days}-day meal plan.",
                                 validation_summary={
-                                    "allergen_status": "passed" if request.allergies else "not_requested",
-                                    "dietary_status": "passed" if request.dietary else "not_requested"},
+                                    "allergen_status": "unverified" if request.allergies else "not_requested",
+                                    "dietary_status": "unverified" if request.dietary else "not_requested"},
                                 relaxations=relaxations, horizon_totals=aggregate(days, request),
                                 days=response_days)
 

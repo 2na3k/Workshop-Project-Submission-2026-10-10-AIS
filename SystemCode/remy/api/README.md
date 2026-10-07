@@ -177,9 +177,10 @@ volume/backups and grading files, and apply retention. SQLite is intentionally
 single-deployment; use shared PostgreSQL before scaling API replicas.
 
 Ranking evaluation does not establish dietary safety. Existing allergen/dietary
-checks are commented out in `filtering.py`; restricted requests now fail closed with
-`503 DIETARY_SCREENING_UNAVAILABLE` until screening is restored. Unrestricted plans
-remain available. No LLM/LangGraph rebuild, token-cost tracking,
+checks now screen known conflicts per recipe in `filtering.py`. Restricted requests
+run normally; unknown evidence remains eligible for best-effort suggestions and is
+explicitly marked `unverified`, never `passed`. Both plan and chat UIs warn that these
+results are not guaranteed allergy-safe or diet-compliant. No blanket 503 guard remains. No LLM/LangGraph rebuild, token-cost tracking,
 automatic grading, click/save tracking, or grading UI is added.
 
 For non-Docker API use, tracing still defaults off. Configure the optional Cloud or

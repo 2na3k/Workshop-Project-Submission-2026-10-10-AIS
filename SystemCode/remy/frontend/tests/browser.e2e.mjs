@@ -23,6 +23,7 @@ test("browser signup, preferences, login, streamed meal plan, and Langfuse trace
     const original = window.fetch.bind(window);
     window.__e2ePlan = null;
     window.fetch = async (...args) => {
+      if (String(args[0]).endsWith("/api/v1/plan")) window.__e2ePlan = null;
       const response = await original(...args);
       if (String(args[0]).endsWith("/api/v1/plan") && response.ok) {
         response.clone().text().then((body) => {
@@ -102,11 +103,29 @@ test("browser signup, preferences, login, streamed meal plan, and Langfuse trace
     assert(stages.every((stage) => trace?.observations?.some((span) => span.name === stage)), "Stream stage traces missing");
     const dashboard = await context.request.get(langfuse + "/api/auth/session");
     assert.equal((await dashboard.json()).user.email, process.env.LANGFUSE_INIT_USER_EMAIL);
+    const restrictedTraces = [];
+    for (const restriction of ["Halal", "Vegetarian", "Peanuts"]) {
+      await page.goto(base + "/plan");
+      await page.getByLabel("Days", { exact: true }).fill("1");
+      await page.getByLabel("Meals a day", { exact: true }).fill("1");
+      await page.getByText(restriction, { exact: true }).click();
+      await page.getByRole("button", { name: "Build my plan", exact: true }).click();
+      await page.getByRole("alert").filter({ hasText: "restrictions are unverified" }).waitFor({ timeout: 90_000 });
+      await page.waitForFunction(() => window.__e2ePlan !== null);
+      const result = await page.evaluate(() => window.__e2ePlan);
+      assert.equal(result.status, "partial");
+      assert(Object.values(result.validation_summary).includes("unverified"));
+      assert(result.trace_id && result.trace_id !== plan.trace_id);
+      assert.equal(result.days[0].meals.length, 1);
+      restrictedTraces.push({ restriction, trace_id: result.trace_id });
+    }
+    assert.equal(pageErrors.length, 0, "Browser runtime errors: " + pageErrors.join("; "));
+    await page.screenshot({ path: artifactDir + "restricted-meal-plan.png", fullPage: true });
     await writeFile(artifactDir + "result.json", JSON.stringify({
       webapp: base, trace_id: plan.trace_id, evaluation_id: plan.evaluation_id,
-      stages, meal: plan.days[0].meals[0].title, human_grades: "pending",
+      stages, restricted_traces: restrictedTraces, meal: plan.days[0].meals[0].title, human_grades: "pending",
     }, null, 2));
-    console.log(`E2E passed: ${base}; real meal rendered; six Langfuse stages; human grades pending.`);
+    console.log(`E2E passed: ${base}; unrestricted + Halal + Vegetarian + Peanuts plans rendered; six Langfuse stages; human grades pending.`);
   } finally {
     await browser.close();
   }

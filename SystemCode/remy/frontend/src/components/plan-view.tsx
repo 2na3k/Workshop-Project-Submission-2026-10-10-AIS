@@ -13,6 +13,7 @@ const HEADLINE = new Set(["calories", "protein_g", "carbs_g", "fat_g"]);
 export default function PlanView({ plan, servings, overview }: { plan: PlanResponse; servings: number; overview?: string }) {
   const totals = sortedNutrients(plan.horizon_totals);
   const complete = plan.status === "complete";
+  const unverified = Object.values(plan.validation_summary).includes("unverified");
 
   return (
     <section aria-labelledby="plan-heading" className="mt-12 border-t border-subtle pt-10">
@@ -25,13 +26,20 @@ export default function PlanView({ plan, servings, overview }: { plan: PlanRespo
             complete ? "bg-sage text-sage-foreground" : "bg-accent/10 text-accent"
           }`}
         >
-          {complete ? "Complete" : "Adjusted to fit"}
+          {unverified ? "Unverified restrictions" : complete ? "Complete" : "Adjusted to fit"}
         </span>
       </div>
       <p className="mt-2 text-sm text-muted">
         {plan.message}
         {servings > 1 && ` Amounts are for ${servings} servings.`}
       </p>
+      {unverified && (
+        <p role="alert" className="mt-4 rounded-2xl border border-accent bg-accent/10 p-4 text-sm font-semibold">
+          Allergy/dietary restrictions are unverified. Known conflicts were screened out,
+          but missing evidence is not proof of safety. This plan is not guaranteed allergy-safe
+          or diet-compliant; check every ingredient and product label.
+        </p>
+      )}
       {overview?.trim() && (
         <p className="mt-4 whitespace-pre-line text-sm leading-relaxed">{overview.trim()}</p>
       )}

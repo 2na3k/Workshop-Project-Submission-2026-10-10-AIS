@@ -150,11 +150,31 @@ class WorkflowTests(unittest.TestCase):
         changed = {"grades": {"b": 0, "a": 2, "d": 1, "c": 0}}
         self.assertEqual(self.http.post(route + "/grades", headers=self.headers, json=changed).status_code, 409)
 
-    def test_unimplemented_dietary_screening_fails_closed(self):
-        for restriction in ({"allergies": [{"code": "peanut"}]}, {"dietary": [{"code": "halal"}]}):
+    def test_restricted_plans_run_and_unknown_evidence_is_not_claimed_safe(self):
+        for restriction in ({"allergies": [{"code": "peanut"}]}, {"dietary": [{"code": "halal"}]}, {"dietary": [{"code": "vegetarian"}]}):
             response = self.http.post("/api/v1/plan", json={**self.request.model_dump(), **restriction})
-            self.assertEqual(response.status_code, 503)
-            self.assertEqual(response.json()["error"]["code"], "DIETARY_SCREENING_UNAVAILABLE")
+            self.assertEqual(response.status_code, 200)
+            block = next(b for b in response.text.split("\n\n") if b.startswith("event: plan\n"))
+            plan = json.loads(block.split("data: ", 1)[1])
+            self.assertEqual(plan["status"], "partial")
+            self.assertIn("unverified", plan["validation_summary"].values())
+            self.assertNotIn("passed", plan["validation_summary"].values())
+            self.assertEqual(len(self.recording.spans[-6:]), 6)
+
+    def test_known_conflicts_are_filtered_not_every_restricted_request(self):
+        from api.features.plan.filtering import filter_candidates
+        for restriction, ingredient in (
+            ({"allergies": [{"code": "peanut"}]}, {"potential_allergens": ["peanut"]}),
+            ({"allergies": [{"code": "milk"}]}, {"text": "milk"}),
+            ({"dietary": [{"code": "halal"}]}, {"halal_status": "non_compliant"}),
+            ({"dietary": [{"code": "vegetarian"}]}, {"vegetarian_status": "potential_not_vegetarian"}),
+            ({"dietary": [{"code": "vegetarian"}]}, {"text": "chicken"}),
+        ):
+            candidates = self.service.repository.fetch_candidates()
+            for key, value in ingredient.items():
+                setattr(candidates[0].ingredients[0], key, value)
+            request = PlanRequest.model_validate({**self.request.model_dump(), **restriction})
+            self.assertEqual([r.recipe_id for r in filter_candidates(candidates, request)], ["b", "c", "d"])
 
     def test_grading_validation(self):
         route = "/api/v1/evaluations/" + self.create()["evaluation_id"] + "/grades"

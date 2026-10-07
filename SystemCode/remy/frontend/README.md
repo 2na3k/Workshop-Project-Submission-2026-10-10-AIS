@@ -47,8 +47,10 @@ It creates a local test account/snapshot/trace; artifacts are in
 Next.js was patched to 16.4.0 for the inherited critical advisory. Production
 `npm audit --omit=dev` reports zero vulnerabilities; five inherited lint-tool
 advisories remain (fixing them via npm's suggested downgrade would break Next 16).
-Allergen/dietary screening is currently disabled in the inherited filter: such
-planner requests now return a clear 503 instead of falsely claiming safety.
+Allergen/dietary requests run through per-recipe screening of known conflicts.
+Unknown evidence is not a blanket rejection: results are marked `unverified`, with
+explicit warnings in plan and chat UIs. They are not certified allergy-safe or
+diet-compliant. E2E also exercises Halal, Vegetarian, and Peanuts selections.
 
 ## Ingredient calculator
 
