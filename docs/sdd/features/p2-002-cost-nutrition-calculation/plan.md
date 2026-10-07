@@ -515,7 +515,7 @@ end-to-end data path is a recorded deferral, not work in this context.
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_nutrition.py` (`test_branded_over_generic`, `test_same_source_tie_break`)
   - Done when: branded wins per nutrient; unknown source treated as generic; tie-break is `nutrition_rank` asc → `selection_priority` asc → `food_key` asc, nulls last, applied per nutrient; fails against the current code
 
-- [ ] **T-13** Write failing tests: order-independent determinism, null-when-any, and baseline scaling (AC-1, AC-2, AC-8)
+- [x] **T-13** Write failing tests: order-independent determinism, null-when-any, and baseline scaling (AC-1, AC-2, AC-8)
   - Type: test
   - Covers: AC-1, AC-2, AC-8
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_nutrition.py` (`test_order_independent_determinism`, `test_nutrient_null_when_any_missing_and_warning_names`, `test_scale_total_per_serving`)
