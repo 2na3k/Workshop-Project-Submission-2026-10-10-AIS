@@ -2,6 +2,7 @@
 
 import pytest
 
+from api.features.calculator.domain.cost import select_package
 from api.features.calculator.exceptions import UnresolvableIngredient
 from api.features.calculator.models import FoodFacts, NutrientProfile, RetailSKU
 from api.features.calculator.schemas import CostNutritionRequest, IngredientRequest
@@ -59,3 +60,48 @@ def test_no_accepted_candidate_is_unresolvable():
     rejected = _fact(food_key="rejected", protein=99, approval="rejected")
     with pytest.raises(UnresolvableIngredient):
         CostNutritionService(_Repository([rejected])).calculate(_request())
+
+
+def test_single_confidence_zero_selected_trace():
+    candidate = _fact(food_key="low", protein=1, confidence=0.0)
+    response, trace = CostNutritionService(_Repository([candidate])).calculate(_request())
+    assert response.itemized[0].listing_name == "offer"
+    assert trace.ingredients[0].chosen_package.confidence == 0.0
+
+
+def test_ranking_order_and_runner_up_trace():
+    scenarios = [
+        # Unit price wins even when the retail package price is higher.
+        ([
+            _fact(food_key="unit-low", protein=1, listing="unit low", price=200, amount=200),
+            _fact(food_key="unit-high", protein=1, listing="unit high", price=150, amount=100),
+        ], "unit-low", "unit-high"),
+        # Equal unit price: lower retail package cost wins.
+        ([
+            _fact(food_key="retail-low", protein=1, listing="retail low", price=100, amount=100),
+            _fact(food_key="retail-high", protein=1, listing="retail high", price=200, amount=200),
+        ], "retail-low", "retail-high"),
+        # Equal price and amount: higher confidence wins.
+        ([
+            _fact(food_key="conf-low", protein=1, listing="conf low", confidence=0.1),
+            _fact(food_key="conf-high", protein=1, listing="conf high", confidence=0.9),
+        ], "conf-high", "conf-low"),
+        # Remaining tie: identity sorts lexicographically.
+        ([
+            _fact(food_key="z-lex", protein=1, listing="z lex", confidence=0.9),
+            _fact(food_key="a-lex", protein=1, listing="a lex", confidence=0.9),
+        ], "a-lex", "z-lex"),
+    ]
+    for facts, chosen_key, runner_key in scenarios:
+        response, trace = CostNutritionService(_Repository(facts)).calculate(_request())
+        assert response.itemized[0].listing_name == next(
+            fact.packages[0].listing_name for fact in facts if fact.food_key == chosen_key
+        )
+        item_trace = trace.ingredients[0]
+        assert item_trace.chosen_package.food_key == chosen_key
+        assert item_trace.runner_up_package.food_key == runner_key
+
+
+def test_confidence_zero_and_one_valid():
+    assert select_package(_fact(food_key="zero", protein=1, confidence=0).packages, 50)
+    assert select_package(_fact(food_key="one", protein=1, confidence=1).packages, 50)

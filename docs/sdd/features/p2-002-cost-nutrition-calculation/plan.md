@@ -535,7 +535,7 @@ end-to-end data path is a recorded deferral, not work in this context.
   - Files: `SystemCode/remy/api/tests/features/calculator/test_mapping_selection.py` (new; R-13's named fixture)
   - Done when: file created with header docstring citing R-13; `test_only_accepted_candidates_usable` asserts non-accepted edges are excluded from nutrient and cost selection, and none-accepted resolves to unresolvable (AC-16); fails against the current code
 
-- [ ] **T-16** Append confidence-0 selection and ranking tests to R-13 fixture
+- [x] **T-16** Append confidence-0 selection and ranking tests to R-13 fixture
   - Type: test
   - Covers: AC-10, AC-11, AC-12
   - Files: `SystemCode/remy/api/tests/features/calculator/test_mapping_selection.py`
