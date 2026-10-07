@@ -611,7 +611,7 @@ end-to-end data path is a recorded deferral, not work in this context.
   - Files: `docs/sdd/features/p2-002-cost-nutrition-calculation/decisions.md`
   - Done when: F-C (mocked-driver deferral for the data-prep path) and D-1/D-2/D-3 are recorded; the spec's C-1..C-9 are transcribed as decisions; F-A and F-B referenced with routing; a one-line note records that the R-16 test lives at the feature-local path (divergence from the constitution's named check, for phase-review awareness — no amendment drafted)
 
-- [ ] **T-25** Run the full API test suite and `sdd.py ci`
+- [x] **T-25** Run the full API test suite and `sdd.py ci`
   - Type: verification
   - Covers: all ACs and interfaces
   - Files: (all above)
