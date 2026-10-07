@@ -2,6 +2,7 @@ import os
 from contextlib import asynccontextmanager
 
 from neo4j import GraphDatabase
+from .monitoring import get_client, shutdown_monitoring
 
 
 def create_driver():
@@ -14,7 +15,11 @@ def create_driver():
 @asynccontextmanager
 async def lifespan(app):
     app.state.neo4j_driver = create_driver()
+    get_client()
     try:
         yield
     finally:
-        app.state.neo4j_driver.close()
+        try:
+            app.state.neo4j_driver.close()
+        finally:
+            shutdown_monitoring()
