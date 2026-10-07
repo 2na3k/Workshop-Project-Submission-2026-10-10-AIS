@@ -529,7 +529,7 @@ end-to-end data path is a recorded deferral, not work in this context.
 
 ### Group 5 — cost selection behaviour (R-13, trace)
 
-- [ ] **T-15** Create R-13 fixture and write accepted-candidates test
+- [x] **T-15** Create R-13 fixture and write accepted-candidates test
   - Type: test
   - Covers: AC-9, AC-16
   - Files: `SystemCode/remy/api/tests/features/calculator/test_mapping_selection.py` (new; R-13's named fixture)
