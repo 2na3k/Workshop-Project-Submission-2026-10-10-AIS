@@ -483,7 +483,7 @@ end-to-end data path is a recorded deferral, not work in this context.
 
 ### Group 3 — domain cost (eligibility, ranking, volume, ceil)
 
-- [ ] **T-8** Write failing tests: eligibility exclusion and `MISSING_PACKAGE_DATA`
+- [x] **T-8** Write failing tests: eligibility exclusion and `MISSING_PACKAGE_DATA`
   - Type: test
   - Covers: AC-5, AC-20
   - Files: `SystemCode/remy/api/tests/features/calculator/test_domain_cost.py` (`test_ineligible_excluded_missing_package_warning`, `test_each_eligibility_condition_excludes`)

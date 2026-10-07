@@ -1,9 +1,23 @@
+import pytest
 from api.features.calculator.domain.cost import consumed_cost, round_money, select_package
 from api.features.calculator.models import RetailSKU
 from api.features.plan.filtering import filter_candidates
 from api.features.plan.models import Ingredient, Recipe
 from api.features.plan.schemas import PlanRequest
 from datetime import datetime, timedelta, timezone
+
+
+def _package(**overrides):
+    values = dict(
+        retailer="A", listing_name="item", reference_price_minor=100,
+        currency="SGD", package_mass_g=100, package_count=1,
+        price_basis="package_mass", cost_basis_compatible=True,
+        confidence=1.0, fdc_id="1", price_status="estimated",
+        price_match_status="accepted", freshness_status="fresh",
+        package_volume_ml=None, food_key="fdc:1",
+    )
+    values.update(overrides)
+    return RetailSKU(**values)
 
 
 def test_selects_lowest_price_per_gram_and_covers_amount():
@@ -33,3 +47,24 @@ def test_stale_offer_excluded_and_24_hour_boundary_is_fresh():
     assert dropped == []
     assert dropped.drop_outcomes["stale"].cause == "evidence-absent"
     assert [r.recipe_id for r in retained] == ["boundary"]
+
+
+def test_ineligible_excluded_missing_package_warning():
+    assert select_package([_package(freshness_status="stale")], 50) is None
+    assert select_package([_package(price_status="unavailable")], 50) is None
+    assert select_package([_package(price_match_status="estimated")], 50) is None
+
+
+@pytest.mark.parametrize("changes", [
+    {"price_status": "unavailable"},
+    {"price_match_status": "estimated"},
+    {"freshness_status": "unknown"},
+    {"price_basis": "span_reference"},
+    {"currency": "USD"},
+    {"reference_price_minor": None},
+    {"reference_price_minor": 0},
+    {"package_mass_g": None},
+    {"package_mass_g": 0},
+])
+def test_each_eligibility_condition_excludes(changes):
+    assert select_package([_package(**changes)], 50) is None
