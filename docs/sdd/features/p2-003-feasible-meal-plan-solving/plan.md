@@ -526,7 +526,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 7 — integration tests
 
-- [ ] **T-14** Plan → calculator integration test
+- [x] **T-14** Plan → calculator integration test
   - Type: integration
   - Covers: interface `CostNutritionService.inspect_candidates` → `PlanService.generate`; AC-4, AC-5, AC-13
   - Files: `tests/features/plan/test_plan_calculator_integration.py` (`test_plan_consumes_calculator_partial_nutrition`)
