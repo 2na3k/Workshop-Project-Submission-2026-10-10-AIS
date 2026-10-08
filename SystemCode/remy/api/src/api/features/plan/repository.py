@@ -7,7 +7,7 @@ import time
 from typing import Optional
 
 from domain import Nutrition
-from .models import Ingredient, Recipe
+from .models import Ingredient, Recipe, RequirementRef
 
 # ---------------------------------------------------------------------------
 # Runtime query — reads pre-computed :BEST_FULFILLMENT edges.
@@ -30,15 +30,18 @@ WITH r
 ORDER BY r.recipe_id
 LIMIT $limit
 
-MATCH (r)-[req:REQUIRES]->(fc:FoodConcept)
+OPTIONAL MATCH (r)-[req:REQUIRES]->(fc:FoodConcept)
 OPTIONAL MATCH (fc)-[best:BEST_FULFILLMENT]->(f:Food)
 
 WITH r, collect({
+  has_requirement: req IS NOT NULL,
   quantity: req.quantity, unit: req.unit, optional: req.optional,
   preparation: req.preparation, raw_text: req.raw_text,
   cleaned_text: req.cleaned_text,
-  occurrence_id: req.occurrence_id, position: req.position,
+  occurrence_id: req.occurrence_id, normalized_name: req.normalized_name,
+  position: req.position,
   canonical_key: fc.canonical_key, concept_name: fc.name,
+  best_food_key: f.food_key,
   description: f.description, ingredients: f.ingredients,
   serving_size: f.serving_size, serving_size_unit: f.serving_size_unit,
   nutrition_basis: f.nutrition_basis, energy_kcal: f.energy_kcal,
@@ -137,10 +140,39 @@ def _build_ingredient(x: dict) -> Ingredient:
 def _build_recipe(row: dict) -> Optional[Recipe]:
     ingredients_raw = row.get("ingredients") or []
 
-    quantifiable = [
-        x for x in ingredients_raw if (x.get("quantity") or 0) != 0
-    ]
-    if not quantifiable:
+    unmapped_requirements = []
+    quantifiable = []
+    for item in ingredients_raw:
+        if item.get("has_requirement") is False:
+            continue
+        if item.get("canonical_key") is None:
+            unmapped_requirements.append(
+                RequirementRef(
+                    occurrence_id=item.get("occurrence_id"),
+                    normalized_name=item.get("normalized_name"),
+                    raw_text=item.get("raw_text"),
+                    cleaned_text=item.get("cleaned_text"),
+                    position=item.get("position"),
+                    reason="missing-food-concept",
+                )
+            )
+            continue
+        if item.get("best_food_key") is None:
+            unmapped_requirements.append(
+                RequirementRef(
+                    occurrence_id=item.get("occurrence_id"),
+                    normalized_name=item.get("normalized_name"),
+                    raw_text=item.get("raw_text"),
+                    cleaned_text=item.get("cleaned_text"),
+                    position=item.get("position"),
+                    reason="missing-best-fulfillment",
+                )
+            )
+            continue
+        if (item.get("quantity") or 0) != 0:
+            quantifiable.append(item)
+
+    if not quantifiable and not unmapped_requirements:
         return None
 
     recipe_id = str(row["recipe_id"])
@@ -149,6 +181,7 @@ def _build_recipe(row: dict) -> Optional[Recipe]:
     recipe.title = row.get("title") or recipe_id
     recipe.instructions = row.get("instructions")
     recipe.ingredients = [_build_ingredient(x) for x in quantifiable]
+    recipe.unmapped_requirements = unmapped_requirements
     return recipe
 
 

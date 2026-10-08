@@ -70,6 +70,16 @@ class NamedConstraint:
     ]
 
 
+@dataclass(frozen=True)
+class RequirementRef:
+    occurrence_id: str | None
+    normalized_name: str | None
+    raw_text: str | None
+    cleaned_text: str | None
+    position: int | None
+    reason: Literal["missing-food-concept", "missing-best-fulfillment"]
+
+
 @dataclass
 class CandidateOutcome:
     recipe_id: str
@@ -98,3 +108,4 @@ class Recipe:
     nutrients: Nutrition = field(default_factory=dict)
     instructions: str | None = None
     score: float = 0.0
+    unmapped_requirements: list[RequirementRef] = field(default_factory=list)

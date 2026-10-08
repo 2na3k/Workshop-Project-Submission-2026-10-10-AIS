@@ -28,8 +28,10 @@ class Driver:
 def canonical_row(**overrides):
     ingredient = {
         "quantity": 100, "unit": "g", "occurrence_id": "ingredient-1",
+        "canonical_key": "black_pepper", "concept_name": "Black pepper",
         "nutrition_basis": "per 100 g", "energy_kcal": 10,
         "protein_g": 1, "halal_status": "halal",
+        "best_food_key": "food-1",
         "freshness_status": "fresh", "package_mass_g": 100,
         "price_basis": "package_mass", "cost_basis_compatible": True,
     }

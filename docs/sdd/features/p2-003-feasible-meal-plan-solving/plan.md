@@ -378,6 +378,15 @@ calculator method; tests under `tests/features/plan`; one doc and one
   `sdd.json` already includes `src/api/features/plan` and
   `tests/features/plan` in its test, lint, and typecheck commands; no check-set
   change was needed.
+- **BD-2 (2026-10-08; observed at `dffeb58`):** Design §0 says the repository
+  silently skips both requirements with no `FoodConcept` and those without
+  `BEST_FULFILLMENT`. Actual state: the query uses `MATCH` for `FoodConcept`,
+  so a requirement with no concept is absent from returned rows; a missing
+  best fulfillment is collected without a marker and built as an ordinary
+  ingredient. The unmapped-record design still holds. The repository change
+  will preserve the same `REQUIRES` → `FoodConcept` → `BEST_FULFILLMENT` path
+  while retaining missing-link facts for recipe-level reporting; no spec or
+  contract change is needed.
 - **F-1 (plan review, blocker) — resolved in this revision.** AC-13's
   per-recipe `unmapped` cause derivation is now explicitly sourced from
   `PlanRepository.fetch_candidates`'s existing traversal (the
@@ -478,7 +487,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
   - Files: `tests/features/plan/test_service_integration.py` (extend the existing fake-driver flow) or a focused new test in the same file asserting per-recipe `unmapped_requirements` for a recipe with a `REQUIRES` edge missing its `FoodConcept` / `BEST_FULFILLMENT`
   - Done when: the test fails against the current repository (which silently skips those edges); the new per-recipe fact is asserted on the real `PlanRepository` output
 
-- [ ] **T-9** Extend `PlanRepository` to record `unmapped_requirements` per recipe
+- [x] **T-9** Extend `PlanRepository` to record `unmapped_requirements` per recipe
   - Type: impl
   - Covers: AC-13 (F-1); R-2 (fact stays within the plan feature)
   - Files: `SystemCode/remy/api/src/api/features/plan/repository.py`, `SystemCode/remy/api/src/api/features/plan/models.py` (`RequirementRef` dataclass; `Recipe` gains `unmapped_requirements`)
