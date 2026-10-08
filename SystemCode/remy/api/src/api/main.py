@@ -9,11 +9,13 @@ load_dotenv(ENV_PATH)
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException
 from .core.database import lifespan
 from .core.errors import ErrorDetail, error_envelope
 from .core.exceptions import AppError
 from .features.calculator.router import router as calculator_router
 from .features.plan.router import router as plan_router
+from .features.plan.evaluation import router as evaluation_router
 
 app = FastAPI(
     title="Remy API",
@@ -36,6 +38,7 @@ app = FastAPI(
 )
 app.include_router(calculator_router, prefix="/api/v1/calculate", tags=["calculator"])
 app.include_router(plan_router, prefix="/api/v1/plan", tags=["plan"])
+app.include_router(evaluation_router, prefix="/api/v1/evaluations", tags=["evaluations"])
 
 
 @app.exception_handler(AppError)
@@ -43,6 +46,12 @@ async def app_error_handler(_: Request, exc: AppError):
     return JSONResponse(status_code=exc.status_code,
                         content=error_envelope(exc.code, exc.message,
                                                [ErrorDetail(**item) for item in exc.details]))
+
+
+@app.exception_handler(HTTPException)
+async def http_error_handler(_: Request, exc: HTTPException):
+    return JSONResponse(status_code=exc.status_code, headers=exc.headers,
+                        content=error_envelope(f"HTTP_{exc.status_code}", str(exc.detail)))
 
 
 @app.exception_handler(RequestValidationError)

@@ -16,6 +16,42 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Integrated Docker + real browser E2E
+
+From `SystemCode/` (uses `.env.prod` for the production food graph):
+
+```sh
+make up-prod API_PORT=8003 FRONTEND_PORT=3100 BACKEND_PORT=8010
+```
+
+This repo's actual webapp is **http://localhost:3100**. Sign up to create a local
+account. The separate auth/preferences backend is on 8010; food API is on 8003;
+passwordless Langfuse is on the `LANGFUSE_PORT` in private `.env.langfuse` (currently
+3032). Existing unrelated services on ports 3000/8000 are left untouched.
+
+From `SystemCode/remy/frontend/`:
+
+```sh
+npm ci
+npx playwright install chromium
+npm run test:e2e
+```
+
+The real Chromium test signs up a random test account, saves preferences, logs out
+and back in, generates a streamed plan through Next.js -> API -> production Neo4j,
+checks all six Langfuse spans and the blind-grading snapshot, and verifies the
+passwordless dashboard session. No mocked food API or fabricated human grades.
+It creates a local test account/snapshot/trace; artifacts are in
+`SystemCode/target/e2e/{meal-plan.png,result.json}` (gitignored).
+
+Next.js was patched to 16.4.0 for the inherited critical advisory. Production
+`npm audit --omit=dev` reports zero vulnerabilities; five inherited lint-tool
+advisories remain (fixing them via npm's suggested downgrade would break Next 16).
+Allergen/dietary requests run through per-recipe screening of known conflicts.
+Unknown evidence is not a blanket rejection: results are marked `unverified`, with
+explicit warnings in plan and chat UIs. They are not certified allergy-safe or
+diet-compliant. E2E also exercises Halal, Vegetarian, and Peanuts selections.
+
 ## Ingredient calculator
 
 The home page has a separate **Check an ingredient** search bar. Enter one

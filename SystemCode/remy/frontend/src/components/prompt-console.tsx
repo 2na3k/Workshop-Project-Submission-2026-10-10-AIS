@@ -27,6 +27,7 @@ type Reply = {
   ideas?: PlanMeal[];
   pending?: boolean;
   failed?: boolean;
+  unverified?: boolean;
 };
 
 type Message = { id: number; from: "you"; text: string } | Reply;
@@ -81,7 +82,11 @@ export default function PromptConsole() {
         onProgress: (progress) => updateReply(replyId, { text: `${progress.message}…` }),
       });
       const ideas = uniqueIdeas(plan);
-      updateReply(replyId, { ...replyFor(ideas, next, reading), ideas, pending: false });
+      const unverified = Object.values(plan.validation_summary).includes("unverified");
+      updateReply(replyId, {
+        ...replyFor(ideas, next, reading), ideas, pending: false, unverified,
+        ...(unverified ? { text: "Here are screened ideas; your allergy/dietary restrictions are unverified." } : {}),
+      });
     } catch (caught) {
       updateReply(replyId, {
         text: caught instanceof Error ? caught.message : "I couldn't fetch ideas just now. Please try again.",
@@ -181,6 +186,12 @@ export default function PromptConsole() {
                     {message.text}
                   </p>
                   {message.note && <p className="mt-1.5 pl-1 text-xs text-muted">{message.note}</p>}
+                  {message.unverified && (
+                    <p role="alert" className="mt-3 rounded-2xl border border-accent bg-accent/10 p-4 text-sm font-semibold">
+                      Known conflicts were screened out, but missing evidence is not proof of safety.
+                      These ideas are not guaranteed allergy-safe or diet-compliant; check every ingredient and product label.
+                    </p>
+                  )}
                   {message.ideas && message.ideas.length > 0 && (
                     <ul className="mt-3 grid gap-3 sm:grid-cols-3">
                       {message.ideas.map((meal, index) => (
