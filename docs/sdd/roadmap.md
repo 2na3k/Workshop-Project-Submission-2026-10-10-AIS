@@ -33,7 +33,7 @@ test"; where nothing exists, it is "new".
 | p1-002-provenance-graph-model              | done    | p1-001-reproducible-source-pipeline, p1-001b-test-infrastructure                                                | p1-001-reproducible-source-pipeline, p1-001b-test-infrastructure, p1-003-coverage-quality-reporting              | Canonical graph schema and `REQUIRES`/`FULFILLS` provenance contract                                                                 |
 | p1-003-coverage-quality-reporting          | done    | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                              | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                                | Coverage dimensions and graph quality manifest                                                                                       |
 | p2-001-constraint-evidence-filtering       | done    | p1-002-provenance-graph-model                                                                                   | p2-002-cost-nutrition-calculation, p2-003-feasible-meal-plan-solving                                              | Candidate evaluation outcome and distinct evidence-absent/present-exclusion causes                                                   |
-| p2-002-cost-nutrition-calculation          | partial | p1-002-provenance-graph-model, p2-001-constraint-evidence-filtering                                             | p2-001-constraint-evidence-filtering, p2-003-feasible-meal-plan-solving                                           | Portion nutrient and consumed/package cost result contract; item-level evidence-absent signals (`MISSING_PACKAGE_DATA`, `PARTIAL_NUTRITION_DATA`) consumed by p2-003 as the recipe-level drop trigger (per-nutrient for partial nutrition) |
+| p2-002-cost-nutrition-calculation          | done    | p1-002-provenance-graph-model, p2-001-constraint-evidence-filtering                                             | p2-001-constraint-evidence-filtering, p2-003-feasible-meal-plan-solving                                           | Portion nutrient and consumed/package cost result contract; item-level evidence-absent signals (`MISSING_PACKAGE_DATA`, `PARTIAL_NUTRITION_DATA`) consumed by p2-003 as the recipe-level drop trigger (per-nutrient for partial nutrition) |
 | p2-003-feasible-meal-plan-solving          | partial | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                         | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                           | Plan feasibility result with named binding constraints, reasoning structure sufficient for downstream explanation, and the recipe-level drop behavior consuming p2-002's item-level evidence-absent signals (per-nutrient for `PARTIAL_NUTRITION_DATA`) |
 | p3-001-workflow-recommendation-service     | partial | p2-003-feasible-meal-plan-solving                                                                               | p3-002-explainable-response-contract, p3-003-web-planner-experience, p3-004-conversational-constraint-interface   | Recommendation execution result and trace boundary                                                                                   |
 | p3-002-explainable-response-contract       | partial | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation, p3-001-workflow-recommendation-service | p3-001-workflow-recommendation-service, p3-003-web-planner-experience, p3-004-conversational-constraint-interface | Three-level user explanation and audit-provenance separation                                                                         |
@@ -233,32 +233,33 @@ tracking the finding as a p2 risk.
   `FilterResult`) carry cause history without widening the user response
   boundary. Zero loops. Pre-existing API baseline failures excluded from the
   feature's CI and recorded in the feature's decisions.md D-1. (serves G-1)
-- **p2-002-cost-nutrition-calculation** *(partial, in progress)* — Existing
-  nutrient computation. Remaining work, per the amended constitution and the
-  feature's spec: verify and, where absent, implement
-  - the canonical `Food`/`FULFILLS` projection (R-1: `QUERY_B` reads only
-    canonical properties; drop `calcium_mg`/`iron_mg`);
-  - item-level cost absence on no eligible package (R-5, R-10);
-  - freshness enforcement at the calculator boundary
-    (`freshness_status == "fresh"`, per amended R-8; p2-001 also enforces at
-    its layer, so a non-fresh offer cannot reach cost by any path);
-  - item-level `PARTIAL_NUTRITION_DATA` signal for missing nutrients
-    (per amended R-9);
-  - cost eligibility by `price_status == "estimated"`,
-    `price_match_status == "accepted"`, and `price_basis in {package_mass,
-    package_volume}` (per amended R-10; `cost_basis_compatible` is not the
-    gate);
-  - consumed vs retail cost separation (R-11);
-  - deterministic nutrient conflict precedence: branded over generic; within
-    source kind, `nutrition_rank` asc → `selection_priority` asc →
-    `food_key` asc, nulls last (R-12);
-  - no-floor package selection with confidence recorded in the execution
-    trace (R-13; interval enforcement is not asserted in this feature);
-  - removal of `fdc_id` from the public response; audit provenance retained
-    in an internal trace (R-16).
-    The calculator emits `MISSING_PACKAGE_DATA` and `PARTIAL_NUTRITION_DATA`
-    as its item-level evidence-absent signals; the recipe-level drop is
-    p2-003's. (serves G-1, G-3)
+- **p2-002-cost-nutrition-calculation** *(done, 2026-10-08)* — Cost and
+  nutrition calculation: prove-and-fix against the amended constitution
+  (R-1, R-5, R-8, R-9, R-10, R-11, R-12, R-13, R-16). The repository now
+  reads the deployed canonical property names (`confidence`, not the stale
+  `mapping_confidence`) and projects the full evidence contract (nine
+  canonical nutrients, `food_key`, `price_status`, `price_match_status`,
+  `freshness_status`, `price_basis`, `package_volume_ml`, `nutrition_rank`,
+  `selection_priority`). Cost eligibility is enforced in `domain/cost.py` per
+  amended R-10: `price_status == "estimated"`, `price_match_status ==
+  "accepted"`, `freshness_status == "fresh"`, `price_basis in {package_mass,
+  package_volume}`, SGD, positive price, positive amount;
+  `cost_basis_compatible` is informational and does not gate selection.
+  `package_volume` is converted to grams silently via `domain.units.to_grams`.
+  Per-nutrient conflict precedence is implemented in
+  `domain/nutrition_select.py` per amended R-12 (branded over generic;
+  smallest `(nutrition_rank, selection_priority, food_key)` tuple, nulls
+  last) and applied per nutrient. Nutrient totals are null-when-any per
+  amended R-9. Item-level evidence-absent signals (`MISSING_PACKAGE_DATA`,
+  `PARTIAL_NUTRITION_DATA` with the missing nutrient names) are emitted;
+  recipe-level drops are p2-003's. Best-score cost selection with no
+  confidence floor, in the R-13 ordering. Audit-only provenance is retained
+  in a new `CalculationTrace`; the router returns only the public response
+  (R-16). `MAX_REQUEST_INGREDIENTS = 100` is a named constant. Two
+  loop-backs: one to the plan (T-20's file scope omitted `router.py`; F-E),
+  one to the spec (the initial spec's freshness and eligibility rules did not
+  match the deployed schema, resolved by amendments A-001..A-004). (serves
+  G-1, G-3)
 - **p2-003-feasible-meal-plan-solving** *(partial)* — Existing planning API.
   Remaining work: verify satisfiable returns a plan and unsatisfiable returns no
   plan with named binding constraints (R-14); confirm the plan result carries
@@ -276,12 +277,15 @@ tracking the finding as a p2 risk.
 
 ### Risks & unknowns
 
-- **p2-001 freshness predicate verification.** The amended R-8 makes freshness
-  enforcement dual-layer (p2-001 and p2-002 both check `freshness_status`). If
-  p2-001's current predicate is timestamp-based, it is non-conformant with the
-  amended rule and must be corrected; this is a p2-001 finding, not a p2-002
-  change. The calculator enforces the rule at its own boundary regardless, so a
-  p2-001 defect does not let non-fresh offers reach cost output.
+- **p2-001 freshness predicate verification (carried).** The amended R-8 makes
+  freshness enforcement dual-layer. p2-001's `_evaluate_freshness` still
+  contains a timestamp branch (`now - offer_observed_at <= 24h`) that predates
+  the amendment. Confirm where `offer_observed_at` is populated: if from a
+  non-existent `FULFILLS` property, the branch is dead and the effective rule
+  is already status-based (cleanup, not behavior); if from
+  `BEST_FULFILLMENT.selected_at` or another source, the branch fires and
+  measures the wrong thing (behavioral). Either way the code should express
+  only the status rule.
 - **p2-001 `cost_basis_compatible` check.** If p2-001's filtering treats
   `cost_basis_compatible = FALSE` as ineligible, it is non-conformant with the
   amended R-10 (which uses `price_status`/`price_match_status`/`price_basis`,
@@ -298,10 +302,13 @@ tracking the finding as a p2 risk.
 
 - p2-001: closed 2026-10-05, 0 loops. Pre-existing API baseline failures
   excluded from the feature's CI (see the feature's decisions.md D-1).
-- p2-002: in progress. Spec revised against the amended constitution
-  (amendments A-001..A-004: R-4, R-8, R-9, R-10). Plan not frozen; tasks
-  paused. Awaiting spec re-review and harness stage regression before tasks
-  resume.
+- p2-002: closed 2026-10-08, 2 loops (plan: T-20's router file scope; spec:
+  freshness/eligibility rule alignment). Five follow-ups carried to phase
+  review: F-A and F-B (p2-001 freshness and cost-basis predicates), F-C
+  (data-prep real-mart deferral, shared with p1), F-D (R-16 named check path
+  divergence from the constitution), N-1 (cross-feature test imports). CI
+  PASS on the corrected check set (`tests/features/calculator`,
+  `src/api/features/calculator`).
 - p2-003: not started. Will consume p2-002's item-level evidence-absent
   signals as the recipe-level drop trigger.
 
@@ -431,3 +438,21 @@ Status: planned
   by the deployed schema as written, and that the drop-layer responsibility
   was ambiguous; the roadmap now reflects the amended rules and the corrected
   scope.
+
+- 2026-10-08 — Marked `p2-002-cost-nutrition-calculation` as done, 2 loops.
+  Updated the feature description to reflect what shipped (canonical
+  `QUERY_B`; cost eligibility per amended R-10; silent `package_volume`
+  conversion; per-nutrient precedence per amended R-12; null-when-any
+  nutrient totals per amended R-9; item-level evidence-absent signals;
+  best-score package selection with no confidence floor in the R-13 ordering;
+  internal `CalculationTrace`; `MAX_REQUEST_INGREDIENTS = 100`). Recorded the
+  two loops (plan: T-20's file scope omitted `router.py`; spec: freshness and
+  eligibility rules did not match the deployed schema, resolved by amendments
+  A-001..A-004). Tightened the two p2-001 risk bullets with what p2-002's
+  review established: the freshness predicate's timestamp branch may be dead
+  code against the deployed schema (cleanup), while the cost-basis predicate
+  has real behavioral impact on ~63 eligible packages (behavioral). Added the
+  five follow-ups (F-A, F-B, F-C, F-D, N-1) to the phase p2 progress entry
+  for phase review. Reason: the second p2 feature closed on 2026-10-08 after
+  two loop-backs; the roadmap reflects the closure, the corrected p2-001
+  findings' severities, and the carry-forward list.

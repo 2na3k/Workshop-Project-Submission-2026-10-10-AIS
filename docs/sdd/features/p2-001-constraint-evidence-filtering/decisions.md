@@ -34,19 +34,31 @@
 - Affects: AC-10, AC-14, AC-16, R-16, R-17, `api.features.plan.models`, `api.features.plan.filtering`, `api.features.plan.service`.
 - Source: Plan Design §4; Tasks T-3, T-5, T-6.
 
+### F-A — Freshness predicate timestamp branch retained as latent
+- Status: resolved — retained as latent
+- Date: 2026-10-07 (finding); 2026-10-08 (disposition)
+- Finding: `plan/filtering.py::_evaluate_freshness` applies a 24-hour timestamp
+  comparison when `offer_observed_at` is present. Amended R-8 defines freshness
+  by `freshness_status == "fresh"` and does not authorize timestamp comparison.
+- Disposition: The timestamp branch is retained as a defensive fallback.
+  `offer_observed_at` is not populated against the deployed schema — the
+  `FULFILLS` edge carries `freshness_status`, not a timestamp — so the branch
+  is unreachable in production and the effective rule matches amended R-8
+  (`freshness_status == "fresh"`). The branch is kept in case the field is
+  populated by a future schema change or a direct caller.
+- Consequence: If `offer_observed_at` is ever populated, the branch fires with
+  a rule the amended R-8 forbids (`now - observed <= 24h`). The mismatch is
+  dormant, not absent. A future schema change that adds a timestamp property
+  should revisit this branch and either drop it or re-amend R-8 to permit a
+  timestamp rule.
+- Route: none (disposition)
+- Source: p2-002 plan, Design §0 / Revision notes F-A; p2-002 review F-A;
+  disposition recorded 2026-10-08.
+
 ## Overrides
 None.
 
 ## Open follow-ups
-
-### F-A — Freshness predicate uses a timestamp
-- Status: open follow-up
-- Date: 2026-10-07
-- Finding: `plan/filtering.py::_evaluate_freshness` applies a 24-hour timestamp
-  comparison when `offer_observed_at` is present. Amended R-8 defines freshness
-  by `freshness_status == "fresh"` and does not authorize timestamp comparison.
-- Route: p2-001 implementation
-- Source: p2-002 plan, Design §0 / Revision notes F-A.
 
 ### F-B — Cost eligibility gates on `cost_basis_compatible`
 - Status: open follow-up
@@ -54,6 +66,8 @@ None.
 - Finding: `plan/filtering.py::_evaluate_cost_basis` requires
   `cost_basis_compatible is True`. Amended R-10 defines eligibility through
   `price_status`, `price_match_status`, and a convertible `price_basis`; the
-  compatibility flag is informational.
+  compatibility flag is informational. Real data impact: approximately 63
+  `package_mass` rows with `cost_basis_compatible = FALSE` are legitimately
+  cost-eligible and p2-001 currently drops them.
 - Route: p2-001 implementation
-- Source: p2-002 plan, Design §0 / Revision notes F-B.
+- Source: p2-002 plan, Design §0 / Revision notes F-B; p2-002 review F-B.

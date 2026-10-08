@@ -122,6 +122,10 @@ def _evaluate_nutrients(recipe, request, outcome):
 def _evaluate_freshness(recipe, outcome, now):
     for ingredient in recipe.ingredients:
         if ingredient.offer_observed_at is not None:
+            # Kept as a defensive fallback: offer_observed_at is not populated by the
+            # deployed schema (freshness is freshness_status, per amended R-8). If it
+            # is ever populated, this branch fires with a timestamp rule that would
+            # need R-8 re-amended to permit.
             observed = ingredient.offer_observed_at
             if observed.tzinfo is None:
                 observed = observed.replace(tzinfo=timezone.utc)

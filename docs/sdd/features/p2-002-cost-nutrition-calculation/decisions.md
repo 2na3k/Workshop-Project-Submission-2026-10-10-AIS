@@ -101,15 +101,36 @@
 - Affects: AC-5, AC-20; data coverage expectations.
 - Source: Spec clarification C-9 and graph stats dated 2026-10-07.
 
-### F-A/F-B — p2-001 follow-ups
+### F-A — p2-001 freshness predicate: timestamp branch retained as latent
+- Date: 2026-10-07; disposition updated 2026-10-08
+- Status: resolved — retained as latent
+- F-A: `plan/filtering.py::_evaluate_freshness` contains a timestamp branch
+  (`now - offer_observed_at <= 24h`) that predates amended R-8. The branch is
+  retained as a defensive fallback. `offer_observed_at` is not populated
+  against the deployed schema (the `FULFILLS` edge carries `freshness_status`,
+  not a timestamp), so the branch is unreachable in production and the
+  effective rule matches amended R-8 (`freshness_status == "fresh"`).
+- Consequence: if `offer_observed_at` is ever populated, the branch will fire
+  with a rule amended R-8 forbids. The rule mismatch is dormant, not absent.
+  A future schema change that adds a timestamp property should revisit this
+  branch and either drop it or re-amend R-8.
+- Affects: p2-001 `plan/filtering.py::_evaluate_freshness`; F-A's disposition.
+  See p2-001's `decisions.md` for the p2-001-side record.
+- Source: p2-002 plan, Design §0 and Revision notes F-A.
+
+### F-B — p2-001 cost-basis predicate: behavioral, open
 - Date: 2026-10-07
-- Status: open follow-ups routed to p2-001
-- F-A: `plan/filtering.py::_evaluate_freshness` uses a 24-hour timestamp check
-  when `offer_observed_at` exists; amended R-8 requires the `freshness_status`
-  comparison. p2-001 owns the correction.
+- Status: open follow-up routed to p2-001
 - F-B: `plan/filtering.py::_evaluate_cost_basis` gates on
-  `cost_basis_compatible`; amended R-10 makes that flag informational.
-  p2-001 owns the correction.
+  `cost_basis_compatible is True`; amended R-10 makes that flag informational.
+  Real data impact: ~63 `package_mass` rows with
+  `cost_basis_compatible = FALSE` are legitimately cost-eligible and p2-001
+  currently drops them. The fix is to replace the gate with
+  `price_status == "estimated"` AND `price_match_status == "accepted"` AND
+  `price_basis in {package_mass, package_volume}`. p2-001 owns the
+  correction.
+- Affects: p2-001 `plan/filtering.py::_evaluate_cost_basis`; p2-002's C-9
+  coverage note (which will drift upward once p2-001 ships the fix).
 - Source: p2-002 plan, Design §0 and Revision notes F-A/F-B.
 
 ### F-C — Real data-preparation path deferred
