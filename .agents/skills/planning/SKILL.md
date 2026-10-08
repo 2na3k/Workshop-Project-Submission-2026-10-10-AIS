@@ -15,6 +15,7 @@ listing findings routed `plan`.
 1. `python .sdd/scripts/sdd.py gate plan <id>` must pass.
 2. Fill Approach (chosen + main rejected alternative, one line each), Design,
    Files to touch.
+    - If the feature adds, renames, or removes source or test files, `sdd.json` is in `## Files to touch` — the CI check set must include the feature's paths. This is not optional; a CI check set that doesn't cover the feature's files is not evidence.
 3. Constitution alignment: one line per relevant rule.
 4. Test strategy: one row per AC. No AC untested.
 5. **Integration per interface.** For every interface the plan names — a
