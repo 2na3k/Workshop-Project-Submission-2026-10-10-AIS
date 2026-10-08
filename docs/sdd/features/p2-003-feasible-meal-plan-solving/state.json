@@ -1,5 +1,9 @@
 {
-  "stage": "specified",
+  "stage": "tasks-approved",
+  "plan_review_verdict": "APPROVE",
+  "spec_hash": "sha256:56364e0bc9b4c410",
+  "plan_hash": "sha256:42bd02517809e07e",
+  "tasks_hash": "sha256:bada1fbaa3e7f89d",
   "history": [
     {
       "at": "2026-10-08T15:42:40+08:00",

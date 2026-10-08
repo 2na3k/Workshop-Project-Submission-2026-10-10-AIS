@@ -1,4 +1,4 @@
-# Plan - <title>
+ Plan - <title>
 
 ## Approach
 <!-- chosen approach + main rejected alternative, one line each -->

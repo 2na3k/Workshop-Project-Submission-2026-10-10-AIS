@@ -3,15 +3,15 @@
   "checks": [
     {
       "name": "test",
-      "command": "cd remy/api && uv run --package remy-api pytest -q tests/features/calculator"
+      "command": "cd remy/api && uv run --package remy-api pytest -q tests/features/calculator tests/features/plan"
     },
     {
       "name": "lint",
-      "command": "cd remy/api && uv run --package remy-api ruff check src/api/features/calculator --select F,E9"
+      "command": "cd remy/api && uv run --package remy-api ruff check src/api/features/calculator src/api/features/plan --select F,E9"
     },
     {
       "name": "typecheck",
-      "command": "cd remy/api && uv run --package remy-api mypy src/api/features/calculator --ignore-missing-imports"
+      "command": "cd remy/api && uv run --package remy-api mypy src/api/features/calculator src/api/features/plan --ignore-missing-imports"
     }
   ],
   "retries": 2,

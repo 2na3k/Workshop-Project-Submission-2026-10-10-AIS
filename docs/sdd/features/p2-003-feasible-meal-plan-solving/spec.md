@@ -111,8 +111,7 @@ R-8/R-10 are amended accordingly (see `## Clarifications` C-1).
   covering every `(day, meal)` slot of `horizon_days × meals_per_day`.
 - When the horizon cannot be satisfied after filtering, dropping, and the
   permitted nutrient-tolerance relaxation, the request does not return a plan.
-  It returns a feasibility failure that names the binding constraint(s) — a
-  minimal set of constraints whose relaxation would admit a plan. The failure
+  It returns a feasibility failure that names the binding constraint(s) — a deterministic set of individually-binding constraints whose relaxation would admit a plan. The failure
   distinguishes "no recipes remained in the eligible pool" from "recipes
   remained but no assignment satisfies the horizon under the constraints." The
   named set is deterministic for identical inputs.
@@ -169,12 +168,7 @@ R-8/R-10 are amended accordingly (see `## Clarifications` C-1).
 
 - **AC-2** Given a request whose horizon cannot be satisfied by any assignment
   of the eligible recipes under the requested constraints and under every
-  permitted nutrient-tolerance relaxation, when the plan is solved, then no
-  plan is returned and the response names the binding constraint(s) — a
-  deterministic minimal set whose relaxation would admit a plan. When the
-  failure is driven by a nutrient bound exceeding the permitted
-  `nutrient_tolerance_pct`, the specific binding nutrient constraint(s) are
-  included in the named set.
+  permitted nutrient-tolerance relaxation, when the plan is solved, then no plan is returned and the response names the binding constraint(s) — a deterministic set of individually-binding constraints, each relaxation of which (in isolation) admits a plan. When the failure is driven by a nutrient bound exceeding the permitted `nutrient_tolerance_pct`, the specific binding nutrient constraint(s) are included in the named set.
 
 - **AC-3** Given a request for which a producible plan exists, when the plan is
   solved, then the response is never a feasibility failure — the existence of a
