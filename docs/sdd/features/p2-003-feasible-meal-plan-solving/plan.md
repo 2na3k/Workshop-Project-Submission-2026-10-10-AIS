@@ -456,7 +456,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 3 — `inspect_candidates` on the calculator (C-7 / R-2)
 
-- [ ] **T-6** Write failing test: calculator exposes `inspect_candidates` returning per-recipe 
+- [x] **T-6** Write failing test: calculator exposes `inspect_candidates` returning per-recipe 
   missing-nutrient signals
   - Type: test
   - Covers: AC-4, AC-5, AC-13 (interface repo→service); C-7
