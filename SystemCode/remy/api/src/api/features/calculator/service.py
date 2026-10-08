@@ -8,6 +8,7 @@ from .domain.cost import consumed_cost, round_money, round_nutrient, select_pack
 from .domain.nutrition import missing_nutrients, per_serving, scale_nutrients, sum_nutrients
 from .domain.nutrition_select import select_nutrient_value
 from .exceptions import MissingUnitConversion, UnresolvableIngredient
+from .models import CandidateRecipe, RecipeNutritionSignal
 from .resolver import normalize_name, resolve
 from .schemas import (
     CalculationSummary, CostNutritionRequest, CostNutritionResponse, ItemWarning,
@@ -42,6 +43,24 @@ def _package_trace(selected) -> PackageTrace:
 class CostNutritionService:
     def __init__(self, repository):
         self.repository = repository
+
+    def inspect_candidates(
+        self, recipes: list[CandidateRecipe], servings: int
+    ) -> dict[str, RecipeNutritionSignal]:
+        """Report nutrients missing from any ingredient in each candidate."""
+        del servings  # Missingness is independent of portion scaling.
+        signals = {}
+        for recipe in recipes:
+            absent = set()
+            for profile in recipe.ingredient_nutrients:
+                absent.update(missing_nutrients(profile))
+            if not recipe.ingredient_nutrients:
+                absent.update(NUTRIENT_FIELDS)
+            signals[recipe.recipe_id] = RecipeNutritionSignal(
+                recipe_id=recipe.recipe_id,
+                missing_nutrients=[field for field in NUTRIENT_FIELDS if field in absent],
+            )
+        return signals
 
     def calculate(self, request: CostNutritionRequest) -> tuple[CostNutritionResponse, CalculationTrace]:
         names = [item.name for item in request.ingredients]

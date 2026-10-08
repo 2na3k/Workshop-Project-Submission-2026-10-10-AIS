@@ -463,7 +463,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
   - Files: `tests/features/calculator/test_inspect_candidates.py` (new)
   - Done when: the test fails because the method does not exist; the test drives the method directly with a small set of candidate recipes (each carrying per-ingredient `NutrientProfile`s), asserting per-recipe `missing_nutrients` and empty-signal behavior; reuses `calculator/domain/nutrition.py::missing_nutrients`
 
-- [ ] **T-7** Implement `CostNutritionService.inspect_candidates(recipes, servings)`
+- [x] **T-7** Implement `CostNutritionService.inspect_candidates(recipes, servings)`
   - Type: impl
   - Covers: AC-4, AC-5, AC-13; C-7 (R-2)
   - Files: `SystemCode/remy/api/src/api/features/calculator/service.py`, `SystemCode/remy/api/src/api/features/calculator/__init__.py` (export the return type), `SystemCode/remy/api/src/api/features/calculator/models.py` (`RecipeNutritionSignal` + `CandidateRecipe` input shape if not reused)

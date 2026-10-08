@@ -5,6 +5,18 @@ from domain.types import NutrientProfile
 
 
 @dataclass(frozen=True)
+class CandidateRecipe:
+    recipe_id: str
+    ingredient_nutrients: list[NutrientProfile]
+
+
+@dataclass(frozen=True)
+class RecipeNutritionSignal:
+    recipe_id: str
+    missing_nutrients: list[str]
+
+
+@dataclass(frozen=True)
 class RetailSKU:
     retailer: str | None
     listing_name: str | None
