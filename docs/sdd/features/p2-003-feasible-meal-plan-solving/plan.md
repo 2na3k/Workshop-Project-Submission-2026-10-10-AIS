@@ -532,7 +532,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
   - Files: `tests/features/plan/test_plan_calculator_integration.py` (`test_plan_consumes_calculator_partial_nutrition`)
   - Done when: real calculator service + real plan service run together; the calculator repository (Neo4j) is mocked/faked, the solver runs for real; a candidate recipe missing a tracked nutrient is dropped by the plan because the real `inspect_candidates` reported it; **one explicit assertion that a `MISSING_PACKAGE_DATA` signal from the calculator is ignored by the plan** (pins A-006/C-1)
 
-- [ ] **T-15** Plan repository → plan service integration test (extend existing)
+- [x] **T-15** Plan repository → plan service integration test (extend existing)
   - Type: integration
   - Covers: interface `PlanRepository.fetch_candidates` → `PlanService.generate`; AC-8a/AC-8b/AC-8c, AC-13
   - Files: `tests/features/plan/test_service_integration.py` (extend)

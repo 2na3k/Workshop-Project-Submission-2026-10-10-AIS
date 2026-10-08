@@ -1,6 +1,6 @@
 from api.features.plan.repository import PlanRepository
 from api.features.plan.service import PlanService
-from api.features.plan.schemas import DietaryRequest, PlanRequest
+from api.features.plan.schemas import DietaryRequest, NutrientLimit, NutrientRequest, PlanRequest
 from api.features.calculator.models import RecipeNutritionSignal
 
 
@@ -27,17 +27,18 @@ class Driver:
 
 
 def canonical_row(**overrides):
+    recipe_id = overrides.pop("recipe_id", "r-1")
     ingredient = {
         "quantity": 100, "unit": "g", "occurrence_id": "ingredient-1",
         "canonical_key": "black_pepper", "concept_name": "Black pepper",
         "nutrition_basis": "per 100 g", "energy_kcal": 10,
-        "protein_g": 1, "halal_status": "halal",
+        "protein_g": 1, "sodium_mg": 1, "halal_status": "halal",
         "best_food_key": "food-1",
         "freshness_status": "fresh", "package_mass_g": 100,
         "price_basis": "package_mass", "cost_basis_compatible": True,
     }
     ingredient.update(overrides)
-    return {"recipe_id": "r-1", "title": "Recipe", "ingredients": [ingredient]}
+    return {"recipe_id": recipe_id, "title": "Recipe", "ingredients": [ingredient]}
 
 
 def test_repository_evidence_reaches_filtering():
@@ -60,6 +61,13 @@ def test_service_propagates_distinct_filter_outcomes():
                           dietary=[DietaryRequest(code="halal")])
     response = service.generate(request)
     assert response.days[0].meals[0].recipe_id == "r-1"
+    assert response.recipe_outcomes[0].outcome == "selected"
+    assert response.relaxed is False
+    assert response.applied_tolerance_pct == 0
+    assert any(
+        outcome.recipe_id == "r-1" and outcome.constraint == "requirement"
+        for outcome in response.constraint_outcomes
+    )
 
 
 def test_canonical_evidence_fields_are_consumed():
@@ -106,3 +114,58 @@ def test_repository_records_unmapped_requirements_per_recipe():
         "rare spice",
         "pepper",
     ]
+
+
+def test_unmapped_fact_and_relaxed_label_survive_service_path():
+    first = canonical_row(recipe_id="r-1", energy_kcal=10, sodium_mg=6)
+    second = canonical_row(recipe_id="r-2", energy_kcal=10, sodium_mg=6)
+    unmapped = canonical_row(recipe_id="r-unmapped", sodium_mg=1)
+    unmapped["ingredients"].append({
+        "quantity": 1,
+        "unit": "tsp",
+        "occurrence_id": "missing-concept",
+        "normalized_name": "rare spice",
+        "canonical_key": None,
+        "best_food_key": None,
+        "raw_text": "1 tsp rare spice",
+    })
+
+    class Inspector:
+        def inspect_candidates(self, recipes, servings):
+            from api.features.calculator.models import RecipeNutritionSignal
+            return {
+                recipe.recipe_id: RecipeNutritionSignal(recipe.recipe_id, [])
+                for recipe in recipes
+            }
+
+    service = PlanService(
+        PlanRepository(Driver([first, second, unmapped])), calculator_service=Inspector()
+    )
+    request = PlanRequest(
+        horizon_days=1,
+        meals_per_day=2,
+        nutrient_tolerance_pct=20,
+        nutrients=[
+            NutrientRequest(
+                code="sodium",
+                unit="mg",
+                limit=NutrientLimit(max=10),
+            )
+        ],
+    )
+
+    response = service.generate(request)
+
+    assert response.status == "partial"
+    assert response.relaxed is True
+    assert response.applied_tolerance_pct == 20
+    dropped = next(item for item in response.recipe_outcomes
+                   if item.recipe_id == "r-unmapped")
+    assert dropped.outcome == "dropped"
+    assert dropped.cause == "unmapped"
+    assert any(
+        item.recipe_id == "r-unmapped"
+        and item.constraint == "unmapped"
+        and item.requirement_text == "1 tsp rare spice"
+        for item in response.constraint_outcomes
+    )
