@@ -373,6 +373,11 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ## Revision notes
 
+- **T-1 baseline (2026-10-08):** `cd SystemCode/remy/api && uv run
+  --package remy-api pytest -q tests/features/plan` → **11 passed**.
+  `sdd.json` already includes `src/api/features/plan` and
+  `tests/features/plan` in its test, lint, and typecheck commands; no check-set
+  change was needed.
 - **F-1 (plan review, blocker) — resolved in this revision.** AC-13's
   per-recipe `unmapped` cause derivation is now explicitly sourced from
   `PlanRepository.fetch_candidates`'s existing traversal (the
@@ -412,13 +417,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 0 — pre-task admin
 
-- [ ] **T-1** Verify rule IDs, AC numbers, and spec-text against the frozen artifacts; land the AC-2 cleanup
-  - Type: admin
-  - Covers: F-2 (spec amendment landing), spec AC-2 cleanup nit
-  - Files: `docs/sdd/features/p2-003-feasible-meal-plan-solving/spec.md` (AC-2 duplicate sentence cleanup only; the F-2 wording change is already in place from the prior loop), `docs/sdd/features/p2-003-feasible-meal-plan-solving/plan.md` (Design §0 / Constitution alignment — edit only if a citation is wrong)
-  - Done when: every cited rule (R-1, R-2, R-3, R-5, R-8, R-9, R-10, R-14, R-16, R-17) and every AC (AC-1..AC-15 incl. AC-2b, AC-4b, AC-4c, AC-8a..AC-8c, AC-14b) is confirmed present in the current approved `constitution.md` (v1.6) and `spec.md`; the AC-2 duplicate sentence is deleted; `spec_hash` is re-recorded after re-review if the deletion changes it
-
-- [ ] **T-2** Baseline-run the plan feature tests and record the CI check-set state
+- [ ] **T-1** Baseline-run the plan feature tests and record the CI check-set state
   - Type: admin
   - Covers: plan Design §0 baseline; `sdd.json` drift guard
   - Files: `docs/sdd/features/p2-003-feasible-meal-plan-solving/plan.md` (## Revision notes — record the run output), `sdd.json` (only if the check set does not already cover `src/api/features/plan` and `tests/features/plan`)
@@ -426,13 +425,15 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 1 — solver relaxation set and fallback (A-005 / C-6 / R-3 / R-14)
 
-- [ ] **T-3** Write failing tests: relaxation set is nutrient-bound-widening-only; structural relaxations prohibited; round-robin fallback removed
+- [ ] **T-2** Write failing tests: relaxation set is nutrient-bound-widening-only; structural 
+  relaxations prohibited; round-robin fallback removed
   - Type: test
   - Covers: AC-9, AC-10, AC-14, AC-14b, AC-15
   - Files: `tests/features/plan/test_tolerance.py` (`test_relaxed_plan_labeled_and_records_tolerance`, `test_widening_insufficient_hard_infeasible`, `test_tolerance_out_of_range_rejected`, `test_tolerance_absent_defaults_zero`), `tests/features/plan/test_solver_unavailable.py` (`test_solver_unavailable_hard_fail`)
   - Done when: the tests fail against the current solver's four-stage ladder and round-robin fallback; AC-9/AC-10 pin nutrient-bound widening and hard infeasibility; AC-14 asserts the FastAPI `{"detail":[...]}` envelope at 422 with no solver invocation; AC-14b pins absent-default 0 and 0-means-no-widening; AC-15 asserts the custom `{"error":{code,message,details,timestamp}}` envelope, no `200 OK`, no degraded plan
 
-- [ ] **T-4** Add `nutrient_tolerance_pct` to the request schema; replace the relaxation ladder with a single widening stage; remove the fallback
+- [ ] **T-3** Add `nutrient_tolerance_pct` to the request schema; replace the relaxation ladder 
+  with a single widening stage; remove the fallback
   - Type: impl
   - Covers: AC-9, AC-10, AC-14, AC-14b, AC-15 (R-3, R-14 per A-005)
   - Files: `SystemCode/remy/api/src/api/features/plan/schemas.py` (`nutrient_tolerance_pct: int` with `Field(ge=0, le=25)` default 0), `SystemCode/remy/api/src/api/features/plan/solver_v2.py`, `SystemCode/remy/api/src/api/features/plan/exceptions.py` (add `SolverUnavailable` error)
@@ -440,13 +441,14 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 2 — hard infeasibility with a named binding-constraint set (R-14 / C-2)
 
-- [ ] **T-5** Write failing tests: `PlanInfeasible` carries the deterministic individually-binding set; reason discriminator
+- [ ] **T-4** Write failing tests: `PlanInfeasible` carries the deterministic 
+  individually-binding set; reason discriminator
   - Type: test
   - Covers: AC-2, AC-2b, AC-3, AC-12
   - Files: `tests/features/plan/test_domain_solver.py` (`test_infeasible_names_individually_binding_set`, `test_producible_never_infeasible`, `test_feasible_returns_plan`), `tests/features/plan/test_response_contract.py` (`test_infeasibility_reason_discriminator`, `test_deterministic_across_runs`)
   - Done when: the tests fail against the current solver; AC-2 asserts a deterministic set of individually-binding constraints (per the amended spec wording); AC-3 asserts a satisfying assignment always returns a plan; AC-2b asserts the `no-recipes-survived` vs `no-assignment` discriminator; AC-12 asserts identical output across runs
 
-- [ ] **T-6** Implement the binding-constraint probe and the structured `PlanInfeasible`
+- [ ] **T-5** Implement the binding-constraint probe and the structured `PlanInfeasible`
   - Type: impl
   - Covers: AC-2, AC-2b, AC-3, AC-12 (R-14)
   - Files: `SystemCode/remy/api/src/api/features/plan/solver_v2.py`, `SystemCode/remy/api/src/api/features/plan/exceptions.py` (`PlanInfeasible` carries `NamedConstraint` set + `reason`), `SystemCode/remy/api/src/api/features/plan/models.py` (`NamedConstraint` dataclass with `scope`/`code`/`kind`)
@@ -454,13 +456,14 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 3 — `inspect_candidates` on the calculator (C-7 / R-2)
 
-- [ ] **T-7** Write failing test: calculator exposes `inspect_candidates` returning per-recipe missing-nutrient signals
+- [ ] **T-6** Write failing test: calculator exposes `inspect_candidates` returning per-recipe 
+  missing-nutrient signals
   - Type: test
   - Covers: AC-4, AC-5, AC-13 (interface repo→service); C-7
   - Files: `tests/features/calculator/test_inspect_candidates.py` (new)
   - Done when: the test fails because the method does not exist; the test drives the method directly with a small set of candidate recipes (each carrying per-ingredient `NutrientProfile`s), asserting per-recipe `missing_nutrients` and empty-signal behavior; reuses `calculator/domain/nutrition.py::missing_nutrients`
 
-- [ ] **T-8** Implement `CostNutritionService.inspect_candidates(recipes, servings)`
+- [ ] **T-7** Implement `CostNutritionService.inspect_candidates(recipes, servings)`
   - Type: impl
   - Covers: AC-4, AC-5, AC-13; C-7 (R-2)
   - Files: `SystemCode/remy/api/src/api/features/calculator/service.py`, `SystemCode/remy/api/src/api/features/calculator/__init__.py` (export the return type), `SystemCode/remy/api/src/api/features/calculator/models.py` (`RecipeNutritionSignal` + `CandidateRecipe` input shape if not reused)
@@ -468,13 +471,14 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 4 — per-recipe unmapped fact in the plan repository (F-1)
 
-- [ ] **T-9** Write failing test: `PlanRepository.fetch_candidates` records per-recipe `unmapped_requirements`
+- [ ] **T-8** Write failing test: `PlanRepository.fetch_candidates` records per-recipe 
+  `unmapped_requirements`
   - Type: test
   - Covers: AC-13 (interface repo→service, second row)
   - Files: `tests/features/plan/test_service_integration.py` (extend the existing fake-driver flow) or a focused new test in the same file asserting per-recipe `unmapped_requirements` for a recipe with a `REQUIRES` edge missing its `FoodConcept` / `BEST_FULFILLMENT`
   - Done when: the test fails against the current repository (which silently skips those edges); the new per-recipe fact is asserted on the real `PlanRepository` output
 
-- [ ] **T-10** Extend `PlanRepository` to record `unmapped_requirements` per recipe
+- [ ] **T-9** Extend `PlanRepository` to record `unmapped_requirements` per recipe
   - Type: impl
   - Covers: AC-13 (F-1); R-2 (fact stays within the plan feature)
   - Files: `SystemCode/remy/api/src/api/features/plan/repository.py`, `SystemCode/remy/api/src/api/features/plan/models.py` (`RequirementRef` dataclass; `Recipe` gains `unmapped_requirements`)
@@ -482,19 +486,22 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 5 — nutrition drop, cause model, three-level response (R-9 / C-3 / C-4 / C-5 / R-16 / R-17)
 
-- [ ] **T-11** Write failing tests: nutrition drop on tracked nutrients, goal-triggers-drop, untracked retention, cause precedence, per-recipe categorization
+- [ ] **T-10** Write failing tests: nutrition drop on tracked nutrients, goal-triggers-drop, 
+  untracked retention, cause precedence, per-recipe categorization
   - Type: test
   - Covers: AC-4, AC-4b, AC-4c, AC-5, AC-6, AC-7, AC-13
   - Files: `tests/features/plan/test_service_nutrition_drop.py` (`test_tracked_partial_nutrition_drops`, `test_drop_categorized_under_nutrient`, `test_goal_on_missing_nutrient_drops`, `test_untracked_partial_nutrition_retained`, `test_unmapped_cause_and_binding`), `tests/features/plan/test_causes.py` (`test_present_evidence_cause_distinct`, `test_multi_cause_precedence`)
   - Done when: the tests fail against the current service (which does not invoke the calculator or derive the per-recipe cause); AC-4/AC-4b/AC-4c pin the per-tracked-nutrient drop and its categorization; AC-5 pins untracked retention; AC-6/AC-7 pin cause distinctness and precedence `present-evidence-excludes → evidence-absent → unmapped`; AC-13 pins the `unmapped` cause and its binding-set naming
 
-- [ ] **T-12** Wire `inspect_candidates` into `PlanService.generate`; derive the per-recipe cause model; build the three-level response
+- [ ] **T-11** Wire `inspect_candidates` into `PlanService.generate`; derive the per-recipe 
+  cause model; build the three-level response
   - Type: impl
   - Covers: AC-4, AC-4b, AC-4c, AC-5, AC-6, AC-7, AC-8a, AC-8b, AC-8c, AC-11, AC-13 (R-5, R-9, R-16, R-17); all interface rows
   - Files: `SystemCode/remy/api/src/api/features/plan/service.py`, `SystemCode/remy/api/src/api/features/plan/models.py` (per-recipe cause/outcome types), `SystemCode/remy/api/src/api/features/plan/schemas.py` (recipe-level outcome list, constraint-level list, `relaxed: bool`, `applied_tolerance_pct: int`, binding-constraint block; keep `status: complete|partial` per F-5), `SystemCode/remy/api/src/api/features/plan/trace.py` (new `PlanTrace`)
   - Done when: T-11 passes; `PlanService.generate` calls `inspect_candidates` on the retained pool between filtering and solving; per-tracked-nutrient drops are applied per C-4; the per-recipe cause is derived per §4 (repository fact + p2-001 causes + p2-003's nutrition drops, combined per C-5 precedence); the response carries the three-level record and the `relaxed`/`applied_tolerance_pct` pair; no audit-only provenance in the user payload (AC-11); the `MISSING_PACKAGE_DATA` signal is not consumed (A-006 / C-1)
 
-- [ ] **T-13** Write failing tests: response contract at three levels; no audit provenance; relaxed label
+- [ ] **T-12** Write failing tests: response contract at three levels; no audit provenance; 
+  relaxed label
   - Type: test
   - Covers: AC-8a, AC-8b, AC-8c, AC-11
   - Files: `tests/features/plan/test_response_contract.py` (`test_plan_level_record`, `test_recipe_level_record`, `test_constraint_level_record`, `test_no_audit_provenance_in_response`)
@@ -502,7 +509,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 6 — API doc correction (R-1)
 
-- [ ] **T-14** Update `API_doc.md` for the new `/plan` request and response shape
+- [ ] **T-13** Update `API_doc.md` for the new `/plan` request and response shape
   - Type: impl
   - Covers: R-1; AC-9, AC-11
   - Files: `SystemCode/remy/api/docs/API_doc.md` (`/plan` section)
@@ -510,13 +517,13 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 7 — integration tests
 
-- [ ] **T-15** Plan → calculator integration test
+- [ ] **T-14** Plan → calculator integration test
   - Type: integration
   - Covers: interface `CostNutritionService.inspect_candidates` → `PlanService.generate`; AC-4, AC-5, AC-13
   - Files: `tests/features/plan/test_plan_calculator_integration.py` (`test_plan_consumes_calculator_partial_nutrition`)
   - Done when: real calculator service + real plan service run together; the calculator repository (Neo4j) is mocked/faked, the solver runs for real; a candidate recipe missing a tracked nutrient is dropped by the plan because the real `inspect_candidates` reported it; **one explicit assertion that a `MISSING_PACKAGE_DATA` signal from the calculator is ignored by the plan** (pins A-006/C-1)
 
-- [ ] **T-16** Plan repository → plan service integration test (extend existing)
+- [ ] **T-15** Plan repository → plan service integration test (extend existing)
   - Type: integration
   - Covers: interface `PlanRepository.fetch_candidates` → `PlanService.generate`; AC-8a/AC-8b/AC-8c, AC-13
   - Files: `tests/features/plan/test_service_integration.py` (extend)
@@ -524,7 +531,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 8 — CI check set
 
-- [ ] **T-17** Extend `sdd.json` to cover the plan feature
+- [ ] **T-16** Extend `sdd.json` to cover the plan feature
   - Type: impl
   - Covers: `sdd.json` scope (per plan Output); the p2-002 CI-drift lesson
   - Files: `sdd.json`
@@ -532,13 +539,13 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 9 — closing admin
 
-- [ ] **T-18** Record feature decisions
+- [ ] **T-17** Record feature decisions
   - Type: admin
   - Covers: F-1..F-5 decisions; C-1..C-7 consequential flags; A-005 and A-006 citations; spec amendment AC-2
   - Files: `docs/sdd/features/p2-003-feasible-meal-plan-solving/decisions.md`
   - Done when: F-1 (unmapped fact sourced from the plan repository), F-2 (spec AC-2 amended to "individually-binding"), F-3 (reason discriminator, goal-triggers-drop), F-4 (`servings` for contract symmetry), F-5 (`status=partial` iff `relaxed`), C-1..C-7 and the AC-2 amendment are recorded; A-005 and A-006 referenced with their impact; no overrides
 
-- [ ] **T-19** Run the full API test suite and `sdd.py ci`
+- [ ] **T-18** Run the full API test suite and `sdd.py ci`
   - Type: verification
   - Covers: all ACs and interfaces
   - Files: (all above)
