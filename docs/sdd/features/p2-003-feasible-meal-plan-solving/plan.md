@@ -509,7 +509,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
   - Files: `SystemCode/remy/api/src/api/features/plan/service.py`, `SystemCode/remy/api/src/api/features/plan/models.py` (per-recipe cause/outcome types), `SystemCode/remy/api/src/api/features/plan/schemas.py` (recipe-level outcome list, constraint-level list, `relaxed: bool`, `applied_tolerance_pct: int`, binding-constraint block; keep `status: complete|partial` per F-5), `SystemCode/remy/api/src/api/features/plan/trace.py` (new `PlanTrace`)
   - Done when: T-11 passes; `PlanService.generate` calls `inspect_candidates` on the retained pool between filtering and solving; per-tracked-nutrient drops are applied per C-4; the per-recipe cause is derived per §4 (repository fact + p2-001 causes + p2-003's nutrition drops, combined per C-5 precedence); the response carries the three-level record and the `relaxed`/`applied_tolerance_pct` pair; no audit-only provenance in the user payload (AC-11); the `MISSING_PACKAGE_DATA` signal is not consumed (A-006 / C-1)
 
-- [ ] **T-12** Write failing tests: response contract at three levels; no audit provenance; 
+- [x] **T-12** Write failing tests: response contract at three levels; no audit provenance; 
   relaxed label
   - Type: test
   - Covers: AC-8a, AC-8b, AC-8c, AC-11
