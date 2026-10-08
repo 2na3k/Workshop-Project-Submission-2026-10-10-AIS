@@ -195,6 +195,8 @@ class PlanService:
                     requirement_id=requirement.occurrence_id,
                     constraint="unmapped",
                     state="unmapped",
+                    requirement_text=(requirement.cleaned_text or requirement.raw_text
+                                      or requirement.normalized_name),
                     resolved_concept=requirement.normalized_name,
                 ))
 
@@ -267,6 +269,8 @@ class PlanService:
                     requirement_id=ingredient.occurrence_id,
                     constraint="requirement",
                     state="selected",
+                    requirement_text=(ingredient.cleaned_text or ingredient.raw_text
+                                      or ingredient.description or ingredient.canonical_key),
                     resolved_concept=ingredient.concept_name or ingredient.canonical_key,
                     selected_offer=selected_offers.get((recipe.recipe_id, ingredient.occurrence_id)),
                     warnings=warning_codes,
@@ -320,7 +324,7 @@ class PlanService:
         response_constraints = [
             ConstraintOutcomeResponse(
                 recipe_id=record.recipe_id,
-                requirement_id=record.requirement_id,
+                requirement_text=record.requirement_text,
                 constraint=record.constraint,
                 state=record.state,
                 resolved_concept=record.resolved_concept,

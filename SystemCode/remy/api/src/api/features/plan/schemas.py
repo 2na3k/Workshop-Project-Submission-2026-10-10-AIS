@@ -145,7 +145,7 @@ class SelectedOfferResponse(BaseModel):
 
 class ConstraintOutcomeResponse(BaseModel):
     recipe_id: str
-    requirement_id: str | None = None
+    requirement_text: str | None = None
     constraint: str
     state: str
     resolved_concept: str | None = None
