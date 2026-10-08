@@ -34,11 +34,11 @@ test"; where nothing exists, it is "new".
 | p1-003-coverage-quality-reporting          | done    | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                              | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                                | Coverage dimensions and graph quality manifest                                                                                       |
 | p2-001-constraint-evidence-filtering       | done    | p1-002-provenance-graph-model                                                                                   | p2-002-cost-nutrition-calculation, p2-003-feasible-meal-plan-solving                                              | Candidate evaluation outcome and distinct evidence-absent/present-exclusion causes                                                   |
 | p2-002-cost-nutrition-calculation          | done    | p1-002-provenance-graph-model, p2-001-constraint-evidence-filtering                                             | p2-001-constraint-evidence-filtering, p2-003-feasible-meal-plan-solving                                           | Portion nutrient and consumed/package cost result contract; item-level evidence-absent signals (`MISSING_PACKAGE_DATA`, `PARTIAL_NUTRITION_DATA`) consumed by p2-003 as the recipe-level drop trigger (per-nutrient for partial nutrition) |
-| p2-003-feasible-meal-plan-solving          | partial | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                         | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                           | Plan feasibility result with named binding constraints, reasoning structure sufficient for downstream explanation, and the recipe-level drop behavior consuming p2-002's item-level evidence-absent signals (per-nutrient for `PARTIAL_NUTRITION_DATA`) |
+| p2-003-feasible-meal-plan-solving          | partial | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                         | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                           | Plan feasibility result with named binding constraints (deterministic minimal set), reasoning structure sufficient for downstream explanation, and the recipe-level nutrition drop behavior consuming p2-002's item-level `PARTIAL_NUTRITION_DATA` signal (per-nutrient for tracked nutrients). Cost/budget out of scope; recipe-level cost drop deferred. |
 | p3-001-workflow-recommendation-service     | partial | p2-003-feasible-meal-plan-solving                                                                               | p3-002-explainable-response-contract, p3-003-web-planner-experience, p3-004-conversational-constraint-interface   | Recommendation execution result and trace boundary                                                                                   |
 | p3-002-explainable-response-contract       | partial | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation, p3-001-workflow-recommendation-service | p3-001-workflow-recommendation-service, p3-003-web-planner-experience, p3-004-conversational-constraint-interface | Three-level user explanation and audit-provenance separation                                                                         |
 | p3-003-web-planner-experience              | partial | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                    | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                      | Web request/response contract for meal-plan recommendations                                                                          |
-| p3-004-conversational-constraint-interface | new     | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                    | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract, p3-003-web-planner-experience       | Conversational constraint extraction, turn-level recommendation delivery, and safe re-expression of deterministic explanation causes |
+| p3-004-conversational-constraint-interface | new     | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                    | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract, p3-003-web-planner-experience       | Conversational constraint extraction, turn-level recommendation delivery, safe re-expression of deterministic explanation causes, **and the recipe-level cost drop inherited from R-8/R-10 per A-006** |
 
 ## Phase p1 - reproducible data and graph foundation
 
@@ -262,18 +262,58 @@ tracking the finding as a p2 risk.
   G-1, G-3)
 - **p2-003-feasible-meal-plan-solving** *(partial)* — Existing planning API.
   Remaining work: verify satisfiable returns a plan and unsatisfiable returns no
-  plan with named binding constraints (R-14); confirm the plan result carries
-  per-requirement outcomes, drop causes, selected offers, and resolved concepts
-  so that p3 can explain without re-deriving. Additionally, per the amended
-  R-8/R-9/R-10, p2-003 consumes p2-002's item-level evidence-absent signals
-  (`MISSING_PACKAGE_DATA`, `PARTIAL_NUTRITION_DATA`) as the recipe-level drop
-  trigger: for `PARTIAL_NUTRITION_DATA` the drop applies per nutrient, since a
-  nutrient total is evaluable only when every contributing ingredient carries a
-  non-null value for that nutrient. (serves G-1)
+  plan with a deterministic minimal set of named binding constraints (R-14, as
+  amended by A-005); confirm the plan result carries per-requirement outcomes,
+  drop causes, selected offers, and resolved concepts so that p3 can explain
+  without re-deriving. p2-003 consumes p2-002's item-level
+  `PARTIAL_NUTRITION_DATA` signal as the recipe-level nutrition drop trigger
+  (per tracked nutrient; a nutrient is tracked when the request supplies a
+  `limit` or a `goal`), and p2-001's per-constraint outcomes and unmapped-
+  requirement tracking. `unmapped` is a top-level drop cause distinct from
+  `evidence-absent` and `present-evidence-excludes`; precedence is
+  `present-evidence-excludes` → `evidence-absent` → `unmapped`. The relaxation
+  set is nutrient-bound widening only (`nutrient_tolerance_pct`, integer
+  `[0, 25]`, default 0); structural relaxations are prohibited; a request
+  satisfiable only under a structural relaxation returns a hard infeasibility
+  failure. Cost and budget are out of scope for this feature (per A-006); the
+  calculator's `MISSING_PACKAGE_DATA` signal is not consumed here, and the
+  recipe-level cost drop is **deferred to p3-004-conversational-constraint-
+  interface**. The solver-unavailable case is a hard failure (no degraded plan).
+  (serves G-1)
 
 ### Exit criteria
 
-*(unchanged)*
+- A request whose `horizon_days × meals_per_day` can be satisfied by the
+  eligible recipes returns a plan that fills every `(day, meal)` slot
+  (R-14's producible direction). *To be satisfied by p2-003's
+  `test_domain_solver.py` fixture.*
+- A request that cannot be satisfied after filtering, dropping, and the
+  permitted nutrient-tolerance relaxation returns no plan and names a
+  deterministic minimal set of binding constraints (R-14's infeasibility
+  direction). *To be satisfied by p2-003's `test_domain_solver.py` fixture.*
+- A recipe that is evidence-absent for any tracked nutrient is dropped from the
+  plan pool with an `evidence-absent` cause categorized under the affected
+  nutrient's constraint (R-9's recipe-level drop). *To be satisfied by p2-003's
+  fixture, consuming p2-002's `PARTIAL_NUTRITION_DATA`.*
+- The plan result exposes three-level reasoning (plan / recipe / constraint)
+  with distinct drop causes (`evidence-absent`, `present-evidence-excludes`,
+  `unmapped`) and their precedence. *To be satisfied by p2-003's fixture,
+  consuming p2-001's outcomes.*
+- The user-facing plan response excludes audit-only provenance; the plan-level
+  trace (separate from p2-002's `CalculationTrace`) carries it. *To be
+  satisfied by p2-003's response-schema fixture.*
+- Cost and budget evaluation is out of scope for p2; the recipe-level cost
+  drop is deferred to p3-004-conversational-constraint-interface. *Recorded
+  per A-006. The deferral crosses the p2→p3 phase boundary; p3-004's entry
+  names the inherited obligation, and the phase p2 review acknowledges that
+  R-8's and R-10's recipe-level check fixtures are owned by p3-004, not by any
+  p2 feature.*
+- No unresolved blocking findings. *p2-002's F-A (p2-001 freshness predicate:
+  timestamp branch retained as latent), F-B (p2-001 cost-basis predicate:
+  behavioral, open), F-C (data-prep real-mart deferral), F-D (R-16 test-path
+  divergence), and N-1 (cross-feature test imports) are tracked for phase
+  review. p2-003's A-005 and A-006 are new amendments; their impact is tracked
+  above.*
 
 ### Risks & unknowns
 
@@ -297,6 +337,28 @@ tracking the finding as a p2 risk.
   before freezing the p2-002 spec.
 - **`data-prep-price-path` finding** (carried from p1): real marts cannot be
   built; p2's features are verified with fixtures only.
+- **p2-003's R-14 relaxation set depends on A-005.** Until A-005 is approved,
+  p2-003's spec asserts a reading of R-14 that the constitution does not yet
+  express. A-005 names the permitted relaxation set (nutrient-bound widening
+  only) and prohibits structural relaxations. If A-005 is rejected, the
+  existing solver's relaxation ladder (repeats, no-consecutive) remains
+  constitutionally unclassified and p2-003's spec must be revised.
+- **The recipe-level cost drop is deferred to p3-004 (A-006)**. R-8 and R-10
+  name a recipe-level cost drop that p2-003 does not implement (cost out of
+  scope). A-006 amends R-8/R-10 so the calculator's item-level
+  `MISSING_PACKAGE_DATA` signal is the sole cost enforcement point in p2.
+  p3-004-conversational-constraint-interface owns the recipe-level cost drop
+  and, when it ships, asserts R-8's and R-10's recipe-level fixtures. The
+  deferral crosses the p2→p3 phase boundary; if p3-004's scope changes (for
+  example, if budget evaluation moves to a different feature), the owner
+  named in A-006 must be re-amended.
+- **p2-001 F-B (cost-basis predicate) affects the pool p2-003 sees.** If
+  p2-001's `_evaluate_cost_basis` continues to gate on
+  `cost_basis_compatible`, the candidate pool p2-003 receives is smaller than
+  amended R-10 permits (~63 eligible `package_mass` rows filtered out). Cost is
+  out of scope for p2-003, so this does not change p2-003's behavior directly;
+  but the shared contract with the future budget feature is affected. Triage
+  F-B before the budget feature's plan.
 
 ### Phase p2 progress
 
@@ -316,7 +378,18 @@ tracking the finding as a p2 risk.
 
 Status: planned
 
-*(unchanged)*
+### Features
+
+- **p3-004-conversational-constraint-interface** *(new)* — Conversational
+  constraint extraction, turn-level recommendation delivery, and safe
+  re-expression of deterministic explanation causes. **Additionally, p3-004
+  inherits the recipe-level cost drop from A-006**: when a requirement has no
+  cost-eligible package (the calculator's `MISSING_PACKAGE_DATA` signal, per
+  amended R-8/R-10), p3-004 drops the recipe from the eligible pool with an
+  evidence-absent cause, asserting R-8's and R-10's recipe-level fixtures.
+  Until p3-004 ships, the calculator's item-level signal is the sole cost
+  enforcement point. (serves G-1, and closes the R-8/R-10 check obligation
+  deferred from p2)
 
 ## Re-plan log
 
@@ -456,3 +529,19 @@ Status: planned
   for phase review. Reason: the second p2 feature closed on 2026-10-08 after
   two loop-backs; the roadmap reflects the closure, the corrected p2-001
   findings' severities, and the carry-forward list.
+
+- 2026-10-08 — Drafted amendments A-005 (R-14 relaxation set) and A-006 (R-8/R-10
+  cost-drop deferral) in response to the p2-003 spec review. Updated the p2-003
+  feature entry, phase p2 exit criteria, and phase p2 risks to reflect the
+  amended rules: p2-003 consumes p2-002's `PARTIAL_NUTRITION_DATA` per tracked
+  nutrient; `unmapped` is a top-level drop cause with precedence
+  `present-evidence-excludes` → `evidence-absent` → `unmapped`; the relaxation
+  set is nutrient-bound widening only, with `nutrient_tolerance_pct` in
+  `[0, 25]` defaulting to 0; cost and budget are out of scope for p2, and the
+  recipe-level cost drop is **deferred to p3-004-conversational-constraint-
+  interface**, which now inherits the R-8/R-10 recipe-level check obligation.
+  Reason: the p2-003 spec review surfaced that R-14's "permitted relaxations"
+  was unclassified and that R-8/R-10 named a p2-003 cost-drop obligation the
+  feature does not execute; both required amendments rather than spec-only
+  readings, matching the A-001..A-004 precedent from p2-002. The owner of the
+  deferred cost drop is p3-004, named in A-006 and in p3-004's entry.

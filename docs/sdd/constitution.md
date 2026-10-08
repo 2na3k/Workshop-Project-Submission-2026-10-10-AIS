@@ -1,6 +1,6 @@
 # Project Constitution
 
-Version: 1.4
+Version: 1.6
 Status: approved
 
 Long-lived, project-level. Changes only via `amendments/`. This file has no
