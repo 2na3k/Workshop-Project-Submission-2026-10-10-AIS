@@ -1,7 +1,7 @@
 import math
 
 from .exceptions import PlanInfeasible, SolverUnavailable
-from .models import Recipe
+from .models import NamedConstraint, Recipe
 
 
 def solve_v2(recipes: list[Recipe], request):
@@ -112,13 +112,13 @@ def solve_v2(recipes: list[Recipe], request):
         solver = cp_model.CpSolver()
         solver.parameters.random_seed = 0
         solver.parameters.num_search_workers = 1
-        solver.parameters.max_time_in_seconds = 0.5
         status = solver.Solve(model)
         if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             return None
         return solver, n
 
-    result = build_and_solve(nutrient_specs)
+    effective_specs = nutrient_specs
+    result = build_and_solve(effective_specs)
     applied_relaxations = []
     tolerance_pct = request.nutrient_tolerance_pct
 
@@ -133,7 +133,8 @@ def solve_v2(recipes: list[Recipe], request):
                 spec["max"] = int(round(spec["max"] * (1 + tolerance_pct / 100)))
                 has_bounds = True
         if has_bounds:
-            result = build_and_solve(widened_specs)
+            effective_specs = widened_specs
+            result = build_and_solve(effective_specs)
             if result is not None:
                 applied_relaxations.append(
                     {
@@ -144,7 +145,36 @@ def solve_v2(recipes: list[Recipe], request):
                 )
 
     if result is None:
-        raise PlanInfeasible("No feasible plan under the requested nutrient tolerance")
+        reason = "no-recipes-survived" if not recipes else "no-assignment"
+        binding_constraints = []
+        if not recipes:
+            binding_constraints.append(
+                NamedConstraint(scope="plan", code="horizon", kind="horizon")
+            )
+        else:
+            for index, spec in enumerate(effective_specs):
+                if spec["min"] is None and spec["max"] is None:
+                    continue
+                relaxed_specs = [dict(item) for item in effective_specs]
+                relaxed_specs[index]["min"] = None
+                relaxed_specs[index]["max"] = None
+                if build_and_solve(relaxed_specs) is not None:
+                    binding_constraints.append(
+                        NamedConstraint(
+                            scope="plan",
+                            code=spec["code"],
+                            kind="nutrient-bound",
+                        )
+                    )
+            if not binding_constraints:
+                binding_constraints.append(
+                    NamedConstraint(scope="plan", code="horizon", kind="horizon")
+                )
+        raise PlanInfeasible(
+            "No feasible plan under the requested nutrient tolerance",
+            binding_constraints=binding_constraints,
+            reason=reason,
+        )
 
     solver, n = result
     days = []

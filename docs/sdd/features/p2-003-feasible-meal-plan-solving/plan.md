@@ -448,7 +448,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
   - Files: `tests/features/plan/test_domain_solver.py` (`test_infeasible_names_individually_binding_set`, `test_producible_never_infeasible`, `test_feasible_returns_plan`), `tests/features/plan/test_response_contract.py` (`test_infeasibility_reason_discriminator`, `test_deterministic_across_runs`)
   - Done when: the tests fail against the current solver; AC-2 asserts a deterministic set of individually-binding constraints (per the amended spec wording); AC-3 asserts a satisfying assignment always returns a plan; AC-2b asserts the `no-recipes-survived` vs `no-assignment` discriminator; AC-12 asserts identical output across runs
 
-- [ ] **T-5** Implement the binding-constraint probe and the structured `PlanInfeasible`
+- [x] **T-5** Implement the binding-constraint probe and the structured `PlanInfeasible`
   - Type: impl
   - Covers: AC-2, AC-2b, AC-3, AC-12 (R-14)
   - Files: `SystemCode/remy/api/src/api/features/plan/solver_v2.py`, `SystemCode/remy/api/src/api/features/plan/exceptions.py` (`PlanInfeasible` carries `NamedConstraint` set + `reason`), `SystemCode/remy/api/src/api/features/plan/models.py` (`NamedConstraint` dataclass with `scope`/`code`/`kind`)

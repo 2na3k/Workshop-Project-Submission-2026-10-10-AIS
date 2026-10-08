@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Literal
 from domain.types import Nutrition
 
 
@@ -54,6 +55,19 @@ class ConstraintEvaluation:
     state: str
     detail: str | None = None
     ingredient_id: str | None = None
+
+
+@dataclass(frozen=True)
+class NamedConstraint:
+    scope: Literal["plan", "recipe", "requirement"]
+    code: str
+    kind: Literal[
+        "present-evidence-excludes",
+        "evidence-absent",
+        "unmapped",
+        "nutrient-bound",
+        "horizon",
+    ]
 
 
 @dataclass
