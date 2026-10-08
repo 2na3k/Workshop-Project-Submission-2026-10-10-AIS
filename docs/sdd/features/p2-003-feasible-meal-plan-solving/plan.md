@@ -441,7 +441,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 2 — hard infeasibility with a named binding-constraint set (R-14 / C-2)
 
-- [ ] **T-4** Write failing tests: `PlanInfeasible` carries the deterministic 
+- [x] **T-4** Write failing tests: `PlanInfeasible` carries the deterministic 
   individually-binding set; reason discriminator
   - Type: test
   - Covers: AC-2, AC-2b, AC-3, AC-12
