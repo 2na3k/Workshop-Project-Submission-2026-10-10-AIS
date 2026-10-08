@@ -432,7 +432,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
   - Files: `tests/features/plan/test_tolerance.py` (`test_relaxed_plan_labeled_and_records_tolerance`, `test_widening_insufficient_hard_infeasible`, `test_tolerance_out_of_range_rejected`, `test_tolerance_absent_defaults_zero`), `tests/features/plan/test_solver_unavailable.py` (`test_solver_unavailable_hard_fail`)
   - Done when: the tests fail against the current solver's four-stage ladder and round-robin fallback; AC-9/AC-10 pin nutrient-bound widening and hard infeasibility; AC-14 asserts the FastAPI `{"detail":[...]}` envelope at 422 with no solver invocation; AC-14b pins absent-default 0 and 0-means-no-widening; AC-15 asserts the custom `{"error":{code,message,details,timestamp}}` envelope, no `200 OK`, no degraded plan
 
-- [ ] **T-3** Add `nutrient_tolerance_pct` to the request schema; replace the relaxation ladder 
+- [x] **T-3** Add `nutrient_tolerance_pct` to the request schema; replace the relaxation ladder 
   with a single widening stage; remove the fallback
   - Type: impl
   - Covers: AC-9, AC-10, AC-14, AC-14b, AC-15 (R-3, R-14 per A-005)

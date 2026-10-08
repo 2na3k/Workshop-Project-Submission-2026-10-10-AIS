@@ -20,4 +20,7 @@ class InvalidNutrientRange(PlanError): status_code, code = 400, "INVALID_NUTRIEN
 class PlanInfeasible(PlanError): status_code, code = 400, "PLAN_INFEASIBLE"
 
 
+class SolverUnavailable(PlanError): status_code, code = 503, "SOLVER_UNAVAILABLE"
+
+
 class UnsupportedUnit(PlanError): status_code, code = 400, "UNSUPPORTED_UNIT"

@@ -74,6 +74,7 @@ class PlanRequest(BaseModel):
     horizon_days: int = Field(ge=1, le=14)
     meals_per_day: int = Field(ge=1, le=6)
     servings: int = Field(default=1, ge=1)
+    nutrient_tolerance_pct: int = Field(default=0, ge=0, le=25, strict=True)
     allergies: list[AllergyRequest] | None = None
     dietary: list[DietaryRequest] | None = None
     nutrients: list[NutrientRequest] | None = None
