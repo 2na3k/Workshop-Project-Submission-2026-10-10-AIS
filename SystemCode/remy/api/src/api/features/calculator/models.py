@@ -5,15 +5,47 @@ from domain.types import NutrientProfile
 
 
 @dataclass(frozen=True)
+class CandidateRequirement:
+    canonical_key: str
+    scaled_grams: float
+    occurrence_id: str | None = None
+
+
+@dataclass(frozen=True)
 class CandidateRecipe:
     recipe_id: str
-    ingredient_nutrients: list[NutrientProfile]
+    requirements: list[CandidateRequirement]
+    nutrient_profiles: list[NutrientProfile]
+
+
+@dataclass(frozen=True)
+class OfferRef:
+    food_key: str
+    listing_name: str
+    retailer: str
+
+
+@dataclass(frozen=True)
+class RequirementOffer:
+    occurrence_id: str | None
+    canonical_key: str
+    selected_offer: OfferRef | None
 
 
 @dataclass(frozen=True)
 class RecipeNutritionSignal:
     recipe_id: str
     missing_nutrients: list[str]
+    selected_offers: list[RequirementOffer] = field(default_factory=list)
+
+    @property
+    def selected_offer(self) -> OfferRef | None:
+        """Return the offer for single-requirement callers; multi-requirement
+        callers use ``selected_offers`` to preserve requirement identity.
+        """
+        if len(self.selected_offers) == 1:
+            return self.selected_offers[0].selected_offer
+        return None
 
 
 @dataclass(frozen=True)

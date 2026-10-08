@@ -1,6 +1,7 @@
 from api.features.plan.repository import PlanRepository
 from api.features.plan.service import PlanService
 from api.features.plan.schemas import DietaryRequest, PlanRequest
+from api.features.calculator.models import RecipeNutritionSignal
 
 
 class Session:
@@ -45,7 +46,16 @@ def test_repository_evidence_reaches_filtering():
 
 
 def test_service_propagates_distinct_filter_outcomes():
-    service = PlanService(PlanRepository(Driver([canonical_row()])))
+    class Inspector:
+        def inspect_candidates(self, recipes, servings):
+            return {
+                recipe.recipe_id: RecipeNutritionSignal(recipe.recipe_id, [])
+                for recipe in recipes
+            }
+
+    service = PlanService(
+        PlanRepository(Driver([canonical_row()])), calculator_service=Inspector()
+    )
     request = PlanRequest(horizon_days=1, meals_per_day=1,
                           dietary=[DietaryRequest(code="halal")])
     response = service.generate(request)

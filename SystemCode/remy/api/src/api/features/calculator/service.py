@@ -8,7 +8,7 @@ from .domain.cost import consumed_cost, round_money, round_nutrient, select_pack
 from .domain.nutrition import missing_nutrients, per_serving, scale_nutrients, sum_nutrients
 from .domain.nutrition_select import select_nutrient_value
 from .exceptions import MissingUnitConversion, UnresolvableIngredient
-from .models import CandidateRecipe, RecipeNutritionSignal
+from .models import CandidateRecipe, OfferRef, RecipeNutritionSignal, RequirementOffer
 from .resolver import normalize_name, resolve
 from .schemas import (
     CalculationSummary, CostNutritionRequest, CostNutritionResponse, ItemWarning,
@@ -52,13 +52,41 @@ class CostNutritionService:
         signals = {}
         for recipe in recipes:
             absent = set()
-            for profile in recipe.ingredient_nutrients:
+            for profile in recipe.nutrient_profiles:
                 absent.update(missing_nutrients(profile))
-            if not recipe.ingredient_nutrients:
+            if not recipe.nutrient_profiles:
                 absent.update(NUTRIENT_FIELDS)
+            selected_offers = []
+            facts_by_key = self.repository.fetch_food_facts(
+                [requirement.canonical_key for requirement in recipe.requirements]
+            ) if recipe.requirements else {}
+            for requirement in recipe.requirements:
+                packages = [
+                    package
+                    for fact in facts_by_key.get(requirement.canonical_key, [])
+                    if fact.approval_status == "accepted"
+                    for package in fact.packages
+                    if package.approval_status == "accepted"
+                ]
+                selected = select_package(packages, requirement.scaled_grams)
+                offer = None
+                if selected is not None:
+                    package = selected[0]
+                    if package.food_key and package.listing_name and package.retailer:
+                        offer = OfferRef(
+                            food_key=package.food_key,
+                            listing_name=package.listing_name,
+                            retailer=package.retailer,
+                        )
+                selected_offers.append(RequirementOffer(
+                    occurrence_id=requirement.occurrence_id,
+                    canonical_key=requirement.canonical_key,
+                    selected_offer=offer,
+                ))
             signals[recipe.recipe_id] = RecipeNutritionSignal(
                 recipe_id=recipe.recipe_id,
                 missing_nutrients=[field for field in NUTRIENT_FIELDS if field in absent],
+                selected_offers=selected_offers,
             )
         return signals
 

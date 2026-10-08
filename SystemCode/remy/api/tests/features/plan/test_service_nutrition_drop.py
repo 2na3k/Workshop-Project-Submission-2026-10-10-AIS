@@ -133,13 +133,7 @@ def test_untracked_partial_nutrition_retained():
         {"partial": RecipeNutritionSignal("partial", ["sodium_mg"])},
         _row("partial"),
     )
-    request = PlanRequest(
-        horizon_days=1,
-        meals_per_day=1,
-        nutrients=[
-            NutrientRequest(code="calories", unit="kcal", limit=NutrientLimit(max=100))
-        ],
-    )
+    request = PlanRequest(horizon_days=1, meals_per_day=1)
 
     response = service.generate(request)
 

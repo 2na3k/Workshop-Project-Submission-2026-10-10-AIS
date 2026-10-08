@@ -502,7 +502,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
   - Files: `tests/features/plan/test_service_nutrition_drop.py` (`test_tracked_partial_nutrition_drops`, `test_drop_categorized_under_nutrient`, `test_goal_on_missing_nutrient_drops`, `test_untracked_partial_nutrition_retained`, `test_unmapped_cause_and_binding`), `tests/features/plan/test_causes.py` (`test_present_evidence_cause_distinct`, `test_multi_cause_precedence`)
   - Done when: the tests fail against the current service (which does not invoke the calculator or derive the per-recipe cause); AC-4/AC-4b/AC-4c pin the per-tracked-nutrient drop and its categorization; AC-5 pins untracked retention; AC-6/AC-7 pin cause distinctness and precedence `present-evidence-excludes → evidence-absent → unmapped`; AC-13 pins the `unmapped` cause and its binding-set naming
 
-- [ ] **T-11** Wire `inspect_candidates` into `PlanService.generate`; derive the per-recipe 
+- [x] **T-11** Wire `inspect_candidates` into `PlanService.generate`; derive the per-recipe 
   cause model; build the three-level response
   - Type: impl
   - Covers: AC-4, AC-4b, AC-4c, AC-5, AC-6, AC-7, AC-8a, AC-8b, AC-8c, AC-11, AC-13 (R-5, R-9, R-16, R-17); all interface rows

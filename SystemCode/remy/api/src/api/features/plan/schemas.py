@@ -119,11 +119,51 @@ class RelaxationRecord(BaseModel):
     detail: dict = Field(default_factory=dict)
 
 
+class NamedConstraintResponse(BaseModel):
+    scope: Literal["plan", "recipe", "requirement"]
+    code: str
+    kind: Literal[
+        "present-evidence-excludes",
+        "evidence-absent",
+        "unmapped",
+        "nutrient-bound",
+        "horizon",
+    ]
+
+
+class RecipeOutcomeResponse(BaseModel):
+    recipe_id: str
+    outcome: Literal["selected", "retained-unselected", "dropped"]
+    cause: str | None = None
+    causes: list[str] = Field(default_factory=list)
+
+
+class SelectedOfferResponse(BaseModel):
+    listing_name: str
+    retailer: str
+
+
+class ConstraintOutcomeResponse(BaseModel):
+    recipe_id: str
+    requirement_id: str | None = None
+    constraint: str
+    state: str
+    resolved_concept: str | None = None
+    selected_offer: SelectedOfferResponse | None = None
+    warnings: list[str] = Field(default_factory=list)
+
+
 class PlanResponse(BaseModel):
     plan_id: str
     status: Literal["complete", "partial"]
     message: str
     validation_summary: dict
+    feasibility_outcome: Literal["plan-produced"] = "plan-produced"
+    relaxed: bool = False
+    applied_tolerance_pct: int = 0
+    binding_constraints: list[NamedConstraintResponse] | None = None
+    recipe_outcomes: list[RecipeOutcomeResponse] = Field(default_factory=list)
+    constraint_outcomes: list[ConstraintOutcomeResponse] = Field(default_factory=list)
     relaxations: list[RelaxationRecord] = Field(default_factory=list)
     horizon_totals: dict[str, float]
     days: list[DayResponse]

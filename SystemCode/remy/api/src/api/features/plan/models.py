@@ -71,6 +71,25 @@ class NamedConstraint:
 
 
 @dataclass(frozen=True)
+class RecipeOutcome:
+    recipe_id: str
+    outcome: Literal["selected", "retained-unselected", "dropped"]
+    cause: str | None = None
+    causes: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class RequirementOutcome:
+    recipe_id: str
+    requirement_id: str | None
+    constraint: str
+    state: str
+    resolved_concept: str | None = None
+    selected_offer: object | None = None
+    warnings: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class RequirementRef:
     occurrence_id: str | None
     normalized_name: str | None
