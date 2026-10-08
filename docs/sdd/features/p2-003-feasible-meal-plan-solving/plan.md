@@ -471,7 +471,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 4 — per-recipe unmapped fact in the plan repository (F-1)
 
-- [ ] **T-8** Write failing test: `PlanRepository.fetch_candidates` records per-recipe 
+- [x] **T-8** Write failing test: `PlanRepository.fetch_candidates` records per-recipe 
   `unmapped_requirements`
   - Type: test
   - Covers: AC-13 (interface repo→service, second row)

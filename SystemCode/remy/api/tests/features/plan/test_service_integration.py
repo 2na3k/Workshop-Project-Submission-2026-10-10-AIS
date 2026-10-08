@@ -56,3 +56,41 @@ def test_canonical_evidence_fields_are_consumed():
     ingredient = recipe.ingredients[0]
     assert ingredient.freshness_status == "stale"
     assert ingredient.cost_basis_compatible is False
+
+
+def test_repository_records_unmapped_requirements_per_recipe():
+    row = {
+        "recipe_id": "r-unmapped",
+        "title": "Partially mapped recipe",
+        "ingredients": [
+            {
+                "quantity": 1,
+                "unit": "tsp",
+                "occurrence_id": "missing-concept",
+                "normalized_name": "rare spice",
+                "canonical_key": None,
+                "best_food_key": None,
+                "raw_text": "1 tsp rare spice",
+            },
+            {
+                "quantity": 2,
+                "unit": "g",
+                "occurrence_id": "missing-best",
+                "normalized_name": "pepper",
+                "canonical_key": "black_pepper",
+                "best_food_key": None,
+                "raw_text": "2 g pepper",
+            },
+        ],
+    }
+
+    recipe = PlanRepository(Driver([row])).fetch_candidates()[0]
+
+    assert [item.occurrence_id for item in recipe.unmapped_requirements] == [
+        "missing-concept",
+        "missing-best",
+    ]
+    assert [item.normalized_name for item in recipe.unmapped_requirements] == [
+        "rare spice",
+        "pepper",
+    ]
