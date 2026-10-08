@@ -495,7 +495,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 5 — nutrition drop, cause model, three-level response (R-9 / C-3 / C-4 / C-5 / R-16 / R-17)
 
-- [ ] **T-10** Write failing tests: nutrition drop on tracked nutrients, goal-triggers-drop, 
+- [x] **T-10** Write failing tests: nutrition drop on tracked nutrients, goal-triggers-drop, 
   untracked retention, cause precedence, per-recipe categorization
   - Type: test
   - Covers: AC-4, AC-4b, AC-4c, AC-5, AC-6, AC-7, AC-13
