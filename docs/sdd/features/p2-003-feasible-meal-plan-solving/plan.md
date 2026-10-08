@@ -548,7 +548,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 9 — closing admin
 
-- [ ] **T-17** Record feature decisions
+- [x] **T-17** Record feature decisions
   - Type: admin
   - Covers: F-1..F-5 decisions; C-1..C-7 consequential flags; A-005 and A-006 citations; spec amendment AC-2
   - Files: `docs/sdd/features/p2-003-feasible-meal-plan-solving/decisions.md`
