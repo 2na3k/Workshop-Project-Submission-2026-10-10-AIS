@@ -106,3 +106,23 @@
 - Acceptance criteria: AC-1 .. AC-16
 - Decisions: docs/sdd/features/p2-001-constraint-evidence-filtering/decisions.md
 - Breaking: none
+
+### p2-002-cost-nutrition-calculation - Cost and nutrition calculation (2026-10-08)
+
+- Added/Changed/Fixed:
+  - Updated `CostNutritionRepository.fetch_food_facts` to read deployed canonical property names (`ful.confidence AS confidence`, dropping stale `mapping_confidence`) and project the complete evidence contract: nine canonical nutrients (including `saturated_fat_g` and `cholesterol_mg`), `food_key`, `price_status`, `price_match_status`, `freshness_status`, `price_basis`, `package_volume_ml`, `nutrition_rank`, and `selection_priority` (R-1).
+  - Implemented cost eligibility rules in `domain/cost.py` (C-4/R-10/R-8/AC-20): requires `price_status == "estimated"`, `price_match_status == "accepted"`, `freshness_status == "fresh"`, `price_basis in {"package_mass", "package_volume"}`, `currency == "SGD"`, and positive price and package amounts. `cost_basis_compatible` is treated as informational and does not gate selection.
+  - Implemented silent volume-to-gram conversion for `package_volume` basis via `domain.units.to_grams`, computing unit prices per gram to rank volume and mass packages like-with-like (AC-13).
+  - Added float tolerance `1e-9` to multi-package retail purchase cost calculation (`ceil(Q / S - 1e-9) * P`) to prevent spurious extra package count (D-2/AC-4).
+  - Implemented deterministic per-nutrient conflict precedence in `domain/nutrition_select.py` (R-12/AC-6/AC-7/AC-8): branded products (`crawler_fdc_profile`) take precedence over generic USDA (`fooddata_central`/other); same-source ties resolve by smallest `(nutrition_rank, selection_priority, food_key)` tuple with missing ranks sorting last.
+  - Enforced null-when-any semantics for recipe and per-serving nutrient totals in `domain/nutrition.py`: recipe and per-serving totals are null whenever any contributing ingredient lacks a value for that nutrient (never zero-filled) (R-5/R-9/AC-2).
+  - Implemented item-level evidence-absent warnings: `MISSING_PACKAGE_DATA` (when an ingredient lacks eligible price packages, omitting cost totals from summary while response succeeds) and `PARTIAL_NUTRITION_DATA` (naming the missing canonical nutrients) (C-2/AC-2/AC-5).
+  - Implemented best-score package selection without confidence floor in `domain/cost.py` and `service.py` (R-13/AC-10/AC-11/AC-12): ranks by lowest unit price, lowest retail package cost, highest confidence, then lexicographic `(food_key, retailer, listing_name)`. Package with confidence 0 is selectable when sole eligible.
+  - Added `CalculationTrace` dataclass in `trace.py` encapsulating audit-only provenance (confidence, chosen/runner-up packages, per-nutrient winners); `service.calculate` returns `(CostNutritionResponse, CalculationTrace)` and `router.py` returns only the public response model, keeping the user payload clean (R-16/AC-18).
+  - Added `MAX_REQUEST_INGREDIENTS = 100` constant in `schemas.py` and enforced request bounds (AC-19).
+  - Updated response examples in `SystemCode/remy/api/docs/API_doc.md` to reflect canonical response shape without `fdc_id` or audit fields (R-1).
+  - Repaired stale unit conversion and resolver tests (T-3, T-4, T-5).
+  - Added comprehensive test suites including R-13 named fixture (`test_mapping_selection.py`), repository integration (`test_repository_integration.py`), service error rejection (`test_service_errors.py`), response schema verification (`test_response_schema.py`), and end-to-end integration (`test_calculator_integration.py`).
+- Acceptance criteria: AC-1 .. AC-20
+- Decisions: docs/sdd/features/p2-002-cost-nutrition-calculation/decisions.md
+- Breaking: none

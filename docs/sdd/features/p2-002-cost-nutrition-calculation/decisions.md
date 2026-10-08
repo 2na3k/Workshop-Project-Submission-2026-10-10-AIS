@@ -4,29 +4,27 @@
 
 ### D-1 Request ingredient limit
 - Date: 2026-10-07
-- Status: adopted
-- Decision: `MAX_REQUEST_INGREDIENTS` is 100, preserving the pre-existing inline
-  request limit.
+- Context: Spec AC-19 requires bounding the calculation request with a single declared constant `MAX_REQUEST_INGREDIENTS`, but does not prescribe the exact integer value.
+- Decision: `MAX_REQUEST_INGREDIENTS` is set to 100, preserving the pre-existing inline request limit in `schemas.py`.
+- Alternatives: Other upper bounds (e.g. 50 or 200) were rejected to preserve deployed behavior and prevent breaking existing callers.
 - Affects: AC-19, calculator request schema.
-- Source: p2-002 plan, Design §2.
+- Source: p2-002 plan, Design §2 (task T-21).
 
 ### D-2 Package count tolerance
 - Date: 2026-10-07
-- Status: adopted
-- Decision: Compute the package count as `max(1, ceil(Q / S - 1e-9))` to avoid
-  a spurious extra package from floating-point representation.
+- Context: Floating-point division artefacts (e.g. `300.00000001 / 100` yielding `3.0000000001`) could cause `math.ceil` to compute an unnecessary extra package.
+- Decision: Compute the package count as `max(1, ceil(Q / S - 1e-9))` to avoid a spurious extra package from floating-point representation.
+- Alternatives: Strict `ceil(Q / S)` without tolerance (rejected due to float imprecision); decimal arithmetic (rejected for performance and consistency with float schema).
 - Affects: AC-4, AC-11, package selection.
-- Source: p2-002 plan, Design §2.
+- Source: p2-002 plan, Design §2 (task T-11).
 
 ### D-3 Internal trace return
 - Date: 2026-10-07
-- Status: adopted
-- Decision: `CostNutritionService.calculate` returns
-  `(CostNutritionResponse, CalculationTrace)`. The calculator router unpacks
-  the tuple and returns the response only; trace exposure remains p3-001's
-  responsibility.
+- Context: Spec AC-18 and R-16 require audit-only provenance (confidence, winner identity, ranks) to be retained in an internal trace while excluding them from the user-facing response.
+- Decision: `CostNutritionService.calculate` returns `(CostNutritionResponse, CalculationTrace)`. The calculator router unpacks the tuple and returns the response only; trace exposure remains p3-001's responsibility.
+- Alternatives: Storing trace in request state or global context (rejected: violates statelessness); passing a query parameter to conditionally expose trace in the public endpoint (rejected: violates R-16 and spec non-goals).
 - Affects: AC-18, service/router interface.
-- Source: p2-002 plan, Design §2.
+- Source: p2-002 plan, Design §2 (tasks T-20, T-23).
 
 ### C-1 Freshness at both consuming layers
 - Date: 2026-10-07

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
+from domain.graph_vocab import PriceStatus, PriceMatchStatus, PriceBasis, FreshnessStatus
 from workflows.rules.allergen import resolve_allergen_key
 from .exceptions import UnknownAllergen, UnknownDietary, UnknownNutrient
 from .models import (CandidateOutcome, ConstraintEvaluation, FilterResult,
@@ -92,7 +93,8 @@ def _evaluate_dietary(recipe, request, outcome):
             if state == "unknown":
                 _add(outcome, dietary.code, "evidence-absent", "dietary evidence absent")
             elif state == "fail":
-                _add(outcome, dietary.code, "present-evidence-excludes", "dietary evidence excludes")
+                _add(outcome, dietary.code, "present-evidence-excludes",
+                     "dietary evidence excludes")
             else:
                 _add(outcome, dietary.code, "pass")
 
@@ -125,20 +127,30 @@ def _evaluate_freshness(recipe, outcome, now):
                 observed = observed.replace(tzinfo=timezone.utc)
             state = "pass" if now - observed <= timedelta(hours=24) else "fail"
         else:
-            state = _state(ingredient.freshness_status, {"fresh", "current"}, {"stale", "expired"})
+            state = _state(
+                ingredient.freshness_status,
+                {FreshnessStatus.FRESH, "current"},
+                {"stale", "expired"}
+            )
         _add(outcome, "freshness", "pass" if state == "pass" else
-             "evidence-absent")
+        "evidence-absent")
 
 
 def _evaluate_cost_basis(recipe, outcome):
     for ingredient in recipe.ingredients:
-        if ingredient.cost_basis_compatible is True:
+        if (
+                ingredient.price_status == PriceStatus.ESTIMATED
+                and ingredient.price_match_status == PriceMatchStatus.ACCEPTED
+                and ingredient.price_basis in {PriceBasis.PACKAGE_MASS, PriceBasis.PACKAGE_VOLUME,
+                                               PriceBasis.PACKAGE_UNRESOLVED}
+        ):
             _add(outcome, "unit-basis", "pass")
         else:
             _add(outcome, "unit-basis", "evidence-absent", "compatible unit basis absent")
 
 
-def filter_candidates(recipes, request, *, now=None, require_fresh=False, require_cost=False) -> FilterResult:
+def filter_candidates(recipes, request, *, now=None, require_fresh=False,
+                      require_cost=False) -> FilterResult:
     for nutrient in request.nutrients or []:
         if nutrient.code not in SUPPORTED_NUTRIENTS:
             raise UnknownNutrient(f"Unknown nutrient: {nutrient.code}")
