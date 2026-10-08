@@ -417,7 +417,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 0 — pre-task admin
 
-- [ ] **T-1** Baseline-run the plan feature tests and record the CI check-set state
+- [x] **T-1** Baseline-run the plan feature tests and record the CI check-set state
   - Type: admin
   - Covers: plan Design §0 baseline; `sdd.json` drift guard
   - Files: `docs/sdd/features/p2-003-feasible-meal-plan-solving/plan.md` (## Revision notes — record the run output), `sdd.json` (only if the check set does not already cover `src/api/features/plan` and `tests/features/plan`)
@@ -425,7 +425,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 1 — solver relaxation set and fallback (A-005 / C-6 / R-3 / R-14)
 
-- [ ] **T-2** Write failing tests: relaxation set is nutrient-bound-widening-only; structural 
+- [x] **T-2** Write failing tests: relaxation set is nutrient-bound-widening-only; structural 
   relaxations prohibited; round-robin fallback removed
   - Type: test
   - Covers: AC-9, AC-10, AC-14, AC-14b, AC-15
