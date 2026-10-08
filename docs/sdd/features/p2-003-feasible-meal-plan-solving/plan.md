@@ -518,7 +518,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 6 — API doc correction (R-1)
 
-- [ ] **T-13** Update `API_doc.md` for the new `/plan` request and response shape
+- [x] **T-13** Update `API_doc.md` for the new `/plan` request and response shape
   - Type: impl
   - Covers: R-1; AC-9, AC-11
   - Files: `SystemCode/remy/api/docs/API_doc.md` (`/plan` section)

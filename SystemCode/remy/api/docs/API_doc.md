@@ -216,16 +216,17 @@ from **whole-package retail pricing** based on grocery data.
 
 ## 2. POST `/api/v1/plan`
 
-Generates an optimized multi-day meal plan constrained by nutrients, budget, dietary requirements,
-and excluded allergens.
+Generates a feasible multi-day meal plan constrained by nutrients, dietary requirements, and
+excluded allergens. Cost and budget do not gate plan eligibility.
 
 ### Request Parameters
 
 | Field                  | Type            | In   | Nullable / Required     | Description                                                |
 |------------------------|-----------------|------|-------------------------|------------------------------------------------------------|
 | `horizon_days`         | `integer`       | Body | Required                | Planning duration in days (1 to 14).                       |
+| `meals_per_day`        | `integer`       | Body | Required                | Meal slots per day (1 to 6).                               |
 | `servings`             | `integer`       | Body | Optional (Default: `1`) | Number of servings per meal slot.                          |
-| `daily_budget_sgd`     | `number`        | Body | Nullable                | Max daily spending cap in SGD.                             |
+| `nutrient_tolerance_pct` | `integer`     | Body | Optional (Default: `0`) | Nutrient-bound widening percentage (0 to 25).             |
 | `allergies`            | `array[object]` | Body | Nullable                | Excluded allergens.                                        |
 | `allergies[].code`     | `string`        | Body | Required                | Allergen identifier (e.g., `peanut`,shellfish`).           |
 | `allergies[].severity` | `string`        | Body | Optional                | `mild` or `severe`.                                        |
@@ -242,12 +243,9 @@ and excluded allergens.
 ```json
 {
   "horizon_days": 7,
-  "meal_slots": [
-    "breakfast",
-    "lunch",
-    "dinner"
-  ],
+  "meals_per_day": 3,
   "servings": 1,
+  "nutrient_tolerance_pct": 10,
   "allergies": [
     {
       "code": "peanut",
@@ -289,41 +287,94 @@ and excluded allergens.
 
 ### Response (`200 OK`)
 
+`relaxed` is true only when the strict nutrient bounds were infeasible and the
+requested widening produced a plan. In that case, `applied_tolerance_pct`
+records the applied value and `status` is `partial`; otherwise the plan is
+`complete` with tolerance `0`. Only nutrient `min` and `max` bounds widen. A
+minimum is lowered and a maximum is raised by the requested percentage; goals
+are unchanged. Recipe repetition limits and the no-consecutive-day rule are
+never relaxed. The former structural-relaxation meaning of `partial` is removed.
+
+The result includes plan-level feasibility, per-recipe outcomes, and
+per-requirement constraint outcomes. A selected offer may be null when no
+eligible offer exists; missing cost data does not drop a recipe. Offer
+responses expose listing name and retailer. Audit provenance such as food keys,
+source identifiers, mapping confidence, and normalization version is not part
+of the user response.
+
 ```json
 {
   "plan_id": "plan_99f2b8a01a",
   "status": "complete",
-  "message": "Successfully generated a 7-day meal plan matching all constraints.",
+  "message": "Successfully generated a 1-day meal plan.",
   "validation_summary": {
-    "carbs_status": "fulfilled",
     "allergen_status": "passed",
-    "budget_status": "within_limit"
+    "dietary_status": "not_requested"
   },
-  "weekly_totals": {
-    "estimated_consumed_cost_sgd": 88.50,
-    "avg_daily_calories_kcal": 1980
+  "feasibility_outcome": "plan-produced",
+  "relaxed": false,
+  "applied_tolerance_pct": 0,
+  "binding_constraints": null,
+  "recipe_outcomes": [
+    {
+      "recipe_id": "recipe-101",
+      "outcome": "selected",
+      "cause": null,
+      "causes": []
+    }
+  ],
+  "constraint_outcomes": [
+    {
+      "recipe_id": "recipe-101",
+      "requirement_text": "1 cup rolled oats",
+      "constraint": "requirement",
+      "state": "selected",
+      "resolved_concept": "rolled oats",
+      "selected_offer": {
+        "listing_name": "Rolled Oats 1 kg",
+        "retailer": "Example Market"
+      },
+      "warnings": []
+    }
+  ],
+  "relaxations": [],
+  "horizon_totals": {
+    "avg_daily_calories": 450
   },
   "days": [
     {
       "day": 1,
       "meals": [
         {
-          "slot": "breakfast",
-          "recipe_id": "rec_oatmeal_01",
-          "title": "High-Protein Peanut-Free Overnight Oats",
-          "estimated_cost_sgd": 2.10,
+          "slot": "meal_1",
+          "recipe_id": "recipe-101",
+          "title": "Rolled oats bowl",
+          "instructions": "Combine and serve.",
           "nutrients": {
-            "calories": 450,
-            "protein": 28,
-            "carbs": 55
-          }
+            "calories": 450
+          },
+          "ingredients": [
+            {
+              "quantity": 1,
+              "unit": "cup",
+              "text": "1 cup rolled oats",
+              "preparation": null,
+              "optional": false
+            }
+          ]
         }
       ]
     }
   ]
 }
-
 ```
+
+If no plan can satisfy the horizon after nutrient widening, the endpoint returns
+`400 PLAN_INFEASIBLE` with the binding constraints in the error `details`. The
+failure distinguishes an empty eligible pool (`no-recipes-survived`) from a
+non-empty pool that cannot fill the horizon (`no-assignment`). If OR-Tools is
+unavailable, the endpoint returns `503 SOLVER_UNAVAILABLE`; no degraded plan
+is returned.
 
 ---
 
