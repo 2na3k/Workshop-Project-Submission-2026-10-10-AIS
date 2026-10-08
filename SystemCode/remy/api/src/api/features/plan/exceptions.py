@@ -29,7 +29,7 @@ class PlanInfeasible(PlanError):
     ):
         self.binding_constraints = list(binding_constraints or [])
         self.reason = reason
-        details = [
+        details = [{"field": "reason", "issue": reason}] + [
             {
                 "field": constraint.scope,
                 "issue": f"{constraint.code}:{constraint.kind}",

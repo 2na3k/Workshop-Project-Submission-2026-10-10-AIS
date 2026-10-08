@@ -87,3 +87,11 @@ constraint-level record.”
 ## Overrides
 
 None.
+
+## Verification deferral
+
+The real-mart demonstration remains deferred under
+`docs/findings/data-prep-price-path.md`, which records the data-preparation dbt
+parse failure. p2-003's repository and plan/calculator integration coverage
+uses fake Neo4j drivers and fixture rows; this does not claim real-mart
+conformance.

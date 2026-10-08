@@ -554,7 +554,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
   - Files: `docs/sdd/features/p2-003-feasible-meal-plan-solving/decisions.md`
   - Done when: F-1 (unmapped fact sourced from the plan repository), F-2 (spec AC-2 amended to "individually-binding"), F-3 (reason discriminator, goal-triggers-drop), F-4 (`servings` for contract symmetry), F-5 (`status=partial` iff `relaxed`), C-1..C-7 and the AC-2 amendment are recorded; A-005 and A-006 referenced with their impact; no overrides
 
-- [ ] **T-18** Run the full API test suite and `sdd.py ci`
+- [x] **T-18** Run the full API test suite and `sdd.py ci`
   - Type: verification
   - Covers: all ACs and interfaces
   - Files: (all above)

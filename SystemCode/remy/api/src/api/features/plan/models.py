@@ -38,6 +38,9 @@ class Ingredient:
     offer_observed_at: datetime | None = None
     package_mass_g: float | None = None
     package_unit_basis: str | None = None
+    price_status: str | None = None
+    price_match_status: str | None = None
+    price_basis: str | None = None
     cost_basis_compatible: bool | None = None
     vegan_status: str | None = None
 
@@ -84,6 +87,7 @@ class RequirementOutcome:
     requirement_id: str | None
     constraint: str
     state: str
+    requirement_text: str | None = None
     resolved_concept: str | None = None
     selected_offer: object | None = None
     warnings: tuple[str, ...] = ()

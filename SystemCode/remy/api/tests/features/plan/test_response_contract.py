@@ -92,6 +92,8 @@ def test_infeasibility_reason_discriminator():
 
     assert empty.reason == "no-recipes-survived"
     assert assignment.reason == "no-assignment"
+    assert empty.details[0] == {"field": "reason", "issue": "no-recipes-survived"}
+    assert assignment.details[0] == {"field": "reason", "issue": "no-assignment"}
 
 
 def test_deterministic_across_runs():
