@@ -81,7 +81,7 @@
 ### p1-003-coverage-quality-reporting - Coverage and quality reporting (2026-10-05)
 
 - Added/Changed/Fixed:
-  - Added canonical coverage quality report mart (`SystemCode/remy/data-preparation/models/mart/coverage_quality_report.sql`) exposing exactly five named dimensions: `nutrition_coverage`, `price_availability`, `package_unit_conversion_coverage`, `dietary_evidence_coverage`, and `whole_recipe_completeness`.
+  - Added canonical coverage quality report mart (`SystemCode/remy/data-preparation/models/mart/coverage_quality_report.sql`) exposing exactly five named dimensions: `nutrition_coverage`, `price_availability`, `package_unit_conversion coverage`, `dietary_evidence_coverage`, and `whole_recipe_completeness`.
   - Added schema contract for coverage quality report declaring exact dimension allowlist, count and bounded percentage rules, and reproducibility content columns (`models/mart/schema.yml`).
   - Added dbt singular test (`tests/coverage_quality_report.sql`) validating metrics, distinct dimensions, and population denominator bounds against canonical `edge_requires` and `node_recipe` populations (execution deferred under p1-001 O-1).
   - Added comprehensive unit and contract tests (`tests/test_coverage_quality_report.py`) covering all five dimensions, cross-dimension independence, zero-population handling, determinism across runs, observation-timestamp stability, fail-closed validation, and build association integrity.
@@ -125,4 +125,22 @@
   - Added comprehensive test suites including R-13 named fixture (`test_mapping_selection.py`), repository integration (`test_repository_integration.py`), service error rejection (`test_service_errors.py`), response schema verification (`test_response_schema.py`), and end-to-end integration (`test_calculator_integration.py`).
 - Acceptance criteria: AC-1 .. AC-20
 - Decisions: docs/sdd/features/p2-002-cost-nutrition-calculation/decisions.md
+- Breaking: none
+
+### p2-003-feasible-meal-plan-solving - Feasible meal-plan solving (2026-10-09)
+
+- Added/Changed/Fixed:
+  - Added `nutrient_tolerance_pct` (closed interval `[0, 25]`, default `0`) to `PlanRequest` schema, rejected with `422 Unprocessable Entity` when out of range or non-integer before invoking the solver (AC-14, AC-14b).
+  - Replaced legacy multi-step solver relaxation ladder with uniform single-stage nutrient-bound widening (`min' = min * (1 - p/100)`, `max' = max * (1 + p/100)`) in `SystemCode/remy/api/src/api/features/plan/solver_v2.py`; removed structural relaxations (repeats, relaxed horizon) and non-solver round-robin fallbacks in compliance with Amendment A-005 and R-14 (AC-9, AC-10).
+  - Implemented deterministic single-constraint drop-out probing upon solver infeasibility in `solver_v2.py`, returning structured `PlanInfeasible` containing named binding constraints and distinguishing empty eligible pools (`no-recipes-survived`) from unsatisfied assignments (`no-assignment`) via the `reason` discriminator (AC-2, AC-2b, AC-12, R-14).
+  - Added `CostNutritionService.inspect_candidates(recipes, servings)` to the calculator service public interface, computing canonical per-recipe missing nutrients and selecting per-requirement package offers without dropping recipes on missing package data (AC-4, AC-5, AC-8c, C-7, R-2).
+  - Extended `PlanRepository.fetch_candidates` to record per-recipe `unmapped_requirements: list[RequirementRef]` for `REQUIRES` edges lacking concept mappings or fulfillments (AC-13, R-17).
+  - Wired `inspect_candidates` into `PlanService.generate`; candidate recipes missing contributing evidence for any tracked nutrient (limit or goal) are globally excluded with `evidence-absent` cause categorized under the affected nutrient (AC-4, AC-4b, AC-4c, AC-5, R-5, R-9).
+  - Established deterministic top-level drop-cause precedence: `present-evidence-excludes` -> `evidence-absent` -> `unmapped`, retaining all applicable causes in recipe outcome records (AC-6, AC-7, R-17).
+  - Structured three-level reasoning records in user response (`plan`, `recipe`, `constraint`), exposing chosen offers, resolved food concepts, warned conditions, and feasibility/binding constraint metadata while strictly stripping audit-only provenance (`confidence`, `normalization_version`, `food_key`, source identifiers) to internal `PlanTrace` (AC-8a, AC-8b, AC-8c, AC-11, R-16, R-17).
+  - Added hard-failure error handling raising `SolverUnavailable` (503 Service Unavailable) when OR-Tools CP-SAT is unavailable, prohibiting degraded fallback plans (AC-15, C-6).
+  - Updated `/plan` endpoint documentation in `API_doc.md` to reflect `nutrient_tolerance_pct`, `relaxed`, `applied_tolerance_pct`, and the three-level outcome response contract (R-1).
+  - Added comprehensive unit and integration test coverage across solver, service, repository, calculator candidate inspection, and response contracts (`tests/features/plan/`, `tests/features/calculator/test_inspect_candidates.py`).
+- Acceptance criteria: AC-1 .. AC-15
+- Decisions: docs/sdd/features/p2-003-feasible-meal-plan-solving/decisions.md
 - Breaking: none
