@@ -977,6 +977,26 @@ wheels = [
 ]
 
 [[package]]
+name = "neo4j-rust-ext"
+version = "6.3.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "neo4j" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/09/61/758bbb248980b67c7dfa397191a14fd65582f6780c4353f8146a48f75e81/neo4j_rust_ext-6.3.1.0.tar.gz", hash = "sha256:cad00f2502b0fe6e9e79168d49b82c85971be7e44c3d1b8d24c782652c310dbe", size = 26477, upload-time = "2026-09-15T15:54:47.719Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a0/bf/ff107ada2a9167d3b4cbd97523ff2aba1a4eb6d80ebf34a8b10d9d074b2f/neo4j_rust_ext-6.3.1.0-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:cce3165452e698b758a9e6699d6296302791be07fde090cb214e67444c666f0c", size = 717867, upload-time = "2026-09-15T15:54:11.585Z" },
+    { url = "https://files.pythonhosted.org/packages/6d/7c/ba346adc83aa86e53331a0b23bb4a0ab5e91aeb5fcd37220d93717272b88/neo4j_rust_ext-6.3.1.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:f9c4880178c74aa1e468ab18182fdf83dee922a2ebb7f592a9f8614fb1452875", size = 716236, upload-time = "2026-09-15T15:54:12.904Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/6b/8bfd8917139626187f7fc630297310674f8eeffde2eb1ffcd780d6461ec3/neo4j_rust_ext-6.3.1.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c22134a5b8112de189ce99fef2b750e4280dcadb74835624f2a0523e92fedb24", size = 313399, upload-time = "2026-09-15T15:54:14.085Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/08/1e0ed70ad5c709a20bd7c4e9dd4d93616338ccd8e876556dabd9675fd31e/neo4j_rust_ext-6.3.1.0-cp312-cp312-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:3c16d3d594eb72723e8e9173cfc14a1e13dbce2bcd284863c5e33fda320ab6aa", size = 315418, upload-time = "2026-09-15T15:54:15.535Z" },
+    { url = "https://files.pythonhosted.org/packages/6f/93/5ffe08557545063e1e08ceda2fe15cd46165aa8f399d6ca72f93bf8ad36e/neo4j_rust_ext-6.3.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b90953050e41928f9e2038cb0e2ac8820c9ec2f6613a2a1df625e1edefad52f5", size = 310592, upload-time = "2026-09-15T15:54:16.719Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/51/fdb7301d7d539c4a031039572c5d9799627af5f3b4aad738a1d0e3bba691/neo4j_rust_ext-6.3.1.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:6cf3bfc398a49cfa0c917050a3994edb21be1a08301ef9ba96376c7a67716b62", size = 518915, upload-time = "2026-09-15T15:54:17.987Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/28/0f32568f255dafb981e061845bb32085cba6af4fb574d8f15468b72490ae/neo4j_rust_ext-6.3.1.0-cp312-cp312-win32.whl", hash = "sha256:c8da98c3e41f4859763027e4533021aff3c31a1d56a7c6aab72adea8a876026a", size = 747152, upload-time = "2026-09-15T15:54:19.234Z" },
+    { url = "https://files.pythonhosted.org/packages/8e/82/4e5bf34aa30b8a54afcea17b1a027874d8ce76be19e4fc0875e8f2feef0f/neo4j_rust_ext-6.3.1.0-cp312-cp312-win_amd64.whl", hash = "sha256:3e5e6de8c79dd3b0247895198dd5c628506acd1df54ce5c16383be12a4ae398f", size = 684175, upload-time = "2026-09-15T15:54:20.613Z" },
+    { url = "https://files.pythonhosted.org/packages/d3/a7/044cfe3eed9c7fd930eda6fc2daa9f59fdd2f74c22905dead3d228ebaa65/neo4j_rust_ext-6.3.1.0-cp312-cp312-win_arm64.whl", hash = "sha256:0bf60a4d119825880b209109e60a9ccae1d8ca00f7180ec77f46f173d1fca62b", size = 164542, upload-time = "2026-09-15T15:54:21.92Z" },
+]
+
+[[package]]
 name = "networkx"
 version = "3.7"
 source = { registry = "https://pypi.org/simple" }
@@ -1393,7 +1413,7 @@ source = { editable = "remy/api" }
 dependencies = [
     { name = "fastapi" },
     { name = "inflect" },
-    { name = "neo4j" },
+    { name = "neo4j-rust-ext" },
     { name = "ortools" },
     { name = "python-dotenv" },
     { name = "remy-domain" },
@@ -1405,7 +1425,7 @@ dependencies = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "inflect", specifier = ">=7.5.0" },
-    { name = "neo4j", specifier = ">=6,<7" },
+    { name = "neo4j-rust-ext", specifier = "==6.3.1" },
     { name = "ortools", specifier = ">=9.10,<10" },
     { name = "python-dotenv", specifier = ">=1.2.3" },
     { name = "remy-domain", editable = "remy/domain" },
