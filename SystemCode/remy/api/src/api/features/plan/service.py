@@ -100,6 +100,32 @@ def _calculator_candidates(recipes: list, servings: int) -> list[CalculatorCandi
     return candidates
 
 
+def _calculator_skeleton_candidates(recipes: list, servings: int) -> list[
+    CalculatorCandidateRecipe]:
+    """Build offer-selection inputs without loading full ingredient profiles."""
+    candidates = []
+    for recipe in recipes:
+        requirements = []
+        for requirement in recipe.requirements:
+            if requirement.quantity is None or requirement.quantity <= 0 or not requirement.unit:
+                continue
+            try:
+                grams, _warnings = to_grams(requirement.quantity * servings, requirement.unit)
+            except DomainError:
+                continue
+            requirements.append(CandidateRequirement(
+                canonical_key=requirement.canonical_key,
+                scaled_grams=grams,
+                occurrence_id=requirement.occurrence_id,
+            ))
+        candidates.append(CalculatorCandidateRecipe(
+            recipe_id=recipe.recipe_id,
+            requirements=requirements,
+            nutrient_profiles=[],
+        ))
+    return candidates
+
+
 def _selected_ids(days: list[list]) -> set[str]:
     return {recipe.recipe_id for day in days for recipe in day}
 
@@ -171,8 +197,12 @@ class PlanService:
                     and nutrient.limit.min > nutrient.limit.max):
                 raise InvalidNutrientRange("min cannot exceed max")
 
-        pool_size = min(50 * request.meals_per_day, 300)
-        candidates = self.repository.fetch_candidates(limit=3 * pool_size)
+        candidates_per_slot = 75
+        pool_size = min(13000,
+                        request.meals_per_day *
+                        max(200, candidates_per_slot * request.horizon_days)
+                        )
+        candidates = self.repository.fetch_candidates(limit=pool_size)
         filtered = filter_candidates(candidates, request)
         self.last_filter_result = filtered
         causes: dict[str, list[str]] = {}
@@ -257,6 +287,216 @@ class PlanService:
             raise exc
 
         selected = _selected_ids(days)
+        recipe_records = _recipe_outcome_records(candidates, causes, selected)
+        for recipe in candidates:
+            if recipe.recipe_id not in selected or recipe.recipe_id in causes:
+                continue
+            for ingredient in recipe.ingredients:
+                warning_codes = tuple(
+                    warning.code for warning in getattr(
+                        filtered.outcomes.get(recipe.recipe_id), "warnings", []
+                    ) if warning.ingredient_id == ingredient.occurrence_id
+                )
+                constraint_records.append(RequirementOutcome(
+                    recipe_id=recipe.recipe_id,
+                    requirement_id=ingredient.occurrence_id,
+                    constraint="requirement",
+                    state="selected",
+                    requirement_text=(ingredient.cleaned_text or ingredient.raw_text
+                                      or ingredient.description or ingredient.canonical_key),
+                    resolved_concept=ingredient.concept_name or ingredient.canonical_key,
+                    selected_offer=selected_offers.get(
+                        (recipe.recipe_id, ingredient.occurrence_id)),
+                    warnings=warning_codes,
+                ))
+
+        applied_tolerance = request.nutrient_tolerance_pct if relaxations else 0
+        self.last_trace = PlanTrace(
+            feasibility_outcome="plan-produced",
+            applied_tolerance_pct=applied_tolerance,
+            recipes=recipe_records,
+            requirements=constraint_records,
+        )
+
+        response_days = []
+        for day_number, meals in enumerate(days, 1):
+            response_days.append(DayResponse(day=day_number, meals=[
+                MealResponse(
+                    slot=f"meal_{index}",
+                    recipe_id=recipe.recipe_id,
+                    title=recipe.title,
+                    nutrients={
+                        key: round((value or 0) * request.servings, 2)
+                        for key, value in recipe.nutrients.items() if value is not None
+                    },
+                    ingredients=[MealIngredientResponse(
+                        quantity=None if ingredient.quantity is None else round(
+                            ingredient.quantity * request.servings, 2
+                        ),
+                        unit=ingredient.unit,
+                        text=(ingredient.cleaned_text or ingredient.raw_text
+                              or ingredient.description or ingredient.canonical_key),
+                        preparation=ingredient.preparation,
+                        optional=bool(ingredient.optional),
+                    ) for ingredient in sorted(recipe.ingredients, key=lambda item: (
+                        item.position if item.position is not None else 0,
+                        item.occurrence_id or "",
+                    ))],
+                    instructions=recipe.instructions,
+                ) for index, recipe in enumerate(meals, 1)
+            ]))
+
+        response_recipes = [
+            RecipeOutcomeResponse(
+                recipe_id=record.recipe_id,
+                outcome=record.outcome,
+                cause=record.cause,
+                causes=list(record.causes),
+            )
+            for record in recipe_records
+        ]
+        response_constraints = [
+            ConstraintOutcomeResponse(
+                recipe_id=record.recipe_id,
+                requirement_text=record.requirement_text,
+                constraint=record.constraint,
+                state=record.state,
+                resolved_concept=record.resolved_concept,
+                selected_offer=(
+                    SelectedOfferResponse(
+                        listing_name=record.selected_offer.listing_name,
+                        retailer=record.selected_offer.retailer,
+                    ) if record.selected_offer is not None else None
+                ),
+                warnings=list(record.warnings),
+            )
+            for record in constraint_records
+        ]
+        return PlanResponse(
+            plan_id="plan_" + secrets.token_hex(5),
+            status="partial" if relaxations else "complete",
+            message=f"Successfully generated a {request.horizon_days}-day meal plan.",
+            validation_summary={
+                "allergen_status": "passed" if request.allergies else "not_requested",
+                "dietary_status": "passed" if request.dietary else "not_requested",
+            },
+            relaxed=bool(relaxations),
+            applied_tolerance_pct=applied_tolerance,
+            recipe_outcomes=response_recipes,
+            constraint_outcomes=response_constraints,
+            relaxations=relaxations,
+            horizon_totals=aggregate(days, request),
+            days=response_days,
+        )
+
+    def generate_v2(self, request):
+        """Generate a plan from nutrient skeletons, fetching details post-solve."""
+        for nutrient in request.nutrients or []:
+            if nutrient.code not in REQUEST_TO_CANONICAL:
+                raise UnknownNutrient(f"Unknown nutrient: {nutrient.code}")
+            if (nutrient.limit and nutrient.limit.min is not None
+                    and nutrient.limit.max is not None
+                    and nutrient.limit.min > nutrient.limit.max):
+                raise InvalidNutrientRange("min cannot exceed max")
+
+        candidates_per_slot = 75
+        pool_size = min(13000,
+                        request.meals_per_day *
+                        max(150, candidates_per_slot * request.horizon_days)
+                        )
+        candidates = self.repository.fetch_candidates_v2(limit=pool_size)
+        for recipe in candidates:
+            recipe.ingredients = recipe.filter_ingredients
+        filtered = filter_candidates(candidates, request)
+        self.last_filter_result = filtered
+        for recipe in candidates:
+            recipe.ingredients = []
+
+        causes: dict[str, list[str]] = {}
+        constraint_records: list[RequirementOutcome] = []
+        for recipe_id, outcome in filtered.drop_outcomes.items():
+            causes.setdefault(recipe_id, []).append(outcome.cause)
+            for evaluation in outcome.evaluations:
+                if evaluation.state in {"present-evidence-excludes", "evidence-absent"}:
+                    constraint_records.append(RequirementOutcome(
+                        recipe_id=recipe_id,
+                        requirement_id=evaluation.ingredient_id,
+                        constraint=evaluation.constraint,
+                        state=evaluation.state,
+                    ))
+
+        for recipe in candidates:
+            for requirement in recipe.unmapped_requirements:
+                causes.setdefault(recipe.recipe_id, []).append("unmapped")
+                constraint_records.append(RequirementOutcome(
+                    recipe_id=recipe.recipe_id,
+                    requirement_id=requirement.occurrence_id,
+                    constraint="unmapped",
+                    state="unmapped",
+                    requirement_text=(requirement.cleaned_text or requirement.raw_text
+                                      or requirement.normalized_name),
+                    resolved_concept=requirement.normalized_name,
+                ))
+
+        tracked = {
+            nutrient.code: REQUEST_TO_CANONICAL[nutrient.code]
+            for nutrient in request.nutrients or []
+            if nutrient.goal is not None or nutrient.limit is not None
+        }
+        nutrition_dropped = set()
+        for recipe in candidates:
+            missing = set(recipe.missing_nutrients)
+            for code, canonical_field in tracked.items():
+                if canonical_field in missing:
+                    causes.setdefault(recipe.recipe_id, []).append("evidence-absent")
+                    nutrition_dropped.add(recipe.recipe_id)
+                    constraint_records.append(RequirementOutcome(
+                        recipe_id=recipe.recipe_id,
+                        requirement_id=None,
+                        constraint=code,
+                        state="evidence-absent",
+                    ))
+
+        eligible = [
+            recipe for recipe in filtered
+            if not recipe.unmapped_requirements
+               and recipe.recipe_id not in nutrition_dropped
+        ]
+        # The query's missing counts are authoritative in v2; the calculator
+        # result is used here only for its per-requirement selected offers.
+        offers_by_recipe = self.calculator_service.inspect_candidates(
+            _calculator_skeleton_candidates(eligible, request.servings), request.servings
+        )
+        selected_offers = {
+            (recipe_id, requirement_offer.occurrence_id): requirement_offer.selected_offer
+            for recipe_id, signal in offers_by_recipe.items()
+            for requirement_offer in signal.selected_offers
+        }
+
+        ranked = rank_candidates(eligible, request)
+        try:
+            days, relaxations = solve_v2(ranked, request)
+        except PlanInfeasible as exc:
+            if exc.reason == "no-recipes-survived":
+                binding = _named_drop_constraints(candidates, causes, constraint_records)
+                if binding:
+                    exc = PlanInfeasible(str(exc), binding, reason=exc.reason)
+            self.last_trace = PlanTrace(
+                feasibility_outcome="infeasible",
+                reason=exc.reason,
+                binding_constraints=exc.binding_constraints,
+                applied_tolerance_pct=0,
+                recipes=_recipe_outcome_records(candidates, causes, set()),
+                requirements=constraint_records,
+            )
+            raise exc
+
+        selected = _selected_ids(days)
+        ingredients_by_recipe = self.repository.fetch_ingredients(sorted(selected))
+        for recipe in candidates:
+            if recipe.recipe_id in selected:
+                recipe.ingredients = ingredients_by_recipe.get(recipe.recipe_id, [])
+
         recipe_records = _recipe_outcome_records(candidates, causes, selected)
         for recipe in candidates:
             if recipe.recipe_id not in selected or recipe.recipe_id in causes:

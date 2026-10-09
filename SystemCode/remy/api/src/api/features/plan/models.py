@@ -103,6 +103,14 @@ class RequirementRef:
     reason: Literal["missing-food-concept", "missing-best-fulfillment"]
 
 
+@dataclass(frozen=True)
+class RecipeRequirement:
+    canonical_key: str
+    quantity: float | None
+    unit: str | None
+    occurrence_id: str | None = None
+
+
 @dataclass
 class CandidateOutcome:
     recipe_id: str
@@ -132,3 +140,6 @@ class Recipe:
     instructions: str | None = None
     score: float = 0.0
     unmapped_requirements: list[RequirementRef] = field(default_factory=list)
+    missing_nutrients: list[str] = field(default_factory=list)
+    requirements: list[RecipeRequirement] = field(default_factory=list)
+    filter_ingredients: list[Ingredient] = field(default_factory=list)

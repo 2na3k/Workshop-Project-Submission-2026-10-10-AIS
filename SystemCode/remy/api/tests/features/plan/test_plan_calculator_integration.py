@@ -2,7 +2,7 @@ from domain.types import NutrientProfile
 
 from api.features.calculator.models import FoodFacts, RetailSKU
 from api.features.calculator.service import CostNutritionService
-from api.features.plan.repository import PlanRepository
+from api.features.plan.repository import QUERY_INGREDIENTS, QUERY_RECIPES, PlanRepository
 from api.features.plan.schemas import NutrientLimit, NutrientRequest, PlanRequest
 from api.features.plan.service import PlanService
 
@@ -27,6 +27,104 @@ class Driver:
 
     def session(self):
         return Session(self.rows)
+
+
+class V2Session(Session):
+    def __init__(self, skeleton_rows, ingredient_rows, driver):
+        super().__init__(skeleton_rows)
+        self.ingredient_rows = ingredient_rows
+        self.driver = driver
+
+    def run(self, query, **params):
+        if query == QUERY_RECIPES:
+            return self.rows
+        if query == QUERY_INGREDIENTS:
+            self.driver.selected_recipe_ids = list(params["recipe_ids"])
+            return [row for row in self.ingredient_rows
+                    if row["recipe_id"] in params["recipe_ids"]]
+        raise AssertionError("unexpected v2 plan query")
+
+
+class V2Driver:
+    def __init__(self, full_rows):
+        self.full_rows = full_rows
+        self.selected_recipe_ids = []
+        self.skeleton_rows = [_skeleton_row(row) for row in full_rows]
+
+    def session(self):
+        return V2Session(self.skeleton_rows, self.full_rows, self)
+
+
+_NUTRIENT_FIELDS = (
+    "energy_kcal", "protein_g", "fat_g", "saturated_fat_g",
+    "carbohydrate_g", "fiber_g", "sugars_g", "sodium_mg", "cholesterol_mg",
+)
+
+
+def _skeleton_row(row):
+    nutrients = {field: 0.0 for field in _NUTRIENT_FIELDS}
+    missing = {field: 0 for field in _NUTRIENT_FIELDS}
+    requirements = []
+    unmapped = []
+    filter_evidence = []
+    for ingredient in row["ingredients"]:
+        if ingredient.get("canonical_key") is None:
+            unmapped.append({
+                "occurrence_id": ingredient.get("occurrence_id"),
+                "normalized_name": ingredient.get("normalized_name"),
+                "raw_text": ingredient.get("raw_text"),
+                "cleaned_text": ingredient.get("cleaned_text"),
+                "position": ingredient.get("position"),
+                "reason": "missing-food-concept",
+            })
+        elif ingredient.get("best_food_key") is None:
+            unmapped.append({
+                "occurrence_id": ingredient.get("occurrence_id"),
+                "normalized_name": ingredient.get("normalized_name"),
+                "raw_text": ingredient.get("raw_text"),
+                "cleaned_text": ingredient.get("cleaned_text"),
+                "position": ingredient.get("position"),
+                "reason": "missing-best-fulfillment",
+            })
+        else:
+            requirements.append({
+                "canonical_key": ingredient["canonical_key"],
+                "quantity": ingredient.get("quantity"),
+                "unit": ingredient.get("unit"),
+                "occurrence_id": ingredient.get("occurrence_id"),
+            })
+        quantity = ingredient.get("quantity") or 0
+        for field in _NUTRIENT_FIELDS:
+            value = ingredient.get(field)
+            if value is None:
+                missing[field] += 1
+            else:
+                nutrients[field] += value * quantity / 100
+        filter_evidence.append({
+            key: ingredient.get(key) for key in (
+                "quantity", "unit", "optional", "preparation", "raw_text",
+                "cleaned_text", "occurrence_id", "normalized_name", "position",
+                "canonical_key", "concept_name", "best_food_key", "nutrition_basis",
+                "serving_size", "serving_size_unit", "allergen_evidence_kinds",
+                "potential_allergens", "may_allergic", "allergen_screening_status",
+                "halal_status", "halal_evidence_kind", "vegetarian_status",
+                "vegetarian_evidence_kind", "vegetarian_concerns", "may_non_vegetarian",
+            )
+        })
+    result = {
+        "recipe_id": row["recipe_id"],
+        "title": row.get("title"),
+        "instructions": row.get("instructions"),
+        "requirement_count": len(row["ingredients"]),
+        "unmapped_requirements": unmapped,
+        "requirements": requirements,
+        "filter_evidence": filter_evidence,
+    }
+    for field in _NUTRIENT_FIELDS:
+        result[field] = nutrients[field]
+        result[f"{field}_value_count"] = len(row["ingredients"]) - missing[field]
+        result[f"{field}_missing_count"] = missing[field]
+    return result
 
 
 class CalculatorRepository:
@@ -89,8 +187,10 @@ class RecordingCalculatorService(CostNutritionService):
     def __init__(self, repository):
         super().__init__(repository)
         self.last_signals = {}
+        self.last_candidates = []
 
     def inspect_candidates(self, recipes, servings):
+        self.last_candidates = recipes
         self.last_signals = super().inspect_candidates(recipes, servings)
         return self.last_signals
 
@@ -177,4 +277,58 @@ def test_plan_consumes_calculator_partial_nutrition():
         item for item in service.last_trace.requirements if item.selected_offer is not None
     )
     assert traced_offer.selected_offer.food_key == "selected-food"
+    assert "food_key" not in str(response.model_dump())
+
+
+def test_plan_v2_consumes_query_missing_counts_and_keeps_offer_path():
+    full_rows = [
+        {
+            "recipe_id": "a-incomplete",
+            "title": "Incomplete recipe",
+            "ingredients": [
+                _ingredient("a-incomplete", "incomplete", sodium=1, occurrence_id="present"),
+                _ingredient("a-incomplete", "incomplete", sodium=None, occurrence_id="missing"),
+            ],
+        },
+        {
+            "recipe_id": "b-offer",
+            "title": "Recipe with offer",
+            "ingredients": [_ingredient("b-offer", "complete-with-offer")],
+        },
+        {
+            "recipe_id": "c-no-offer",
+            "title": "Recipe without offer",
+            "ingredients": [_ingredient("c-no-offer", "complete-without-offer")],
+        },
+    ]
+    driver = V2Driver(full_rows)
+    calculator = RecordingCalculatorService(CalculatorRepository())
+    service = PlanService(PlanRepository(driver), calculator_service=calculator)
+    request = PlanRequest(
+        horizon_days=1,
+        meals_per_day=1,
+        nutrients=[
+            NutrientRequest(code="sodium", unit="mg", limit=NutrientLimit(max=100))
+        ],
+    )
+
+    response = service.generate_v2(request)
+
+    outcomes = {item.recipe_id: item for item in response.recipe_outcomes}
+    assert outcomes["a-incomplete"].outcome == "dropped"
+    assert outcomes["a-incomplete"].cause == "evidence-absent"
+    assert "sodium_mg" in next(
+        recipe.missing_nutrients
+        for recipe in service.last_filter_result
+        if recipe.recipe_id == "a-incomplete"
+    )
+    assert calculator.last_signals["b-offer"].selected_offers
+    assert all(not candidate.nutrient_profiles for candidate in calculator.last_candidates)
+    selected = next(item for item in response.recipe_outcomes if item.outcome == "selected")
+    offer = next(
+        item for item in response.constraint_outcomes
+        if item.recipe_id == selected.recipe_id and item.constraint == "requirement"
+    )
+    assert offer.selected_offer is not None
+    assert driver.selected_recipe_ids == [selected.recipe_id]
     assert "food_key" not in str(response.model_dump())
