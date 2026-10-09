@@ -109,7 +109,7 @@ def test_deterministic_across_runs():
             )
         ],
     )
-    recipes = [Recipe(recipe_id="high", title="High", nutrients={"calories": 20})]
+    recipes = [Recipe(recipe_id="high", title="High", nutrients={"energy_kcal": 20})]
 
     first = _infeasible(recipes=recipes, request=request)
     second = _infeasible(recipes=recipes, request=request)

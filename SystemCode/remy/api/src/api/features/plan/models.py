@@ -128,7 +128,7 @@ class Recipe:
     recipe_id: str
     title: str
     ingredients: list[Ingredient] = field(default_factory=list)
-    nutrients: Nutrition = field(default_factory=dict)
+    nutrients: Nutrition = field(default_factory=Nutrition)
     instructions: str | None = None
     score: float = 0.0
     unmapped_requirements: list[RequirementRef] = field(default_factory=list)

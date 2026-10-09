@@ -2,6 +2,8 @@ import math
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, field_validator
 
+from domain import NutrientProfile
+
 MAX_REQUEST_INGREDIENTS = 100
 
 
@@ -37,17 +39,31 @@ class CostNutritionRequest(BaseModel):
 
 
 class Nutrients(BaseModel):
+    """Public API response DTO. Field names are the API contract; do not
+    change them without a spec-level API revision."""
+
     calories_kcal: float | None = None
     protein_g: float | None = None
     carbs_g: float | None = None
     fat_g: float | None = None
-    saturated_fat_g: float | None = None
     fiber_g: float | None = None
     sugar_g: float | None = None
     sodium_mg: float | None = None
-    cholesterol_mg: float | None = None
     calcium_mg: float | None = None
     iron_mg: float | None = None
+
+    @classmethod
+    def from_profile(cls, profile: NutrientProfile) -> "Nutrients":
+        """Boundary translation: canonical internal names → API contract names."""
+        return cls(
+            calories_kcal=profile.energy_kcal,
+            protein_g=profile.protein_g,
+            carbs_g=profile.carbohydrate_g,
+            fat_g=profile.fat_g,
+            fiber_g=profile.fiber_g,
+            sugar_g=profile.sugars_g,
+            sodium_mg=profile.sodium_mg,
+        )
 
 
 class ItemWarning(BaseModel):

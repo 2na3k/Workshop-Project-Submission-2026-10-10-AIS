@@ -96,8 +96,8 @@ def test_nutrient_null_when_any_missing_and_warning_names():
     assert per_serving(total, 2).protein_g is None
     assert total.sodium_mg == 9
     assert missing_nutrients(missing_protein) == [
-        "calories_kcal", "protein_g", "fat_g", "saturated_fat_g", "carbs_g",
-        "fiber_g", "sugar_g", "cholesterol_mg",
+        "energy_kcal", "protein_g", "fat_g", "saturated_fat_g", "carbohydrate_g",
+        "fiber_g", "sugars_g", "cholesterol_mg",
     ]
 
 

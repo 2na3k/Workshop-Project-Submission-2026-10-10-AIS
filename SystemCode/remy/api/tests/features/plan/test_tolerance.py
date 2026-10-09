@@ -7,7 +7,7 @@ from api.features.plan.solver_v2 import solve_v2
 
 
 def _recipe(calories: float) -> Recipe:
-    return Recipe(recipe_id="recipe-1", title="Recipe", nutrients={"calories": calories})
+    return Recipe(recipe_id="recipe-1", title="Recipe", nutrients={"energy_kcal": calories})
 
 
 def _request(*, tolerance: int, days: int = 1, maximum: float = 9) -> PlanRequest:
@@ -48,4 +48,3 @@ def test_structural_relaxations_are_not_applied():
 def test_tolerance_absent_defaults_zero():
     assert PlanRequest(horizon_days=1, meals_per_day=1).nutrient_tolerance_pct == 0
     assert _request(tolerance=0).nutrient_tolerance_pct == 0
-

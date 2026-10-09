@@ -1,4 +1,5 @@
 from api.features.plan.models import Recipe
+from domain.types import REQUEST_TO_CANONICAL
 
 
 def rank_candidates(recipes, request) -> list[Recipe]:
@@ -70,12 +71,7 @@ def rank_candidates(recipes, request) -> list[Recipe]:
                 r.nutrients.get(k)
                 if k in r.nutrients
                 else r.nutrients.get(
-                    {
-                        "calories": "calories",
-                        "protein": "protein_g",
-                        "carbs": "carbs_g",
-                        "fat": "fat_g",
-                    }.get(k, k)
+                    REQUEST_TO_CANONICAL.get(k, k)
                 )
             )
             if value is not None:

@@ -1,4 +1,3 @@
----
 feature: p2-003-feasible-meal-plan-solving
 ---
 
@@ -19,7 +18,8 @@ cost-drop deferral to p3-004).
   `inspect_candidates`, extend the plan repository to record a per-recipe
   unmapped-requirement fact, and attach a plan-level reasoning structure +
   trace (plan / recipe / constraint) to the response without widening
-  audit-only provenance.
+  audit-only provenance. **Plus a vocabulary consolidation across the p2 reasoning core** 
+  (request code + canonical field only; `domain/types.py` as the sole map authority), which the T-11 wiring surfaced.
 - **Rejected:** Rebuild the solver as a fresh module with a native feasibility
   model. Rejected — the spec is a prove-and-fix against pre-existing behavior
   (Non-goals), the solver shape is fixed by R-3, and the existing CP-SAT model
@@ -92,7 +92,7 @@ Read on 2026-10-08 from `SystemCode/remy/api/src/api/features/plan` and
 
 **Nutrient vocabulary (three vocabularies).**
 - `domain.NutrientProfile`: nine canonical fields.
-- Plan `Nutrition` dict: key `calories` (not `calories_kcal`), else same names.
+- Plan `Nutrition` dict: canonical field names (matches the deployed `Food` node), per BD-4.
 - p2-001 request→field map: `calories → energy_kcal`, etc.
 
 **Baseline tests.** `uv run --package remy-api pytest -q tests/features/plan`
@@ -120,10 +120,15 @@ and a solver comment match. All of `nutrient_tolerance_pct`,
   old structural-`partial` semantics dies with the ladder removal; the API doc
   states this explicitly.
 
-**Error envelope.** Business-logic errors raise `AppError` → custom envelope
-`{"error":{code,message,details,timestamp}}`; schema validation uses FastAPI's
-default `{"detail":[...]}`. AC-14 (out-of-range) is 422 + `{"detail":...}`;
-AC-15 (solver unavailable) is the custom envelope.
+**Error envelope.** All 4xx rejections — schema validation and business-logic
+errors alike — use the project's custom envelope
+`{"error":{code,message,details,timestamp}}`, installed by the
+`RequestValidationError` handler in main.py. FastAPI's default
+`{"detail":[...]}` shape does not reach the client. AC-14 (out-of-range
+`nutrient_tolerance_pct`) is 422 with the custom envelope and code
+`VALIDATION_ERROR`; AC-15 (solver unavailable) is the custom envelope with
+its own code. **Baseline drift: the prior version of this paragraph claimed
+the FastAPI default for schema validation. See Revision notes BD-1**.
 
 ### §1 nutrient-tolerance relaxation (A-005 / C-2)
 
@@ -176,14 +181,47 @@ AC-15 (solver unavailable) is the custom envelope.
   per recipe: the set of canonical nutrients that are evidence-absent (any
   contributing ingredient missing a value), reusing
   `calculator/domain/nutrition.py::missing_nutrients` and `NUTRIENT_FIELDS`.
-  - **Signature (F-4 accepted):** input `list[CandidateRecipe]`
-    (each exposing `recipe_id` and a mapping of its ingredients'
-    `NutrientProfile`s) + `servings: int`; output
-    `dict[str, RecipeNutritionSignal]` where
-    `RecipeNutritionSignal(recipe_id: str, missing_nutrients: list[str])`
-    (empty = no signal). `servings` is retained for contract symmetry even
-    though missingness does not depend on scaling (F-4). The plan maps plan
-    `Nutrition` → canonical `NutrientProfile` at the call boundary.
+  - **Signature (F-4 accepted; extended per BD-2 and r6 F-1):** input is
+    `list[CandidateRecipe]` + `servings: int`. Each `CandidateRecipe` carries:
+    - `recipe_id: str`;
+    - `requirements: list[CandidateRequirement]`, each carrying
+      `canonical_key: str` (the resolved food concept, passed through from the
+      plan repository — **not** re-resolved by name in the calculator) and
+      `scaled_grams: float` (the requirement's quantity in grams, already
+      scaled by `servings` — pinned so `select_package`'s `count·price`
+      tie-break and AC-12 determinism hold);
+    - `nutrient_profiles: list[NutrientProfile]` for the recipe's ingredients
+      (for missing-nutrient detection).
+
+    Output is `dict[str, RecipeNutritionSignal]` where
+    `RecipeNutritionSignal(recipe_id: str, missing_nutrients: list[str],
+    selected_offer: OfferRef | None)`.
+    - `missing_nutrients` is empty when the recipe has no evidence-absent
+      canonical nutrient; non-empty otherwise.
+    - `selected_offer` is the offer chosen by the calculator's existing
+      `select_package` ranking, keyed on each requirement's `canonical_key`,
+      using that requirement's `scaled_grams` as the quantity, over the
+      concept's eligible `FULFILLS` edges (eligibility per p2-002's C-4 rule:
+      `price_status == "estimated"`, `price_match_status == "accepted"`,
+      `freshness_status == "fresh"`, `price_basis in {package_mass,
+      package_volume}`). Ranking is unit price → retail cost → confidence →
+      lexicographic `(food_key, retailer, listing_name)` (p2-002's
+      `select_package` ordering). **The ranking operates over the concept's
+      `FULFILLS` edges, not restricted to the `BEST_FULFILLMENT`-chosen Food**
+      — matches p2-002's `select_package`, which ranks across the resolved
+      key's accepted edges.
+    - If a requirement has no eligible offer, its `selected_offer` is `None`.
+      **A `None` selected_offer does not drop the recipe and does not cause
+      infeasibility — cost stays non-gating per A-006/C-1.** The
+      constraint-level record for that requirement carries no offer; the
+      per-recipe outcome is unaffected.
+    - `OfferRef(food_key: str, listing_name: str, retailer: str)`.
+      `listing_name` + `retailer` go to the user-facing constraint-level
+      record (AC-8c); `food_key` goes to `PlanTrace` (R-16).
+    - The plan service maps plan `Nutrition` → canonical `NutrientProfile`
+      at the call boundary; the plan repository supplies the per-requirement
+      `canonical_key` (already present in its traversal) and the scaled
+      `scaled_grams`.
 - In `PlanService.generate`, after `filter_candidates` and before `solve_v2`,
   call `inspect_candidates` on the retained pool. For each recipe, for each
   **tracked** nutrient (request supplies a `limit` or a `goal` — C-4), if that
@@ -266,26 +304,37 @@ AC-15 (solver unavailable) is the custom envelope.
   `NUTRIENT_FIELDS`; no change to `calculate`.
 - `SystemCode/remy/api/src/api/features/calculator/__init__.py` — export the
   new method's return type.
-- Tests (new): `test_domain_solver.py` (R-14 fixture), `test_service_nutrition_drop.py`
-  (AC-4/AC-4b/AC-4c/AC-5/AC-13), `test_causes.py` (AC-6/AC-7),
-  `test_tolerance.py` (AC-9/AC-10/AC-14/AC-14b), `test_response_contract.py`
-  (AC-2b/AC-8a/AC-8b/AC-8c/AC-11/AC-12),
-  `test_solver_unavailable.py` (AC-15),
-  `test_plan_calculator_integration.py` (integration; plus a one-line
-  assertion that `MISSING_PACKAGE_DATA` is genuinely ignored).
+- `SystemCode/remy/api/src/api/features/calculator/models.py` — add
+  `OfferRef`, `CandidateRecipe`, and `CandidateRequirement` dataclasses (T-7).
+- Tests (new, plan feature): `test_domain_solver.py` (R-14 fixture),
+  `test_service_nutrition_drop.py` (AC-4/AC-4b/AC-4c/AC-5/AC-13),
+  `test_causes.py` (AC-6/AC-7), `test_tolerance.py` (AC-9/AC-10/AC-14/AC-14b),
+  `test_response_contract.py` (AC-2b/AC-8a/AC-8b/AC-8c/AC-11/AC-12),
+  `test_solver_unavailable.py` (AC-15), `test_plan_calculator_integration.py`
+  (integration; plus a one-line assertion that `MISSING_PACKAGE_DATA` is
+  genuinely ignored).
+- Tests (new, calculator feature): `test_inspect_candidates.py` (T-6;
+  exercises the new public method's per-recipe missing-nutrient signals;
+  lives with the calculator feature's tests, not the plan feature's).
 - Tests (extended): `test_service_integration.py` (extend the existing
   fake-driver flow to assert the new reasoning record and relaxed label).
 - `SystemCode/remy/api/docs/API_doc.md` — document `nutrient_tolerance_pct`,
   `relaxed`, `applied_tolerance_pct`, binding constraints, three-level
   reasoning; state that the old structural-`partial` semantics is removed
   (F-5); remove the structural-relaxation description.
-- `sdd.json` — extend the CI check set to cover `src/api/features/plan` and
-  `tests/features/plan` in addition to the calculator paths.
+- `sdd.json` — no change needed; T-1 confirmed the CI check set already
+  covers `src/api/features/plan` and `tests/features/plan`. T-18 re-confirms
+  at close.
+- `SystemCode/remy/domain/src/domain/types.py` — the vocabulary authority rewrite.
+- `SystemCode/remy/domain/src/domain/nutrients.py` — the fix's function rewrites.
+- `SystemCode/remy/api/src/api/features/plan/filtering.py` — where `_recipe_nutrients` writes canonical keys and `_evaluate_nutrients` reads them.
+- `SystemCode/remy/api/src/api/features/plan/ranking.py` — the shared `REQUEST_TO_CANONICAL` import.
 
 ## Constitution alignment
 
 - **R-1** — API doc corrected in the same change; `relaxed` replaces the
   implicit structural-`partial` meaning; one name per concept.
+- **R-1 (extended by the vocabulary consolidation)** — the p2 reasoning core uses one internal vocabulary (graph canonical names) and one request vocabulary; boundary translation to the API contract happens only at the DTO. No module accepts two names for the same concept.
 - **R-2** — `PlanService` calls the calculator only through
   `CostNutritionService.inspect_candidates` (public surface); no calculator
   internals imported; the plan repository extension is within the plan feature.
@@ -327,13 +376,15 @@ AC-15 (solver unavailable) is the custom envelope.
 | AC-11 | unit | test_response_contract.py::test_no_audit_provenance_in_response | no confidence/normalization/source in user payload |
 | AC-12 | unit | test_response_contract.py::test_deterministic_across_runs | identical plan / infeasibility+binding set across runs |
 | AC-13 | unit | test_service_nutrition_drop.py::test_unmapped_cause_and_binding | unmapped requirement → unmapped cause; binding set names it (F-1 mechanism: plan repository records it) |
-| AC-14 | unit (schema) | test_tolerance.py::test_tolerance_out_of_range_rejected | outside [0,25] or non-int → 422 `{"detail":...}`, solver not invoked |
+| AC-14 | unit (schema) | test_tolerance.py::test_tolerance_out_of_range_rejected | outside [0,25] or non-int → 422 with the custom envelope (code: VALIDATION_ERROR), solver not invoked |
 | AC-14b | unit | test_tolerance.py::test_tolerance_absent_defaults_zero | absent → 0; 0 → no widening |
 | AC-15 | unit | test_solver_unavailable.py::test_solver_unavailable_hard_fail | custom envelope, no 200, no degraded plan, no trace claiming feasibility |
 | AC-2b | unit | test_response_contract.py::test_infeasibility_reason_discriminator | empty-pool vs non-empty-pool reason |
 
-Error-envelope assertions: AC-14 asserts the FastAPI default `{"detail":[...]}`;
-AC-15 asserts the custom `{"error":{code,message,details,timestamp}}` envelope.
+Error-envelope assertions: both AC-14 and AC-15 assert the project's custom
+`{"error":{code,message,details,timestamp}}` envelope (the `main.py
+RequestValidationError` handler converts schema validation errors to this
+shape; FastAPI's default `{"detail":[...]}` never reaches the client).
 
 ## Integration per interface
 
@@ -368,8 +419,9 @@ AC-15 asserts the custom `{"error":{code,message,details,timestamp}}` envelope.
 ## Scope check
 
 Fits one working context: **yes.** Source edits within `plan` plus one additive
-calculator method; tests under `tests/features/plan`; one doc and one
-`sdd.json` edit. The calculator change is additive.
+calculator method; tests under `tests/features/plan` and one new test file under
+`tests/features/calculator`; one doc edit. `sdd.json` needs no change (T-1
+confirmed coverage). The calculator change is additive.
 
 ## Revision notes
 
@@ -378,7 +430,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
   `sdd.json` already includes `src/api/features/plan` and
   `tests/features/plan` in its test, lint, and typecheck commands; no check-set
   change was needed.
-- **BD-2 (2026-10-08; observed at `dffeb58`):** Design §0 says the repository
+- **BD-R1 (2026-10-08; observed at `dffeb58`):** Design §0 says the repository
   silently skips both requirements with no `FoodConcept` and those without
   `BEST_FULFILLMENT`. Actual state: the query uses `MATCH` for `FoodConcept`,
   so a requirement with no concept is absent from returned rows; a missing
@@ -421,6 +473,94 @@ calculator method; tests under `tests/features/plan`; one doc and one
   p2-001's F-B is noted only.
 - **Deferral — none.** Both integration rows run in this environment with the
   fake Neo4j driver and the real solver.
+- BD-1 (baseline drift, plan review loop 2) — 2026-10-08.
+  - Original claim (plan Design §0): "schema validation uses FastAPI's
+    default {"detail":[...]}" and "AC-14 (out-of-range) is 422 +
+    {"detail":...}."
+  - Actual state: main.py installs a RequestValidationError handler
+    that converts all schema-validation errors into the project's custom
+    {"error":{code,message,details,timestamp}} envelope with code
+    VALIDATION_ERROR. FastAPI's default {"detail":[...]} shape never
+    reaches the client. The prior plan's baseline was written from the
+    framework default, not from the app's installed handler.
+  - Design still holds? Yes. The plan's design says "reject with 422 and
+    the custom envelope"; only the plan's description of which envelope is
+    wrong. No design change. No spec change (AC-14 names the status, not the
+    envelope shape).
+  - Corrective edit: Design §0's error-envelope paragraph and T-2's
+    Done when: now assert the custom envelope at 422 with code
+    VALIDATION_ERROR. The test-strategy row and the closing envelope note
+    are corrected to match.
+  - Route: implement → plan (task-text change requires re-review of the
+    hashed ## Tasks). Plan re-review and tasks_hash re-record before
+    resuming at T-2.
+  - Date: 2026-10-08.
+- **BD-2 (baseline drift, implement loop 1, T-11 block) — 2026-10-09.**
+  - **Original claim (plan Design §3, `## Files to touch`, T-11):**
+    `inspect_candidates` returns per-recipe `missing_nutrients` only; AC-8c's
+    "selected offer" per requirement is satisfied from the plan feature's
+    existing data (the plan repository's traversal).
+  - **Actual state:** the plan repository's traversal
+    (`(:Recipe)-[:REQUIRES]->(:FoodConcept)-[:BEST_FULFILLMENT]->(:Food)`)
+    does not carry offer identity, `listing_name`, or `retailer`.
+    `BEST_FULFILLMENT` (per `neo4j_db_design.md`'s `EDGE_BEST_FULFILLMENT`)
+    carries `food_key`, `nutrition_rank`, `selection_priority`, and dietary/
+    allergen attributes — no offer. Offer data lives on `FULFILLS`. The plan's
+    §0 baseline read `BEST_FULFILLMENT`'s schema but did not identify the
+    offer-identity gap for AC-8c.
+  - **Design still holds?** Yes, with the resolution below. The plan's design
+    says the response carries the selected offer at constraint granularity; the
+    plan just didn't name where the offer comes from.
+  - **Resolution (Fix B, confirmed):** `inspect_candidates` extends to return
+    `selected_offer: OfferRef | None` per recipe, computed by the calculator's
+    existing `select_package` ranking over the concept's eligible `FULFILLS`
+    edges (not restricted to the `BEST_FULFILLMENT`-chosen Food; matches
+    p2-002's selection scope). `OfferRef(food_key, listing_name, retailer)`;
+    `listing_name` + `retailer` go to the user-facing constraint-level record
+    (AC-8c), `food_key` goes to `PlanTrace` (R-16). The plan service maps the
+    returned `OfferRef` into the AC-8c record. No plan-repository change for
+    offers; no second offer-selection rule.
+  - **Corrective edits:** Design §3's signature block (extended); T-6's and
+    T-7's done-when (offer assertions); T-11's `Files:` trailing parenthetical
+    and done-when (offer mapping); this entry.
+  - **Route:** `implement → plan` (task-text change). Plan re-review,
+    `plan_hash` re-record, `tasks_hash` re-record before resuming at T-11.
+  - **Date:** 2026-10-09.
+- **BD-3 (baseline drift / contract gap, implement loop 1, T-11 block, r6 resolution) — 2026-10-09.**
+  - **Original claim (plan Design §3, BD-2 revision):** `CandidateRecipe`
+    carries "a mapping of its ingredients' `NutrientProfile`s"; the calculator
+    can select offers from that alone.
+  - **Actual state (r6 F-1):** offer selection needs, per requirement, the
+    **canonical key** (the plan repository already resolves it; passing it
+    through avoids a non-deterministic re-resolution by name) and the
+    **scaled gram quantity** (so `select_package`'s `count·price` tie-break
+    and AC-12 determinism hold). The BD-2 revision's input shape did not
+    carry either.
+  - **Design still holds?** Yes, with the F-1 resolution. The design says the
+    response carries the selected offer at constraint granularity; the input
+    shape just needed the two additional fields.
+  - **Resolution:** `CandidateRecipe` gains `requirements:
+    list[CandidateRequirement]` where each `CandidateRequirement` carries
+    `canonical_key` and `scaled_grams`; the calculator keys offer selection on
+    those. No re-resolution by name; determinism holds.
+  - **Corrective edits:** Design §3 signature block (fuller input shape);
+    T-6 and T-7 done-whens (input fixtures and offer assertions); T-14's
+    done-when (offer path through the real integration); F-2a/b/c text fixes;
+    nit-list corrections.
+  - **Route:** `implement → plan`. Plan re-review, `plan_hash` and
+    `tasks_hash` re-record before resuming at T-11.
+  - **Date:** 2026-10-09.
+- **BD-4 (baseline drift, vocabulary mismatch, T-11 block) — 2026-10-09.**
+  - **Original claim (§0 "Nutrient vocabulary (three vocabularies)"):** three vocabularies exist; the plan identified them but did not declare which one is canonical, and did not verify that the plan feature's local maps agreed with each other.
+  - **Actual state:** five distinct vocabularies for the same nine values across four packages (request code; graph canonical; `NutrientProfile`'s `calories_kcal`/`carbs_g`/`sugar_g`; the plan `Nutrition` dict's initial names; `service.py`'s `calories_kcal` target). `filtering.py`'s `_evaluate_nutrients` did `field, _ = REQUEST_TO_CANONICAL[nutrient.code]` against a now-flat map; `_recipe_nutrients` wrote request-code keys while `_evaluate_nutrients` read canonical — the two disagreed, producing `ValueError: too many values to unpack` and, before the fix, silently marking every nutrient as evidence-absent.
+  - **Design still holds?** Yes, with the resolution below.
+  - **Resolution:** `domain/types.py` becomes the single vocabulary authority. Two vocabularies exist: request code and canonical field (graph names). One translation table `REQUEST_TO_CANONICAL`; every module imports it; no module declares its own. `NutrientProfile`'s three divergent fields renamed to canonical. `Nutrients` DTO keeps its public-contract names and translates via a boundary constructor.
+  - **Corrective edits:** `domain/types.py` (rewrite); `domain/nutrients.py` (`sum_nutrition`, `calculate_portion_nutrients` iterate `NUTRIENT_FIELDS`); `calculator/repository.py` (canonical keyword args); `calculator/schemas.py` (boundary translation); `plan/filtering.py` (`_recipe_nutrients` writes canonical; dead map deleted); `plan/ranking.py` (shared map); `plan/service.py` (shared map; canonical reads); `plan/solver_v2.py` (shared map; cast for mypy); `plan/models.py` (`Recipe.nutrients` uses `field(default_factory=Nutrition)`); test fixtures renamed.
+  - **Route:** `implement → plan`. Plan re-review, `plan_hash` and `tasks_hash` re-record.
+  - **Date:** 2026-10-09.
+  - **Prevention:** the `types.py` authority, the `Literal` types (`RequestCode`, `CanonicalField`) that make mypy flag unknown names, and the round-trip tests that build fixtures from the producer's output.
+- **BD-4b (BD-4 completion, 2026-10-09).** The vocabulary fix's first pass missed two functions in `filtering.py` (`_recipe_nutrients` wrote request-code keys, `_evaluate_nutrients` read canonical keys — the two disagreed, producing `ValueError: too many values to unpack` in the drop path); two functions in `domain/nutrients.py` (`calculate_portion_nutrients`, `sum_nutrition` — signature/type mismatches from the half-applied rename); and the `_evaluate_allergens`/`_evaluate_dietary` calls in `filter_candidates` were commented out. Fixes: `_recipe_nutrients` iterates `NUTRIENT_FIELDS` and writes canonical keys; the two `_evaluate_*` calls are re-enabled; `sum_nutrition` uses `result: Nutrition = {}` and populates on demand; `calculate_portion_nutrients` iterates `NUTRIENT_FIELDS`; `plan/models.py`'s `Recipe.nutrients` uses `field(default_factory=Nutrition)`; `plan/solver_v2.py` casts the `.get()` result. All 79 tests pass, mypy clean.
+- **Phase-review inputs from p2-003:** the six BD entries (BD-1 envelope; BD-2 offer source; BD-3 offer input shape; BD-4 vocabulary; BD-4b vocabulary completion; plus the repository skip-site note); the four `annotation-unchecked` mypy sites (`filtering.py:186`, `service.py:162,176,177`); the starlette `BlockingPortal` deprecation carried from p2-002; the `sdd.json` check-set recommendation (template-based or plan-review-time coverage check); the plan-prompt recommendation (declare one canonical vocabulary per feature; name producer→consumer key names; build tests from producer output). The vocabulary fix touched a closed feature (p2-002) and the shared `domain` package; the phase review records the cross-feature impact.
 
 ## Tasks
 
@@ -434,23 +574,23 @@ calculator method; tests under `tests/features/plan`; one doc and one
 
 ### Group 1 — solver relaxation set and fallback (A-005 / C-6 / R-3 / R-14)
 
-- [x] **T-2** Write failing tests: relaxation set is nutrient-bound-widening-only; structural 
+- [x] **T-2** Write failing tests: relaxation set is nutrient-bound-widening-only; structural
   relaxations prohibited; round-robin fallback removed
   - Type: test
   - Covers: AC-9, AC-10, AC-14, AC-14b, AC-15
   - Files: `tests/features/plan/test_tolerance.py` (`test_relaxed_plan_labeled_and_records_tolerance`, `test_widening_insufficient_hard_infeasible`, `test_tolerance_out_of_range_rejected`, `test_tolerance_absent_defaults_zero`), `tests/features/plan/test_solver_unavailable.py` (`test_solver_unavailable_hard_fail`)
-  - Done when: the tests fail against the current solver's four-stage ladder and round-robin fallback; AC-9/AC-10 pin nutrient-bound widening and hard infeasibility; AC-14 asserts the FastAPI `{"detail":[...]}` envelope at 422 with no solver invocation; AC-14b pins absent-default 0 and 0-means-no-widening; AC-15 asserts the custom `{"error":{code,message,details,timestamp}}` envelope, no `200 OK`, no degraded plan
+  - Done when: the tests fail against the current solver's four-stage ladder and round-robin fallback; AC-9/AC-10 pin nutrient-bound widening and hard infeasibility; AC-14 asserts the project's custom `{"error":{code,message,details,timestamp}}` envelope at 422 with code `VALIDATION_ERROR` and no solver invocation; AC-14b pins absent-default 0 and 0-means-no-widening; AC-15 asserts the same custom envelope with its own code, no `200 OK`, no degraded plan
 
-- [x] **T-3** Add `nutrient_tolerance_pct` to the request schema; replace the relaxation ladder 
+- [x] **T-3** Add `nutrient_tolerance_pct` to the request schema; replace the relaxation ladder
   with a single widening stage; remove the fallback
   - Type: impl
   - Covers: AC-9, AC-10, AC-14, AC-14b, AC-15 (R-3, R-14 per A-005)
   - Files: `SystemCode/remy/api/src/api/features/plan/schemas.py` (`nutrient_tolerance_pct: int` with `Field(ge=0, le=25)` default 0), `SystemCode/remy/api/src/api/features/plan/solver_v2.py`, `SystemCode/remy/api/src/api/features/plan/exceptions.py` (add `SolverUnavailable` error)
-  - Done when: T-3 passes; structural stages (1, 2) and the round-robin `ImportError` fallback are removed; solve order is strict → widened → hard infeasibility; bound widening is `lo' = round(lo * (1 - p/100))` and `hi' = round(hi * (1 + p/100))`, zero bound stays zero, goals not widened; ortools-unavailable raises `SolverUnavailable` (custom envelope); `nutrient_tolerance_pct` validated at the schema boundary
+  - Done when: T-2 passes; structural stages (1, 2) and the round-robin `ImportError` fallback are removed; solve order is strict → widened → hard infeasibility; bound widening is `lo' = round(lo * (1 - p/100))` and `hi' = round(hi * (1 + p/100))`, zero bound stays zero, goals not widened; ortools-unavailable raises `SolverUnavailable` (custom envelope); `nutrient_tolerance_pct` validated at the schema boundary
 
 ### Group 2 — hard infeasibility with a named binding-constraint set (R-14 / C-2)
 
-- [x] **T-4** Write failing tests: `PlanInfeasible` carries the deterministic 
+- [x] **T-4** Write failing tests: `PlanInfeasible` carries the deterministic
   individually-binding set; reason discriminator
   - Type: test
   - Covers: AC-2, AC-2b, AC-3, AC-12
@@ -461,26 +601,26 @@ calculator method; tests under `tests/features/plan`; one doc and one
   - Type: impl
   - Covers: AC-2, AC-2b, AC-3, AC-12 (R-14)
   - Files: `SystemCode/remy/api/src/api/features/plan/solver_v2.py`, `SystemCode/remy/api/src/api/features/plan/exceptions.py` (`PlanInfeasible` carries `NamedConstraint` set + `reason`), `SystemCode/remy/api/src/api/features/plan/models.py` (`NamedConstraint` dataclass with `scope`/`code`/`kind`)
-  - Done when: T-5 passes; single-constraint drop-out probe implemented in fixed request order; determinism forced (`random_seed=0`, `num_search_workers=1`); empty-pool and non-empty-pool cases both produce the named set with the correct `reason`; probe cost bounded by the number of requested constraints
+  - Done when: T-4 passes; single-constraint drop-out probe implemented in fixed request order; determinism forced (`random_seed=0`, `num_search_workers=1`); empty-pool and non-empty-pool cases both produce the named set with the correct `reason`; probe cost bounded by the number of requested constraints
 
 ### Group 3 — `inspect_candidates` on the calculator (C-7 / R-2)
 
-- [x] **T-6** Write failing test: calculator exposes `inspect_candidates` returning per-recipe 
+- [x] **T-6** Write failing test: calculator exposes `inspect_candidates` returning per-recipe
   missing-nutrient signals
   - Type: test
   - Covers: AC-4, AC-5, AC-13 (interface repo→service); C-7
   - Files: `tests/features/calculator/test_inspect_candidates.py` (new)
-  - Done when: the test fails because the method does not exist; the test drives the method directly with a small set of candidate recipes (each carrying per-ingredient `NutrientProfile`s), asserting per-recipe `missing_nutrients` and empty-signal behavior; reuses `calculator/domain/nutrition.py::missing_nutrients`
+  - Done when: the test fails because the method does not exist; the test drives the method directly with a small set of candidate recipes (each carrying per-ingredient `NutrientProfile`s), asserting per-recipe `missing_nutrients` and empty-signal behavior; reuses `calculator/domain/nutrition.py::missing_nutrients`; **additionally asserts `selected_offer`**: for a recipe with an eligible `FULFILLS` offer, the returned `OfferRef` matches the calculator's ranking (unit price → retail cost → confidence → lexicographic; eligibility per C-4); for a recipe with no eligible offer, `selected_offer is None`; a recipe that is missing a tracked nutrient **still returns a `selected_offer` if any eligible offer exists** — missingness and offer selection are independent; the test's input fixtures construct `CandidateRecipe`s carrying per-requirement `canonical_key` and `scaled_grams`, and assert that a `None` selected_offer yields an offer-less signal without dropping the recipe
 
 - [x] **T-7** Implement `CostNutritionService.inspect_candidates(recipes, servings)`
   - Type: impl
   - Covers: AC-4, AC-5, AC-13; C-7 (R-2)
   - Files: `SystemCode/remy/api/src/api/features/calculator/service.py`, `SystemCode/remy/api/src/api/features/calculator/__init__.py` (export the return type), `SystemCode/remy/api/src/api/features/calculator/models.py` (`RecipeNutritionSignal` + `CandidateRecipe` input shape if not reused)
-  - Done when: T-7 passes; the method takes `list[CandidateRecipe]` and `servings: int` and returns `dict[str, RecipeNutritionSignal]`; `RecipeNutritionSignal(recipe_id, missing_nutrients)`; `servings` is accepted for contract symmetry (F-4) and does not affect missingness; no change to `calculate`
+  - Done when: T-6 passes; the method takes `list[CandidateRecipe]` and `servings: int` and returns `dict[str, RecipeNutritionSignal]`; each `CandidateRecipe` carries `recipe_id`, `requirements` (each with `canonical_key` and `scaled_grams`), and `nutrient_profiles`; `RecipeNutritionSignal(recipe_id, missing_nutrients, selected_offer)`; `selected_offer` is computed by the calculator's existing `select_package` ranking, keyed on each requirement's `canonical_key` with that requirement's `scaled_grams`, over the concept's eligible `FULFILLS` edges (no restriction to the `BEST_FULFILLMENT`-chosen Food); a requirement with no eligible offer yields `selected_offer is None` and **does not drop the recipe**; `OfferRef(food_key, listing_name, retailer)`, `CandidateRecipe`, and `CandidateRequirement` are defined in `calculator/models.py`; `servings` is accepted for contract symmetry (F-4); no change to `calculate`
 
 ### Group 4 — per-recipe unmapped fact in the plan repository (F-1)
 
-- [x] **T-8** Write failing test: `PlanRepository.fetch_candidates` records per-recipe 
+- [x] **T-8** Write failing test: `PlanRepository.fetch_candidates` records per-recipe
   `unmapped_requirements`
   - Type: test
   - Covers: AC-13 (interface repo→service, second row)
@@ -491,25 +631,25 @@ calculator method; tests under `tests/features/plan`; one doc and one
   - Type: impl
   - Covers: AC-13 (F-1); R-2 (fact stays within the plan feature)
   - Files: `SystemCode/remy/api/src/api/features/plan/repository.py`, `SystemCode/remy/api/src/api/features/plan/models.py` (`RequirementRef` dataclass; `Recipe` gains `unmapped_requirements`)
-  - Done when: T-9 passes; the traversal is unchanged; the skip site identified in plan §0 records the missed `REQUIRES` edge into the recipe's `unmapped_requirements`; no p2-001 code change
+  - Done when: T-8 passes; the traversal is unchanged; the skip site identified in plan §0 records the missed `REQUIRES` edge into the recipe's `unmapped_requirements`; no p2-001 code change
 
 ### Group 5 — nutrition drop, cause model, three-level response (R-9 / C-3 / C-4 / C-5 / R-16 / R-17)
 
-- [x] **T-10** Write failing tests: nutrition drop on tracked nutrients, goal-triggers-drop, 
+- [x] **T-10** Write failing tests: nutrition drop on tracked nutrients, goal-triggers-drop,
   untracked retention, cause precedence, per-recipe categorization
   - Type: test
   - Covers: AC-4, AC-4b, AC-4c, AC-5, AC-6, AC-7, AC-13
   - Files: `tests/features/plan/test_service_nutrition_drop.py` (`test_tracked_partial_nutrition_drops`, `test_drop_categorized_under_nutrient`, `test_goal_on_missing_nutrient_drops`, `test_untracked_partial_nutrition_retained`, `test_unmapped_cause_and_binding`), `tests/features/plan/test_causes.py` (`test_present_evidence_cause_distinct`, `test_multi_cause_precedence`)
   - Done when: the tests fail against the current service (which does not invoke the calculator or derive the per-recipe cause); AC-4/AC-4b/AC-4c pin the per-tracked-nutrient drop and its categorization; AC-5 pins untracked retention; AC-6/AC-7 pin cause distinctness and precedence `present-evidence-excludes → evidence-absent → unmapped`; AC-13 pins the `unmapped` cause and its binding-set naming
 
-- [x] **T-11** Wire `inspect_candidates` into `PlanService.generate`; derive the per-recipe 
+- [x] **T-11** Wire `inspect_candidates` into `PlanService.generate`; derive the per-recipe
   cause model; build the three-level response
   - Type: impl
   - Covers: AC-4, AC-4b, AC-4c, AC-5, AC-6, AC-7, AC-8a, AC-8b, AC-8c, AC-11, AC-13 (R-5, R-9, R-16, R-17); all interface rows
-  - Files: `SystemCode/remy/api/src/api/features/plan/service.py`, `SystemCode/remy/api/src/api/features/plan/models.py` (per-recipe cause/outcome types), `SystemCode/remy/api/src/api/features/plan/schemas.py` (recipe-level outcome list, constraint-level list, `relaxed: bool`, `applied_tolerance_pct: int`, binding-constraint block; keep `status: complete|partial` per F-5), `SystemCode/remy/api/src/api/features/plan/trace.py` (new `PlanTrace`)
-  - Done when: T-11 passes; `PlanService.generate` calls `inspect_candidates` on the retained pool between filtering and solving; per-tracked-nutrient drops are applied per C-4; the per-recipe cause is derived per §4 (repository fact + p2-001 causes + p2-003's nutrition drops, combined per C-5 precedence); the response carries the three-level record and the `relaxed`/`applied_tolerance_pct` pair; no audit-only provenance in the user payload (AC-11); the `MISSING_PACKAGE_DATA` signal is not consumed (A-006 / C-1)
+  - Files: `SystemCode/remy/api/src/api/features/plan/service.py`, `SystemCode/remy/api/src/api/features/plan/models.py` (per-recipe cause/outcome types), `SystemCode/remy/api/src/api/features/plan/schemas.py` (recipe-level outcome list, constraint-level list, `relaxed: bool`, `applied_tolerance_pct: int`, binding-constraint block; keep `status: complete|partial` per F-5; constraint-level record carries the `OfferRef`'s `listing_name` + `retailer`), `SystemCode/remy/api/src/api/features/plan/trace.py` (new `PlanTrace`; per-requirement resolved concept + offer, including the `OfferRef.food_key` audit identity)
+  - Done when: T-10 passes; `PlanService.generate` calls `inspect_candidates` on the retained pool between filtering and solving; per-tracked-nutrient drops are applied per C-4; the per-recipe cause is derived per §4 (repository fact + p2-001 causes + p2-003's nutrition drops, combined per C-5 precedence); **the constraint-level record carries the `selected_offer` returned by `inspect_candidates` — `listing_name` + `retailer` in the user-facing response (AC-8c), `food_key` in `PlanTrace` (R-16)**; the response carries the three-level record and the `relaxed`/`applied_tolerance_pct` pair; no audit-only provenance in the user payload (AC-11); the `MISSING_PACKAGE_DATA` signal is not consumed (A-006 / C-1). **No plan-repository change is needed for offer data** — the offer comes from the calculator via `inspect_candidates`.
 
-- [x] **T-12** Write failing tests: response contract at three levels; no audit provenance; 
+- [x] **T-12** Write failing tests: response contract at three levels; no audit provenance;
   relaxed label
   - Type: test
   - Covers: AC-8a, AC-8b, AC-8c, AC-11
@@ -530,7 +670,7 @@ calculator method; tests under `tests/features/plan`; one doc and one
   - Type: integration
   - Covers: interface `CostNutritionService.inspect_candidates` → `PlanService.generate`; AC-4, AC-5, AC-13
   - Files: `tests/features/plan/test_plan_calculator_integration.py` (`test_plan_consumes_calculator_partial_nutrition`)
-  - Done when: real calculator service + real plan service run together; the calculator repository (Neo4j) is mocked/faked, the solver runs for real; a candidate recipe missing a tracked nutrient is dropped by the plan because the real `inspect_candidates` reported it; **one explicit assertion that a `MISSING_PACKAGE_DATA` signal from the calculator is ignored by the plan** (pins A-006/C-1)
+  - Done when: real calculator service + real plan service run together; the calculator repository (Neo4j) is mocked/faked, the solver runs for real; a candidate recipe missing a tracked nutrient is dropped by the plan because the real `inspect_candidates` reported it; **one explicit assertion that a `MISSING_PACKAGE_DATA` signal from the calculator is ignored by the plan** (pins A-006/C-1); the test also asserts the selected offer flows through the real plan → calculator path: a recipe with an eligible offer produces a constraint-level record carrying `listing_name` + `retailer`, and the `OfferRef.food_key` is present only in `PlanTrace`
 
 - [x] **T-15** Plan repository → plan service integration test (extend existing)
   - Type: integration
@@ -538,24 +678,16 @@ calculator method; tests under `tests/features/plan`; one doc and one
   - Files: `tests/features/plan/test_service_integration.py` (extend)
   - Done when: the existing fake-driver flow asserts the new three-level record, the `relaxed` label, and the per-recipe `unmapped_requirements` fact survive the full path
 
-### Group 8 — CI check set
-
-- [ ] **T-16** Extend `sdd.json` to cover the plan feature
-  - Type: impl
-  - Covers: `sdd.json` scope (per plan Output); the p2-002 CI-drift lesson
-  - Files: `sdd.json`
-  - Done when: the `test`, `lint`, and `typecheck` commands cover `src/api/features/plan` and `tests/features/plan` in addition to `src/api/features/calculator` and `tests/features/calculator`; `sdd.py ci p2-003-feasible-meal-plan-solving` runs the extended set
-
-### Group 9 — closing admin
+### Group 8 — closing admin
 
 - [x] **T-17** Record feature decisions
   - Type: admin
   - Covers: F-1..F-5 decisions; C-1..C-7 consequential flags; A-005 and A-006 citations; spec amendment AC-2
   - Files: `docs/sdd/features/p2-003-feasible-meal-plan-solving/decisions.md`
-  - Done when: F-1 (unmapped fact sourced from the plan repository), F-2 (spec AC-2 amended to "individually-binding"), F-3 (reason discriminator, goal-triggers-drop), F-4 (`servings` for contract symmetry), F-5 (`status=partial` iff `relaxed`), C-1..C-7 and the AC-2 amendment are recorded; A-005 and A-006 referenced with their impact; no overrides
+  - Done when: F-1 (unmapped fact sourced from the plan repository), F-2 (spec AC-2 amended to "individually-binding"), F-3 (reason discriminator, goal-triggers-drop), F-4 (`servings` for contract symmetry), F-5 (`status=partial` iff `relaxed`), C-1..C-7 and the AC-2 amendment are recorded; A-005 and A-006 referenced with their impact; no overrides; the r6 F-3 spec-sync note is recorded as a phase-review input: the spec's Q7 paragraph describes `inspect_candidates` as returning per-nutrient signals only — BD-2 extends it to also return the per-requirement `selected_offer` (for AC-8c's constraint-level record); additive, no AC contradicted; one line to add at the next spec touch ("…and the per-requirement selected offer for the constraint-level record.")
 
 - [x] **T-18** Run the full API test suite and `sdd.py ci`
   - Type: verification
   - Covers: all ACs and interfaces
   - Files: (all above)
-  - Done when: `cd remy/api && uv run --package remy-api pytest -q tests/features/plan tests/features/calculator` passes; `sdd.py ci p2-003-feasible-meal-plan-solving` reports `OVERALL: PASS`; the real-mart demonstration remains deferred under `docs/findings/data-prep-price-path.md` and is recorded as such
+  - Done when: `cd remy/api && uv run --package remy-api pytest -q tests/features/plan tests/features/calculator` passes; sdd.json's check commands are re-confirmed to cover `src/api/features/plan` and `tests/features/plan` (T-1 established the coverage; this step re-confirms it hasn't drifted during implementation, and updates it if it has); `sdd.py ci p2-003-feasible-meal-plan-solving` reports `OVERALL: PASS`; the real-mart demonstration remains deferred under `docs/findings/data-prep-price-path.md` and is recorded as such

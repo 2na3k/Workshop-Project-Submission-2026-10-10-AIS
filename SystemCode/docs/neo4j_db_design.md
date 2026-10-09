@@ -148,6 +148,7 @@
         STRING snapshot_id "NOT NULL"
         DATETIME selected_at "NOT NULL"
         STRING food_key "NOT NULL"
+        
         INTEGER nutrition_rank "NULLABLE"
         INTEGER selection_priority "NULLABLE"
         STRING vegetarian_status "NULLABLE"
@@ -202,6 +203,33 @@
 ```
 
 ## Sample Data
+
+### Sample Recipe Node
+
+```
+<id>: 4:88c9edac-c0d2-495c-9955-fd5445d76ca7:206337
+Image_Name: "cheesy-sweet-potato-crisps-241136"
+Instructions: "Heat oven to 425°F. Finely grate sweet potatoes into a bowl. Squeeze grated sweet potatoes in batches to release as much moisture as possible and place in another bowl; fluff with a fork. Stir in cheese, egg whites, rosemary and pepper. Line a large cookie sheet with parchment paper. Spoon 1 rounded tablespoon batter onto cookie sheet and flatten into a thin, 2- to 2 1/2-inch round. Repeat with remaining batter, leaving 1 inch between rounds. Bake until edges and underside are crisp and browned, 13 to 15 minutes. Remove from oven, let cool slightly and remove from parchment. Serve warm with Rosemary-Balsamic Cream ."
+projection_owner: "remy_recipe_graph"
+recipe_id: 10234
+source: "josephrmartinez/recipe-dataset"
+source_license: "CC BY-SA 3.0"
+Title: "Cheesy Sweet Potato Crisps"
+```
+
+### Sample Food Concept Node
+
+```
+<id>: 4:88c9edac-c0d2-495c-9955-fd5445d76ca7:223306
+candidate_count: 5
+canonical_key: "parmigiano reggiano"
+cost_ready_count: 1
+name: "parmigiano reggiano"
+normalization_version: "recipe-food-v4"
+price_reference_count: 1
+projection_owner: "remy_recipe_graph"
+status: "cost_ready"
+```
 
 ### Sample Food Node
 

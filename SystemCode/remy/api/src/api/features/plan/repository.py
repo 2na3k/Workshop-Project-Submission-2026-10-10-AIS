@@ -30,7 +30,7 @@ WITH r
 ORDER BY r.recipe_id
 LIMIT $limit
 
-OPTIONAL MATCH (r)-[req:REQUIRES]->(fc:FoodConcept)
+MATCH (r)-[req:REQUIRES]->(fc:FoodConcept)
 OPTIONAL MATCH (fc)-[best:BEST_FULFILLMENT]->(f:Food)
 
 WITH r, collect({
@@ -38,32 +38,14 @@ WITH r, collect({
   quantity: req.quantity, unit: req.unit, optional: req.optional,
   preparation: req.preparation, raw_text: req.raw_text,
   cleaned_text: req.cleaned_text,
-  occurrence_id: req.occurrence_id, normalized_name: req.normalized_name,
   position: req.position,
   canonical_key: fc.canonical_key, concept_name: fc.name,
   best_food_key: f.food_key,
-  description: f.description, ingredients: f.ingredients,
   serving_size: f.serving_size, serving_size_unit: f.serving_size_unit,
   nutrition_basis: f.nutrition_basis, energy_kcal: f.energy_kcal,
   protein_g: f.protein_g, fat_g: f.fat_g, saturated_fat_g: f.saturated_fat_g,
   carbohydrate_g: f.carbohydrate_g, fiber_g: f.fiber_g, sugars_g: f.sugars_g,
-  sodium_mg: f.sodium_mg, cholesterol_mg: f.cholesterol_mg,
-  vegetarian_status: best.vegetarian_status,
-  vegetarian_evidence_kind: best.vegetarian_evidence_kind,
-  vegetarian_concerns: best.vegetarian_concerns,
-  may_non_vegetarian: best.may_non_vegetarian,
-  halal_status: best.halal_status,
-  halal_evidence_kind: best.halal_evidence_kind,
-  halal_freshness_status: best.halal_freshness_status,
-  freshness_status: best.freshness_status,
-  observed_at: best.observed_at,
-  package_mass_g: best.package_mass_g,
-  price_basis: best.price_basis,
-  cost_basis_compatible: best.cost_basis_compatible,
-  allergen_evidence_kinds: best.allergen_evidence_kinds,
-  potential_allergens: best.potential_allergens,
-  may_allergic: best.may_allergic,
-  allergen_screening_status: best.allergen_screening_status
+  sodium_mg: f.sodium_mg, cholesterol_mg: f.cholesterol_mg
 }) AS ingredients
 
 RETURN r.recipe_id AS recipe_id,
@@ -73,15 +55,16 @@ RETURN r.recipe_id AS recipe_id,
 ORDER BY recipe_id
 """
 
+
 def _build_nutrients(x: dict) -> Nutrition:
     return {
-        "calories": x.get("energy_kcal"),
+        "energy_kcal": x.get("energy_kcal"),
         "protein_g": x.get("protein_g"),
         "fat_g": x.get("fat_g"),
         "saturated_fat_g": x.get("saturated_fat_g"),
-        "carbs_g": x.get("carbohydrate_g"),
+        "carbohydrate_g": x.get("carbohydrate_g"),
         "fiber_g": x.get("fiber_g"),
-        "sugar_g": x.get("sugars_g"),
+        "sugars_g": x.get("sugars_g"),
         "sodium_mg": x.get("sodium_mg"),
         "cholesterol_mg": x.get("cholesterol_mg"),
     }
@@ -192,7 +175,7 @@ class PlanRepository:
     def __init__(self, driver):
         self.driver = driver
 
-    def fetch_candidates(self, limit: int = 1000) -> list[Recipe]:
+    def fetch_candidates(self, limit: int = 600) -> list[Recipe]:
         t0 = time.perf_counter()
 
         with self.driver.session() as session:
@@ -206,9 +189,9 @@ class PlanRepository:
 
         t2 = time.perf_counter()
         print(
-            f"fetch_candidates: neo4j={(t1-t0)*1000:.0f}ms "
-            f"python={(t2-t1)*1000:.0f}ms "
-            f"total={(t2-t0)*1000:.0f}ms "
+            f"fetch_candidates: neo4j={(t1 - t0) * 1000:.0f}ms "
+            f"python={(t2 - t1) * 1000:.0f}ms "
+            f"total={(t2 - t0) * 1000:.0f}ms "
             f"recipes={len(result)}"
         )
         return result

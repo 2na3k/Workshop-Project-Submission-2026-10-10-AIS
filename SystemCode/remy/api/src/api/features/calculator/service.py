@@ -1,10 +1,8 @@
-from dataclasses import asdict
-
 from domain.exceptions import DomainError
 from domain.types import NUTRIENT_FIELDS, NutrientProfile
 from domain.units import to_grams
 
-from .domain.cost import consumed_cost, round_money, round_nutrient, select_package
+from .domain.cost import consumed_cost, round_money, select_package
 from .domain.nutrition import missing_nutrients, per_serving, scale_nutrients, sum_nutrients
 from .domain.nutrition_select import select_nutrient_value
 from .exceptions import MissingUnitConversion, UnresolvableIngredient
@@ -21,9 +19,7 @@ from .trace import (
 
 
 def _public_nutrients(profile: NutrientProfile) -> Nutrients:
-    return Nutrients(**{
-        key: round_nutrient(key, value) for key, value in asdict(profile).items()
-    })
+    return Nutrients.from_profile(profile)
 
 
 def _package_trace(selected) -> PackageTrace:
@@ -45,21 +41,34 @@ class CostNutritionService:
         self.repository = repository
 
     def inspect_candidates(
-        self, recipes: list[CandidateRecipe], servings: int
+            self, recipes: list[CandidateRecipe], servings: int
     ) -> dict[str, RecipeNutritionSignal]:
-        """Report nutrients missing from any ingredient in each candidate."""
+        """Report nutrients missing from any ingredient in each candidate, and
+        the selected offer per requirement."""
         del servings  # Missingness is independent of portion scaling.
-        signals = {}
+
+        # 1. Collect every canonical_key across all recipes, deduplicated.
+        all_keys = {
+            requirement.canonical_key
+            for recipe in recipes
+            for requirement in recipe.requirements
+        }
+
+        # 2. One repository round trip for the whole batch.
+        facts_by_key = (
+            self.repository.fetch_food_facts(list(all_keys)) if all_keys else {}
+        )
+
+        # 3. Build signals per recipe using the shared result.
+        signals: dict[str, RecipeNutritionSignal] = {}
         for recipe in recipes:
-            absent = set()
+            absent: set[str] = set()
             for profile in recipe.nutrient_profiles:
                 absent.update(missing_nutrients(profile))
             if not recipe.nutrient_profiles:
                 absent.update(NUTRIENT_FIELDS)
+
             selected_offers = []
-            facts_by_key = self.repository.fetch_food_facts(
-                [requirement.canonical_key for requirement in recipe.requirements]
-            ) if recipe.requirements else {}
             for requirement in recipe.requirements:
                 packages = [
                     package
@@ -83,6 +92,7 @@ class CostNutritionService:
                     canonical_key=requirement.canonical_key,
                     selected_offer=offer,
                 ))
+
             signals[recipe.recipe_id] = RecipeNutritionSignal(
                 recipe_id=recipe.recipe_id,
                 missing_nutrients=[field for field in NUTRIENT_FIELDS if field in absent],
@@ -90,7 +100,8 @@ class CostNutritionService:
             )
         return signals
 
-    def calculate(self, request: CostNutritionRequest) -> tuple[CostNutritionResponse, CalculationTrace]:
+    def calculate(self, request: CostNutritionRequest) -> tuple[
+        CostNutritionResponse, CalculationTrace]:
         names = [item.name for item in request.ingredients]
         candidates = self.repository.resolve_candidates(names)
         resolved: list[tuple[str, str, float | None]] = []
@@ -111,7 +122,8 @@ class CostNutritionService:
         retail_values: list[float | None] = []
         trace = CalculationTrace()
 
-        for ingredient, (key, match_type, resolver_confidence) in zip(request.ingredients, resolved):
+        for ingredient, (key, match_type, resolver_confidence) in zip(request.ingredients,
+                                                                      resolved):
             all_facts = facts_by_key.get(key, [])
             accepted = [fact for fact in all_facts if fact.approval_status == "accepted"]
             if not accepted:
@@ -228,7 +240,8 @@ class CostNutritionService:
                 total_consumed_cost_sgd=round_money(total_consumed),
                 total_retail_package_cost_sgd=round_money(total_retail),
                 nutrients=_public_nutrients(total_nutrients),
-                nutrients_per_serving=_public_nutrients(per_serving(total_nutrients, request.servings)),
+                nutrients_per_serving=_public_nutrients(
+                    per_serving(total_nutrients, request.servings)),
             ),
             itemized=items,
         )

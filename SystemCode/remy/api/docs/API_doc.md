@@ -127,8 +127,6 @@ from **whole-package retail pricing** based on grocery data.
       "fiber_g": 10.0,
       "sugar_g": 0.0,
       "sodium_mg": 429.0,
-      "calcium_mg": null,
-      "iron_mg": null,
       "saturated_fat_g": null,
       "cholesterol_mg": null
     },
@@ -140,8 +138,6 @@ from **whole-package retail pricing** based on grocery data.
       "fiber_g": 5.0,
       "sugar_g": 0.0,
       "sodium_mg": 215.0,
-      "calcium_mg": null,
-      "iron_mg": null,
       "saturated_fat_g": null,
       "cholesterol_mg": null
     }
@@ -163,8 +159,6 @@ from **whole-package retail pricing** based on grocery data.
         "fiber_g": 0.0,
         "sugar_g": 0.0,
         "sodium_mg": 429.0,
-        "calcium_mg": null,
-        "iron_mg": null,
         "saturated_fat_g": null,
         "cholesterol_mg": 5.0
       },
@@ -191,8 +185,6 @@ from **whole-package retail pricing** based on grocery data.
         "fiber_g": 10.0,
         "sugar_g": 0.0,
         "sodium_mg": 0.0,
-        "calcium_mg": null,
-        "iron_mg": null,
         "saturated_fat_g": 0.0,
         "cholesterol_mg": null
       },

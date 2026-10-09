@@ -1,6 +1,6 @@
 # CI results - p2-003-feasible-meal-plan-solving
 
-Run at: 2026-10-09T01:29:03+08:00
+Run at: 2026-10-09T12:57:53+08:00
 
 | Check | Command | Result |
 |---|---|---|
@@ -22,7 +22,7 @@ OVERALL: PASS
     _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-79 passed, 1 warning in 10.73s
+79 passed, 1 warning in 11.56s
 ```
 
 ### lint
@@ -32,9 +32,10 @@ All checks passed!
 
 ### typecheck
 ```
-src/api/features/plan/service.py:161: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
-src/api/features/plan/service.py:175: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/api/features/plan/filtering.py:186: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/api/features/plan/service.py:162: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
 src/api/features/plan/service.py:176: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/api/features/plan/service.py:177: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
 Success: no issues found in 31 source files
 ```
 

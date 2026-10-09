@@ -1,6 +1,6 @@
 import secrets
 
-from domain.types import NutrientProfile
+from domain.types import NutrientProfile, REQUEST_TO_CANONICAL
 
 from api.features.calculator import (
     CandidateRequirement,
@@ -13,11 +13,11 @@ from domain.exceptions import DomainError
 from domain.units import to_grams
 from .aggregation import aggregate
 from .exceptions import InvalidNutrientRange, PlanInfeasible, UnknownNutrient
-from .filtering import SUPPORTED_NUTRIENTS, filter_candidates
+from .filtering import filter_candidates
 from .models import (
     NamedConstraint,
     RecipeOutcome,
-    RequirementOutcome,
+    RequirementOutcome
 )
 from .ranking import rank_candidates
 from .schemas import (
@@ -38,17 +38,18 @@ CAUSE_PRECEDENCE = (
     "unmapped",
 )
 
-NUTRIENT_CANONICAL_FIELDS = {
-    "calories": "calories_kcal",
-    "protein": "protein_g",
-    "carbs": "carbs_g",
-    "fat": "fat_g",
-    "saturated_fat": "saturated_fat_g",
-    "fiber": "fiber_g",
-    "sugar": "sugar_g",
-    "sodium": "sodium_mg",
-    "cholesterol": "cholesterol_mg",
-}
+
+# NUTRIENT_CANONICAL_FIELDS = {
+#     "calories": "calories_kcal",
+#     "protein": "protein_g",
+#     "carbs": "carbs_g",
+#     "fat": "fat_g",
+#     "saturated_fat": "saturated_fat_g",
+#     "fiber": "fiber_g",
+#     "sugar": "sugar_g",
+#     "sodium": "sodium_mg",
+#     "cholesterol": "cholesterol_mg",
+# }
 
 
 def resolve_recipe_causes(causes: list[str]) -> list[str]:
@@ -60,13 +61,13 @@ def resolve_recipe_causes(causes: list[str]) -> list[str]:
 def _canonical_profile(nutrients: dict | None) -> NutrientProfile:
     values = nutrients or {}
     return NutrientProfile(
-        calories_kcal=values.get("calories", values.get("calories_kcal")),
+        energy_kcal=values.get("energy_kcal"),
         protein_g=values.get("protein_g"),
-        carbs_g=values.get("carbs_g"),
         fat_g=values.get("fat_g"),
         saturated_fat_g=values.get("saturated_fat_g"),
+        carbohydrate_g=values.get("carbohydrate_g"),
         fiber_g=values.get("fiber_g"),
-        sugar_g=values.get("sugar_g"),
+        sugars_g=values.get("sugars_g"),
         sodium_mg=values.get("sodium_mg"),
         cholesterol_mg=values.get("cholesterol_mg"),
     )
@@ -123,9 +124,9 @@ def _recipe_outcome_records(recipes: list, causes: dict[str, list[str]], selecte
 
 
 def _named_drop_constraints(
-    recipes: list,
-    causes: dict[str, list[str]],
-    constraint_records: list[RequirementOutcome],
+        recipes: list,
+        causes: dict[str, list[str]],
+        constraint_records: list[RequirementOutcome],
 ) -> list[NamedConstraint]:
     named = []
     for recipe in recipes:
@@ -154,6 +155,7 @@ def _named_drop_constraints(
 
 class PlanService:
     def __init__(self, repository, calculator_service=None):
+        self.last_filter_result = None
         self.repository = repository
         self.calculator_service = calculator_service or CostNutritionService(
             CostNutritionRepository(repository.driver)
@@ -162,14 +164,15 @@ class PlanService:
 
     def generate(self, request):
         for nutrient in request.nutrients or []:
-            if nutrient.code not in SUPPORTED_NUTRIENTS:
+            if nutrient.code not in REQUEST_TO_CANONICAL:
                 raise UnknownNutrient(f"Unknown nutrient: {nutrient.code}")
             if (nutrient.limit and nutrient.limit.min is not None
                     and nutrient.limit.max is not None
                     and nutrient.limit.min > nutrient.limit.max):
                 raise InvalidNutrientRange("min cannot exceed max")
 
-        candidates = self.repository.fetch_candidates()
+        pool_size = min(50 * request.meals_per_day, 300)
+        candidates = self.repository.fetch_candidates(limit=3 * pool_size)
         filtered = filter_candidates(candidates, request)
         self.last_filter_result = filtered
         causes: dict[str, list[str]] = {}
@@ -209,7 +212,7 @@ class PlanService:
             for requirement_offer in signal.selected_offers
         }
         tracked = {
-            nutrient.code: NUTRIENT_CANONICAL_FIELDS[nutrient.code]
+            nutrient.code: REQUEST_TO_CANONICAL[nutrient.code]
             for nutrient in request.nutrients or []
             if nutrient.goal is not None or nutrient.limit is not None
         }
@@ -233,7 +236,7 @@ class PlanService:
         eligible = [
             recipe for recipe in filtered
             if not recipe.unmapped_requirements
-            and recipe.recipe_id not in nutrition_dropped
+               and recipe.recipe_id not in nutrition_dropped
         ]
         ranked = rank_candidates(eligible, request)
         try:
@@ -272,7 +275,8 @@ class PlanService:
                     requirement_text=(ingredient.cleaned_text or ingredient.raw_text
                                       or ingredient.description or ingredient.canonical_key),
                     resolved_concept=ingredient.concept_name or ingredient.canonical_key,
-                    selected_offer=selected_offers.get((recipe.recipe_id, ingredient.occurrence_id)),
+                    selected_offer=selected_offers.get(
+                        (recipe.recipe_id, ingredient.occurrence_id)),
                     warnings=warning_codes,
                 ))
 

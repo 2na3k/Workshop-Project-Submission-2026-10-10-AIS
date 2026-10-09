@@ -7,7 +7,7 @@ from api.features.plan.solver_v2 import solve_v2
 
 
 def _recipe(recipe_id: str, calories: float) -> Recipe:
-    return Recipe(recipe_id=recipe_id, title=recipe_id, nutrients={"calories": calories})
+    return Recipe(recipe_id=recipe_id, title=recipe_id, nutrients={"energy_kcal": calories})
 
 
 def _calorie_request(*, maximum: float, tolerance: int = 0) -> PlanRequest:
@@ -48,4 +48,3 @@ def test_feasible_returns_plan():
     assert len(days) == 2
     assert all(len(day) == 1 for day in days)
     assert {day[0].recipe_id for day in days} == {"first", "second"}
-

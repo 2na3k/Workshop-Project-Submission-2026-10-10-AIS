@@ -1,5 +1,7 @@
 import math
+from typing import cast
 
+from domain.types import REQUEST_TO_CANONICAL
 from .exceptions import PlanInfeasible, SolverUnavailable
 from .models import NamedConstraint, Recipe
 
@@ -33,17 +35,7 @@ def solve_v2(recipes: list[Recipe], request):
         if goal is None and lo is None and hi is None:
             continue
 
-        nutrient_key = {
-            "calories": "calories",
-            "protein": "protein_g",
-            "carbs": "carbs_g",
-            "fat": "fat_g",
-            "saturated_fat": "saturated_fat_g",
-            "fiber": "fiber_g",
-            "sugar": "sugar_g",
-            "sodium": "sodium_mg",
-            "cholesterol": "cholesterol_mg",
-        }.get(code, code)
+        nutrient_key = REQUEST_TO_CANONICAL.get(code, code)
         nutrient_specs.append(
             {
                 "code": code,
@@ -51,7 +43,7 @@ def solve_v2(recipes: list[Recipe], request):
                 "min": lo,
                 "max": hi,
                 "values": [
-                    int(round((recipe.nutrients.get(nutrient_key, 0) or 0) * scale))
+                    int(round(cast(float, recipe.nutrients.get(nutrient_key, 0) or 0) * scale))
                     for recipe in recipes
                 ],
                 "weight": 1.0,
@@ -96,8 +88,8 @@ def solve_v2(recipes: list[Recipe], request):
                 if spec["max"] is not None:
                     model.Add(day_total <= spec["max"])
                 if spec["goal"] is not None:
-                    dev_over = model.NewIntVar(0, 10**9, f"dev_over_{day}_{code}")
-                    dev_under = model.NewIntVar(0, 10**9, f"dev_under_{day}_{code}")
+                    dev_over = model.NewIntVar(0, 10 ** 9, f"dev_over_{day}_{code}")
+                    dev_under = model.NewIntVar(0, 10 ** 9, f"dev_under_{day}_{code}")
                     model.Add(day_total - spec["goal"] == dev_over - dev_under)
                     deviation_terms.append(spec["weight"] * (dev_over + dev_under))
 
@@ -109,13 +101,13 @@ def solve_v2(recipes: list[Recipe], request):
         )
         model.Minimize(primary + secondary)
 
-        solver = cp_model.CpSolver()
-        solver.parameters.random_seed = 0
-        solver.parameters.num_search_workers = 1
-        status = solver.Solve(model)
+        cp_solver = cp_model.CpSolver()
+        cp_solver.parameters.random_seed = 0
+        cp_solver.parameters.num_search_workers = horizon
+        status = cp_solver.Solve(model)
         if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             return None
-        return solver, n
+        return cp_solver, n
 
     effective_specs = nutrient_specs
     result = build_and_solve(effective_specs)
@@ -186,7 +178,7 @@ def solve_v2(recipes: list[Recipe], request):
             sorted(
                 meals,
                 key=lambda recipe: (
-                    -float(recipe.nutrients.get("calories", 0) or 0),
+                    -float(recipe.nutrients.get("energy_kcal", 0) or 0),
                     recipe.recipe_id,
                 ),
             )
