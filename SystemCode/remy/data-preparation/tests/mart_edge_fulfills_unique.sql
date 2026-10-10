@@ -1,4 +1,4 @@
-select food_key, canonical_key, kind
+select candidate_key
 from {{ ref('edge_fulfills') }}
-group by food_key, canonical_key, kind
+group by candidate_key
 having count(*) > 1
