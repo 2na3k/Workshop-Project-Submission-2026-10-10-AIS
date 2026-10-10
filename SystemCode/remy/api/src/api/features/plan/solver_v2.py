@@ -88,8 +88,8 @@ def solve_v2(recipes: list[Recipe], request):
                 if spec["max"] is not None:
                     model.Add(day_total <= spec["max"])
                 if spec["goal"] is not None:
-                    dev_over = model.NewIntVar(0, 10 ** 9, f"dev_over_{day}_{code}")
-                    dev_under = model.NewIntVar(0, 10 ** 9, f"dev_under_{day}_{code}")
+                    dev_over = model.NewIntVar(0, 10 ** 7, f"dev_over_{day}_{code}")
+                    dev_under = model.NewIntVar(0, 10 ** 7, f"dev_under_{day}_{code}")
                     model.Add(day_total - spec["goal"] == dev_over - dev_under)
                     deviation_terms.append(spec["weight"] * (dev_over + dev_under))
 
@@ -102,8 +102,10 @@ def solve_v2(recipes: list[Recipe], request):
         model.Minimize(primary + secondary)
 
         cp_solver = cp_model.CpSolver()
+        num_worker = min(horizon, 4)
+        cp_solver.parameters.max_time_in_seconds = (1.0 / max(2, num_worker)) * (horizon ** 0.5)
         cp_solver.parameters.random_seed = 0
-        cp_solver.parameters.num_search_workers = horizon
+        cp_solver.parameters.num_search_workers = num_worker
         status = cp_solver.Solve(model)
         if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             return None

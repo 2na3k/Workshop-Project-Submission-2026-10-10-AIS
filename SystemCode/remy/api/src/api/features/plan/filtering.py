@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta, timezone
 
-from domain.graph_vocab import PriceStatus, PriceMatchStatus, PriceBasis, FreshnessStatus
-from domain.types import REQUEST_TO_CANONICAL, NUTRIENT_FIELDS
+from domain import calculate_portion_nutrients, sum_nutrition
+from domain.graph_vocab import PriceStatus, PriceMatchStatus, PriceBasis, FreshnessStatus, \
+    AllergenScreeningStatus
+from domain.types import REQUEST_TO_CANONICAL, Nutrition
 from workflows.rules.allergen import resolve_allergen_key
 from .exceptions import UnknownAllergen, UnknownDietary, UnknownNutrient
 from .models import (CandidateOutcome, ConstraintEvaluation, FilterResult,
@@ -50,12 +52,16 @@ def _evaluate_allergens(recipe, request, outcome):
         key = resolve_allergen_key(allergy.code)
         severity = allergy.severity or "severe"
         for ingredient in recipe.ingredients:
-            evidence_known = (ingredient.potential_allergens is not None and
-                              ingredient.allergen_screening_status not in {None, "unknown"})
-            if not evidence_known:
-                _add(outcome, "allergen", "evidence-absent", f"{key}: allergen evidence absent")
-                continue
-            if key not in {str(value).lower() for value in ingredient.potential_allergens}:
+            evidence_known = (
+                    ingredient.allergen_screening_status not in {None,
+                                                                 AllergenScreeningStatus.UNKNOWN}
+                    and ingredient.potential_allergens is not None
+            )
+            # if not evidence_known:
+            #     _add(outcome, "allergen", "evidence-absent", f"{key}: allergen evidence absent")
+            #     continue
+            # if key not in {str(value).lower() for value in ingredient.potential_allergens}:
+            if not evidence_known or key not in {str(value).lower() for value in ingredient.potential_allergens}:
                 _add(outcome, "allergen", "pass", key)
                 continue
             if severity == "mild":
@@ -166,7 +172,7 @@ def filter_candidates(recipes, request, *, now=None, require_fresh=False,
     for recipe in recipes:
         recipe.nutrients = _recipe_nutrients(recipe)
         outcome = CandidateOutcome(recipe.recipe_id)
-        # _evaluate_allergens(recipe, request, outcome)
+        _evaluate_allergens(recipe, request, outcome)
         # _evaluate_dietary(recipe, request, outcome)
         _evaluate_nutrients(recipe, request, outcome)
         if require_fresh:
@@ -183,11 +189,17 @@ def filter_candidates(recipes, request, *, now=None, require_fresh=False,
 
 
 def _recipe_nutrients(recipe):
-    totals: dict[str, float] = {}
+    portions: list[Nutrition] = []
     for ingredient in recipe.ingredients:
-        profile = _normalise_food_nutrients(ingredient) or {}
-        for canonical_field in NUTRIENT_FIELDS:
-            value = profile.get(canonical_field)
-            if value is not None:
-                totals[canonical_field] = totals.get(canonical_field, 0) + round(value, 2)
-    return totals
+        profile = _normalise_food_nutrients(ingredient)  # returns per-100g Nutrition or None
+        if profile is None or ingredient.quantity is None or not ingredient.unit:
+            continue
+        portion = calculate_portion_nutrients(
+            nutrition_per_100g=profile,
+            quantity_g=ingredient.quantity,
+            unit=ingredient.unit,
+            servings=1,        # no per-serving division at the recipe level
+        )
+        if portion is not None:
+            portions.append(portion)
+    return sum_nutrition(portions)

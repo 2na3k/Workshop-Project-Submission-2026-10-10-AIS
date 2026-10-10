@@ -55,15 +55,14 @@ def calculate_portion_nutrients(*, nutrition_per_100g: Nutrition | None,
 
 def sum_nutrition(servings: list[Nutrition]) -> Nutrition:
     result: Nutrition = {}
-    for serving in servings:
-        for key in NUTRIENT_FIELDS:
+    for key in NUTRIENT_FIELDS:
+        total: float | None = 0.0
+        missing = False
+        for serving in servings:
             value = serving.get(key)
             if value is None:
-                result[key] = None
-                continue
-            current = result.get(key)
-            if current is None:
-                result[key] = value
-            else:
-                result[key] = round(current + value, 4)
+                missing = True
+                break
+            total += value
+        result[key] = None if missing else total
     return result

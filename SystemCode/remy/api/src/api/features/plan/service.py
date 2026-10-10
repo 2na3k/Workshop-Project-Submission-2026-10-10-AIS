@@ -409,8 +409,6 @@ class PlanService:
             recipe.ingredients = recipe.filter_ingredients
         filtered = filter_candidates(candidates, request)
         self.last_filter_result = filtered
-        for recipe in candidates:
-            recipe.ingredients = []
 
         causes: dict[str, list[str]] = {}
         constraint_records: list[RequirementOutcome] = []
@@ -492,11 +490,6 @@ class PlanService:
             raise exc
 
         selected = _selected_ids(days)
-        ingredients_by_recipe = self.repository.fetch_ingredients(sorted(selected))
-        for recipe in candidates:
-            if recipe.recipe_id in selected:
-                recipe.ingredients = ingredients_by_recipe.get(recipe.recipe_id, [])
-
         recipe_records = _recipe_outcome_records(candidates, causes, selected)
         for recipe in candidates:
             if recipe.recipe_id not in selected or recipe.recipe_id in causes:

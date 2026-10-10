@@ -37,6 +37,8 @@ class NutritionSource(StrEnum):
     CRAWLER_FDC_PROFILE = "crawler_fdc_profile"
     FOODDATA_CENTRAL = "fooddata_central"
 
+class AllergenScreeningStatus(StrEnum):
+    UNKNOWN = "unknown"
 
 COST_CONVERTIBLE_BASES = frozenset({PriceBasis.PACKAGE_MASS, PriceBasis.PACKAGE_VOLUME})
 FRESH_VALUES = frozenset({FreshnessStatus.FRESH})
