@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import re
-
+from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # Same shape the database enforces in app_user_username_format, so a bad
 # username is rejected at the edge with a useful message instead of coming back
@@ -102,3 +102,30 @@ class PreferencesIn(BaseModel):
 
 class PreferencesOut(PreferencesIn):
     username: str
+
+
+class SavedMeal(BaseModel):
+    """One meal as the planner returned it. Only the id and title are checked;
+    the rest (nutrients, ingredients, method) is stored as-is for display."""
+
+    model_config = ConfigDict(extra="allow")
+
+    recipe_id: str = Field(min_length=1, max_length=128)
+    title: str = Field(min_length=1, max_length=300)
+
+
+class SavedMealsIn(BaseModel):
+    meals: list[SavedMeal] = Field(min_length=1, max_length=50)
+
+
+class RatingIn(BaseModel):
+    like: bool
+    meal: SavedMeal
+
+
+class RatingOut(BaseModel):
+    """One History row: the meal, whether it was liked, and when."""
+
+    meal: SavedMeal
+    like: bool
+    rated_at: datetime

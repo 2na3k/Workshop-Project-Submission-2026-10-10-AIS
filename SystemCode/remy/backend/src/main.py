@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import db
 from app.config import load_settings
 from app.middleware import JWTAuthMiddleware
-from app.routes import auth, preferences
+from app.routes import auth, preferences, ratings, saved
 
 settings = load_settings()
 
@@ -20,6 +20,7 @@ async def lifespan(app: FastAPI):
     app.state.bloom = await db.load_bloom(
         app.state.pool, settings.bloom_capacity, settings.bloom_error_rate
     )
+    await db.ensure_tables(app.state.pool)
     try:
         yield
     finally:
@@ -43,6 +44,8 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(preferences.router)
+app.include_router(saved.router)
+app.include_router(ratings.router)
 
 
 @app.get("/health", tags=["meta"])

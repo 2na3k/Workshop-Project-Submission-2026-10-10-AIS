@@ -5,6 +5,8 @@
  *  because every request below sets `credentials: "include"`. That is the point
  *  of the arrangement: an XSS bug cannot exfiltrate a token it cannot see. */
 
+import type { PlanMeal } from "@/lib/plan-api";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export class ApiError extends Error {
@@ -85,6 +87,11 @@ export const signUp = (credentials: Credentials) =>
 export const signIn = (credentials: Credentials) =>
   request<SessionResponse>("POST", "/auth/signin", credentials);
 
+/** The demo account seeded by backend/db.sql. The password is in the bundle
+ *  on purpose - it guards nothing. */
+export const signInDemo = () =>
+  signIn({ username: "demo", password: "remy-demo-account" });
+
 export const checkUsername = (username: string) =>
   request<{ username: string; available: boolean; answered_by_filter: boolean }>(
     "POST",
@@ -128,3 +135,23 @@ export async function loadPreferences(): Promise<PreferencesPayload | null> {
     throw caught;
   }
 }
+
+/** Meals kept from the home page ideas, newest first. */
+export const listSavedMeals = () => request<PlanMeal[]>("GET", "/saved");
+
+/** Resolves to the full saved list after the new ones are added. */
+export const saveMeals = (meals: PlanMeal[]) =>
+  request<PlanMeal[]>("POST", "/saved", { meals });
+
+export const removeSavedMeal = (recipeId: string) =>
+  request<void>("DELETE", `/saved/${encodeURIComponent(recipeId)}`);
+
+/** One History row: the meal, whether it was liked, and when (ISO 8601). */
+export type MealRating = { meal: PlanMeal; like: boolean; rated_at: string };
+
+/** Every meal the user rated, newest first. */
+export const listRatings = () => request<MealRating[]>("GET", "/ratings");
+
+/** Rating a meal again changes its like and moves it to the top of History. */
+export const rateMeal = (meal: PlanMeal, like: boolean) =>
+  request<MealRating>("PUT", `/ratings/${encodeURIComponent(meal.recipe_id)}`, { like, meal });
