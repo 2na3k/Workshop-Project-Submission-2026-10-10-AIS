@@ -6,7 +6,10 @@ from collections.abc import Iterable, Iterator
 
 from api.core.errors import ErrorDetail, error_envelope
 from api.core.exceptions import AppError
+from api.core.monitoring import update_observation
 from .narrative import plan_text
+from .schemas import PlanResponse
+from .service import trace_plan, complete_plan
 
 logger = logging.getLogger(__name__)
 
@@ -67,32 +70,37 @@ def word_chunks(pieces: Iterable[str], size: int = FLUSH_WORDS) -> Iterator[str]
 
 
 async def stream_plan(request, service, keep_alive_seconds: float = KEEP_ALIVE_SECONDS):
-    try:
-        yield progress(1)
-        task = in_thread(service.fetch_candidates)
-        async for ping in keep_alive_until_done(task, keep_alive_seconds):
-            yield ping
-        recipes = task.result()
+    with trace_plan(request) as span:
+        try:
+            yield progress(1)
+            task = in_thread(service.fetch_candidates)
+            async for ping in keep_alive_until_done(task, keep_alive_seconds):
+                yield ping
+            recipes = task.result()
 
-        yield progress(2)
-        task = in_thread(service.select_candidates, recipes, request)
-        async for ping in keep_alive_until_done(task, keep_alive_seconds):
-            yield ping
-        candidates = task.result()
+            yield progress(2)
+            task = in_thread(service.select_candidates, recipes, request)
+            async for ping in keep_alive_until_done(task, keep_alive_seconds):
+                yield ping
+            candidates = task.result()
 
-        yield progress(3)
-        task = in_thread(service.solve, candidates, request)
-        async for ping in keep_alive_until_done(task, keep_alive_seconds):
-            yield ping
-        days, relaxations = task.result()
+            yield progress(3)
+            task = in_thread(service.solve, candidates, request)
+            async for ping in keep_alive_until_done(task, keep_alive_seconds):
+                yield ping
+            days, relaxations = task.result()
 
-        plan = service.build_response(days, relaxations, request)
-        for chunk in word_chunks(plan_text(plan)):
-            yield sse("text", {"text": chunk})
-        yield sse("plan", plan.model_dump(mode="json"))
-    except AppError as exc:
-        details = [ErrorDetail(**item) for item in exc.details]
-        yield sse("error", error_envelope(exc.code, exc.message, details))
-    except Exception:
-        logger.exception("Plan stream failed")
-        yield sse("error", error_envelope("INTERNAL_ERROR", "An unexpected error occurred"))
+            plan = service.build_response(days, relaxations, request)
+            if isinstance(plan, PlanResponse):
+                complete_plan(plan, request, candidates, span)
+            for chunk in word_chunks(plan_text(plan)):
+                yield sse("text", {"text": chunk})
+            yield sse("plan", plan.model_dump(mode="json"))
+        except AppError as exc:
+            update_observation(span, level="ERROR", status_message=type(exc).__name__)
+            details = [ErrorDetail(**item) for item in exc.details]
+            yield sse("error", error_envelope(exc.code, exc.message, details))
+        except Exception as exc:
+            update_observation(span, level="ERROR", status_message=type(exc).__name__)
+            logger.exception("Plan stream failed")
+            yield sse("error", error_envelope("INTERNAL_ERROR", "An unexpected error occurred"))

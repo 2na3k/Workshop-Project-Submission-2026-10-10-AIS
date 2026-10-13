@@ -97,29 +97,31 @@ def filter_candidates(recipes, request) -> list[Recipe]:
             unsupported += 1
             continue
         recipe.nutrients = canonicalize_calories(sum_nutrition([p for p in portions if p]))
-        # declared = " ".join((i.ingredients or i.text or "") for i in recipe.ingredients)
-        # evidence = " ".join(
-        #     str(x) for i in recipe.ingredients for x in (i.potential_allergens or []))
-        # if any(s != "pass" for _, s in check_allergen_compliance(
-        #         allergens=allergens, declared_ingredients_text=declared,
-        #         precautionary_text=evidence)):
-        #     continue
-        # for d in request.dietary or []:
-        #     if d.code == "halal":
-        #         states = [check_halal_compliance(
-        #             halal_badge=(i.halal_status or "").lower()
-        #                         in {"pass", "halal", "compliant", "true", "yes"}
-        #         ) for i in recipe.ingredients]
-        #     else:
-        #         states = [check_vegetarian_compliance(
-        #             vegetarian_evidence=("true" if (i.vegetarian_status or "").lower()
-        #                                            in {"pass", "vegetarian", "compliant", "true",
-        #                                                "yes"}
-        #                                  else i.vegetarian_status),
-        #             ingredients_text=i.ingredients or i.text) for i in recipe.ingredients]
-        #     if not states or any(s != "pass" for s in states):
-        #         failed = True
-        #         break
+        declared = " ".join((i.ingredients or i.text or i.canonical_key or "") for i in recipe.ingredients)
+        flags = {str(x) for i in recipe.ingredients for x in (i.potential_allergens or [])}
+        if flags.intersection(allergens) or any(s == "fail" for _, s in check_allergen_compliance(
+                allergens=allergens, declared_ingredients_text=declared,
+                precautionary_text=" ".join(flags))):
+            continue
+        # ponytail: best-effort screening, not certification; unknowns remain explicitly unverified.
+        for d in request.dietary or []:
+            if d.code == "halal":
+                states = [check_halal_compliance(halal_badge=(
+                    False if (i.halal_status or "").lower() in {"fail", "false", "no", "non_compliant", "not_halal", "haram"}
+                    else True if (i.halal_status or "").lower() in {"pass", "halal", "compliant", "true", "yes", "certified", "retailer_claim", "ingredient_screen_pass"}
+                    else None
+                )) for i in recipe.ingredients]
+            else:
+                states = [check_vegetarian_compliance(
+                    vegetarian_evidence=(
+                        "false" if i.may_non_vegetarian or i.vegetarian_concerns or i.vegetarian_status == "potential_not_vegetarian"
+                        else "true" if (i.vegetarian_status or "").lower() in {"pass", "vegetarian", "compliant", "true", "yes", "retailer_claim", "ingredient_screen_pass"}
+                        else i.vegetarian_status),
+                    ingredients_text=i.ingredients or i.text or i.canonical_key
+                ) for i in recipe.ingredients]
+            if any(s == "fail" for s in states):
+                failed = True
+                break
         if not failed:
             good.append(recipe)
     if not good:
@@ -127,5 +129,5 @@ def filter_candidates(recipes, request) -> list[Recipe]:
             raise UnsupportedUnit("No deterministic recipe unit conversions")
         if unsupported and recipes:
             raise NoCandidates("No candidates with usable nutrition data")
-        raise UnsupportedUnit("No usable recipe conversions")
+        raise NoCandidates("No recipes match the requested restrictions and usable nutrition data")
     return good

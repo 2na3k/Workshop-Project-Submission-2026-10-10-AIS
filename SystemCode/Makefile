@@ -1,17 +1,18 @@
 SHELL := /bin/sh
 
 UV ?= uv
-COMPOSE ?= REMY_API_ENV_FILE=.env.nonprod docker compose --env-file .env.nonprod
+COMPOSE ?= docker compose --env-file .env.$(DBT_TARGET) --env-file .env.langfuse
 API_PACKAGE := remy-api
 CRAWLER_PACKAGE := remy-data-crawler
 DBT_PACKAGE := remy-data-preparation
 DBT_TARGET ?= nonprod
+export DBT_TARGET
 
 -include .env.$(DBT_TARGET)
 export NEO4J_URI NEO4J_USERNAME NEO4J_PASSWORD NEO4J_DATABASE NEO4J_HTTP NEO4J_USER NEO4J_BATCH_SIZE \
        AURA_INSTANCEID AURA_INSTANCENAME
 
-.PHONY: help install sync lock check build build-all up up-all down logs \
+.PHONY: help install sync lock check build build-all up up-prod up-all down logs langfuse langfuse-init \
         api crawler dbt dbt-all serve-neo4j serve-neo4j-replace frontend-install clean _neo4j-creds
 
 help:
@@ -26,8 +27,10 @@ help:
 		'make serve-neo4j      Load built marts into Neo4j' \
 		'make serve-neo4j-replace  Replace the existing Neo4j recipe graph' \
 		'make build            Build the API image' \
-		'make build-all        Build every image, including the jobs' \
-		'make up               Start API and Neo4j' \
+		'make build-all        Build API, jobs, and optional frontend images' \
+		'make up               Start API, Neo4j, and local Langfuse' \
+		'make up-prod          Start webapp, auth backend, API, and Langfuse with production Neo4j' \
+		'make langfuse         Start the local Langfuse dashboard and worker' \
 		'make up-all           Start all Compose profiles' \
 		'make down             Stop Compose services' \
 		'make logs             Follow Compose logs'
@@ -65,6 +68,18 @@ serve-neo4j: _neo4j-creds
 
 serve-neo4j-replace: serve-neo4j
 
+langfuse-init:
+	$(UV) run --frozen --package $(API_PACKAGE) python scripts/init_langfuse.py
+
+build build-all up up-all down logs: langfuse-init
+
+langfuse: langfuse-init
+	$(COMPOSE) up -d --build --wait langfuse-gateway langfuse-worker
+
+up-prod: DBT_TARGET=prod
+up-prod: langfuse
+	$(COMPOSE) up -d --build --wait frontend
+
 build:
 	$(COMPOSE) build api
 
@@ -72,7 +87,7 @@ build-all:
 	$(COMPOSE) --profile neo4j --profile jobs build
 
 up:
-	$(COMPOSE) up --build api neo4j
+	$(COMPOSE) --profile neo4j up --build frontend neo4j
 
 up-all:
 	$(COMPOSE) --profile neo4j --profile jobs up --build
@@ -84,8 +99,7 @@ logs:
 	$(COMPOSE) logs -f
 
 frontend-install:
-	@test -f remy/app/package.json || { echo 'remy/app/package.json is not initialized yet'; exit 1; }
-	npm --prefix remy/app install
+	npm --prefix remy/frontend ci
 
 clean:
 	rm -rf .venv

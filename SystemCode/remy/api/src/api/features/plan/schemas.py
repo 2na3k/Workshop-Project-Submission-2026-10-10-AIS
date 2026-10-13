@@ -120,6 +120,8 @@ class RelaxationRecord(BaseModel):
 
 class PlanResponse(BaseModel):
     plan_id: str
+    trace_id: str | None = None
+    evaluation_id: str | None = None
     status: Literal["complete", "partial"]
     message: str
     validation_summary: dict
