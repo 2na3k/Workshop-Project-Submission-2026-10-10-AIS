@@ -1,3 +1,4 @@
+import { Bookmark } from "@/components/icons";
 import {
   describeRelaxation,
   formatIngredient,
@@ -85,12 +86,32 @@ export default function PlanView({ plan, servings, overview }: { plan: PlanRespo
   );
 }
 
-export function MealCard({ meal, label }: { meal: PlanMeal; label?: string }) {
+type MealCardProps = {
+  meal: PlanMeal;
+  label?: string;
+  /** Shows a bookmark on the card. */
+  saved?: boolean;
+  /** Given, the card becomes a button that opens the meal's details, and the
+   *  ingredients and method move into that pop-up. */
+  onOpen?: () => void;
+  /** Controls under the card, outside the button, such as like buttons. */
+  footer?: React.ReactNode;
+};
+
+export function MealCard({ meal, label, saved = false, onOpen, footer }: MealCardProps) {
   const headline = sortedNutrients(meal.nutrients).filter(([key]) => HEADLINE.has(key));
 
-  return (
-    <li className="flex flex-col rounded-2xl border border-subtle bg-surface p-4">
-      <p className="text-xs font-semibold text-muted">{label ?? meal.slot.replace(/^meal_/, "Meal ")}</p>
+  const summary = (
+    <>
+      <p className="flex items-center justify-between gap-2 text-xs font-semibold text-muted">
+        {label ?? meal.slot.replace(/^meal_/, "Meal ")}
+        {saved && (
+          <span className="text-accent">
+            <Bookmark filled className="size-4" />
+            <span className="sr-only">Saved</span>
+          </span>
+        )}
+      </p>
       <h4 className="mt-1 font-bold leading-snug">{meal.title}</h4>
       {headline.length > 0 && (
         <p className="mt-1.5 text-sm text-muted tabular-nums">
@@ -103,6 +124,24 @@ export function MealCard({ meal, label }: { meal: PlanMeal; label?: string }) {
             .join(" · ")}
         </p>
       )}
+    </>
+  );
+
+  if (onOpen) {
+    return (
+      <li className="flex flex-col rounded-2xl border border-subtle bg-surface transition hover:-translate-y-0.5 hover:border-sage-deep hover:shadow-[0_12px_28px_-14px_rgba(33,56,42,0.25)]">
+        <button type="button" onClick={onOpen} className="flex flex-1 flex-col rounded-2xl p-4 text-left">
+          {summary}
+          <span className="mt-auto pt-3 text-sm font-semibold text-accent">View details</span>
+        </button>
+        {footer && <div className="-mt-1 px-4 pb-4">{footer}</div>}
+      </li>
+    );
+  }
+
+  return (
+    <li className="flex flex-col rounded-2xl border border-subtle bg-surface p-4">
+      {summary}
 
       <details className="mt-3 text-sm">
         <summary className="cursor-pointer font-semibold text-accent">Ingredients &amp; method</summary>

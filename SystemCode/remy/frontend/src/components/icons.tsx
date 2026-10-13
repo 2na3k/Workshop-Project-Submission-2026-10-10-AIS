@@ -95,3 +95,20 @@ export function Close({ className }: IconProps) {
     </svg>
   );
 }
+
+/** Filled once the meal is saved, outlined otherwise. */
+export function Bookmark({ className, filled = false }: IconProps & { filled?: boolean }) {
+  return (
+    <svg {...base} fill={filled ? "currentColor" : "none"} className={className} aria-hidden="true">
+      <path d="M7 4.5h10a.5.5 0 0 1 .5.5v14.5L12 16l-5.5 3.5V5a.5.5 0 0 1 .5-.5Z" />
+    </svg>
+  );
+}
+
+export function Check({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <path d="m5.5 12.5 4 4 9-9" />
+    </svg>
+  );
+}

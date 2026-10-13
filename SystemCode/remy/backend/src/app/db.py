@@ -101,3 +101,106 @@ async def fetch_preferences(pool: asyncpg.Pool, username: str) -> dict | None:
         "preferred_nutrient": row["preferred_nutrient"],
         "cuisines": cuisines,
     }
+
+
+# db.sql only runs when the database is first created, so an older database
+# would be missing these tables. Creating them at startup keeps those working.
+SAVED_MEAL_DDL = """
+CREATE TABLE IF NOT EXISTS saved_meal (
+    username   TEXT        NOT NULL
+                           REFERENCES app_user (username)
+                           ON DELETE CASCADE
+                           ON UPDATE CASCADE,
+    recipe_id  TEXT        NOT NULL,
+    meal       JSONB       NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    PRIMARY KEY (username, recipe_id)
+)
+"""
+
+
+MEAL_RATING_DDL = """
+CREATE TABLE IF NOT EXISTS meal_rating (
+    username  TEXT        NOT NULL
+                          REFERENCES app_user (username)
+                          ON DELETE CASCADE
+                          ON UPDATE CASCADE,
+    recipe_id TEXT        NOT NULL,
+    liked     BOOLEAN     NOT NULL,
+    meal      JSONB       NOT NULL,
+    rated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    PRIMARY KEY (username, recipe_id)
+);
+
+CREATE INDEX IF NOT EXISTS meal_rating_history_idx
+    ON meal_rating (username, rated_at DESC);
+"""
+
+
+async def ensure_tables(pool: asyncpg.Pool) -> None:
+    await pool.execute(SAVED_MEAL_DDL)
+    await pool.execute(MEAL_RATING_DDL)
+
+
+async def save_meals(pool: asyncpg.Pool, username: str, meals: list[dict]) -> None:
+    """Keep each meal, refreshing the stored copy if it was saved before."""
+    await pool.executemany(
+        """
+        INSERT INTO saved_meal (username, recipe_id, meal)
+        VALUES ($1, $2, $3::jsonb)
+        ON CONFLICT (username, recipe_id) DO UPDATE SET meal = EXCLUDED.meal
+        """,
+        [(username, meal["recipe_id"], json.dumps(meal)) for meal in meals],
+    )
+
+
+async def fetch_saved_meals(pool: asyncpg.Pool, username: str) -> list[dict]:
+    """Newest first, as the Saved page lists them."""
+    rows = await pool.fetch(
+        "SELECT meal FROM saved_meal WHERE username = $1 ORDER BY created_at DESC",
+        username,
+    )
+    return [json.loads(row["meal"]) for row in rows]
+
+
+async def delete_saved_meal(pool: asyncpg.Pool, username: str, recipe_id: str) -> bool:
+    status = await pool.execute(
+        "DELETE FROM saved_meal WHERE username = $1 AND recipe_id = $2",
+        username,
+        recipe_id,
+    )
+    return status != "DELETE 0"
+
+
+async def rate_meal(pool: asyncpg.Pool, username: str, meal: dict, liked: bool) -> dict:
+    """Record the like, or change it and date it now if the meal was rated before."""
+    row = await pool.fetchrow(
+        """
+        INSERT INTO meal_rating (username, recipe_id, liked, meal)
+        VALUES ($1, $2, $3, $4::jsonb)
+        ON CONFLICT (username, recipe_id) DO UPDATE
+            SET liked = EXCLUDED.liked, meal = EXCLUDED.meal, rated_at = now()
+        RETURNING liked, meal, rated_at
+        """,
+        username,
+        meal["recipe_id"],
+        liked,
+        json.dumps(meal),
+    )
+    return _rating(row)
+
+
+async def fetch_ratings(pool: asyncpg.Pool, username: str) -> list[dict]:
+    """The user's history, newest rating first."""
+    rows = await pool.fetch(
+        "SELECT liked, meal, rated_at FROM meal_rating "
+        "WHERE username = $1 ORDER BY rated_at DESC",
+        username,
+    )
+    return [_rating(row) for row in rows]
+
+
+def _rating(row: asyncpg.Record) -> dict:
+    return {"meal": json.loads(row["meal"]), "like": row["liked"], "rated_at": row["rated_at"]}

@@ -74,4 +74,51 @@ CREATE TABLE past_meals(
 
 CREATE INDEX IF NOT EXISTS user_meal_lookup_idx ON past_meals(username);
 
+-- Meals a user kept from the ideas on the home page. The whole meal is stored
+-- as JSONB so the Saved page can show it without asking the planner again.
+-- Mirrored by SAVED_MEAL_DDL in src/app/db.py for databases created before
+-- this table existed.
+CREATE TABLE IF NOT EXISTS saved_meal (
+    username   TEXT        NOT NULL
+                           REFERENCES app_user (username)
+                           ON DELETE CASCADE
+                           ON UPDATE CASCADE,
+    recipe_id  TEXT        NOT NULL,
+    meal       JSONB       NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    PRIMARY KEY (username, recipe_id)
+);
+
+-- Whether a user liked a meal, shown newest first on the History page. One row
+-- per meal: rating it again changes the like and moves it to the top. The meal
+-- is stored whole so History can show it. Mirrored by MEAL_RATING_DDL in
+-- src/app/db.py.
+CREATE TABLE IF NOT EXISTS meal_rating (
+    username  TEXT        NOT NULL
+                          REFERENCES app_user (username)
+                          ON DELETE CASCADE
+                          ON UPDATE CASCADE,
+    recipe_id TEXT        NOT NULL,
+    liked     BOOLEAN     NOT NULL,
+    meal      JSONB       NOT NULL,
+    rated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    PRIMARY KEY (username, recipe_id)
+);
+
+CREATE INDEX IF NOT EXISTS meal_rating_history_idx
+    ON meal_rating (username, rated_at DESC);
+
+-- Demo account behind the "Try the demo" button on the sign-in page.
+-- Password: remy-demo-account (public on purpose; the account guards nothing).
+-- Only runs when the database is first created, like the rest of this file.
+INSERT INTO app_user (username, password_hash)
+VALUES ('demo', '$argon2id$v=19$m=65536,t=3,p=4$GcIO1+gErvyJyc0IetEyrA$Vzs+eH+7V8nigMYVW824pPCniXgMVuXYbgAB0vmZc54')
+ON CONFLICT (username) DO NOTHING;
+
+INSERT INTO preference (username, special_diet, cuisine, preferred_nutrient)
+VALUES ('demo', 'meat', '["Chinese", "Malay", "Indian"]'::jsonb, 'Protein')
+ON CONFLICT (username) DO NOTHING;
+
 COMMIT;

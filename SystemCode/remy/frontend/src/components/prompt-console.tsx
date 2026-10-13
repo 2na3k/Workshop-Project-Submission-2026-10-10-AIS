@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Bubble, Sparkle } from "@/components/icons";
+import LikeButtons from "@/components/like-buttons";
+import MealDialog from "@/components/meal-dialog";
 import { MealCard } from "@/components/plan-view";
 import { loadPreferences } from "@/lib/api";
 import { generatePlan, type PlanMeal } from "@/lib/plan-api";
@@ -15,6 +17,8 @@ import {
   uniqueIdeas,
   type Constraints,
 } from "@/lib/prompt-ideas";
+import { useRatings } from "@/lib/use-ratings";
+import { useSavedMeals } from "@/lib/use-saved-meals";
 
 const STARTERS = ["Something light", "Plant-powered", "Protein please", "Surprise me"];
 const REFINEMENTS = ["Make it filling", "No dairy", "More protein"];
@@ -38,6 +42,19 @@ export default function PromptConsole() {
   const [pending, setPending] = useState(false);
   const [preferences, setPreferences] = useState<Constraints>(NO_CONSTRAINTS);
   const [constraints, setConstraints] = useState<Constraints | null>(null);
+  const [open, setOpen] = useState<{ meal: PlanMeal; label: string } | null>(null);
+  const saved = useSavedMeals();
+  const ratings = useRatings();
+
+  const likeButtons = (meal: PlanMeal) => (
+    <LikeButtons
+      title={meal.title}
+      like={ratings.likeOf(meal.recipe_id)}
+      saving={ratings.busy === meal.recipe_id}
+      error={ratings.errors[meal.recipe_id]}
+      onRate={(like) => void ratings.rate(meal, like)}
+    />
+  );
   const nextId = useRef(0);
   const trimmed = draft.trim();
 
@@ -195,7 +212,14 @@ export default function PromptConsole() {
                   {message.ideas && message.ideas.length > 0 && (
                     <ul className="mt-3 grid gap-3 sm:grid-cols-3">
                       {message.ideas.map((meal, index) => (
-                        <MealCard key={meal.recipe_id} meal={meal} label={`Idea ${index + 1}`} />
+                        <MealCard
+                          key={meal.recipe_id}
+                          meal={meal}
+                          label={`Idea ${index + 1}`}
+                          saved={saved.isSaved(meal.recipe_id)}
+                          onOpen={() => setOpen({ meal, label: `Idea ${index + 1}` })}
+                          footer={likeButtons(meal)}
+                        />
                       ))}
                     </ul>
                   )}
@@ -220,6 +244,17 @@ export default function PromptConsole() {
           </div>
         </>
       )}
+
+      <MealDialog
+        meal={open?.meal ?? null}
+        label={open?.label}
+        saved={open ? saved.isSaved(open.meal.recipe_id) : false}
+        saving={open !== null && saved.busy === open.meal.recipe_id}
+        error={open ? saved.error : null}
+        onToggleSave={() => open && void saved.toggle(open.meal)}
+        onClose={() => setOpen(null)}
+        rating={open && likeButtons(open.meal)}
+      />
     </section>
   );
 }
