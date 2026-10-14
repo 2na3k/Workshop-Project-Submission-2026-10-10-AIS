@@ -34,7 +34,7 @@ test"; where nothing exists, it is "new".
 | p1-003-coverage-quality-reporting          | done    | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                              | p1-001-reproducible-source-pipeline, p1-002-provenance-graph-model                                                | Coverage dimensions and graph quality manifest                                                                                       |
 | p2-001-constraint-evidence-filtering       | done    | p1-002-provenance-graph-model                                                                                   | p2-002-cost-nutrition-calculation, p2-003-feasible-meal-plan-solving                                              | Candidate evaluation outcome and distinct evidence-absent/present-exclusion causes                                                   |
 | p2-002-cost-nutrition-calculation          | done    | p1-002-provenance-graph-model, p2-001-constraint-evidence-filtering                                             | p2-001-constraint-evidence-filtering, p2-003-feasible-meal-plan-solving                                           | Portion nutrient and consumed/package cost result contract; item-level evidence-absent signals (`MISSING_PACKAGE_DATA`, `PARTIAL_NUTRITION_DATA`) consumed by p2-003 as the recipe-level drop trigger (per-nutrient for partial nutrition) |
-| p2-003-feasible-meal-plan-solving          | partial | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                         | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                           | Plan feasibility result with named binding constraints (deterministic minimal set), reasoning structure sufficient for downstream explanation, and the recipe-level nutrition drop behavior consuming p2-002's item-level `PARTIAL_NUTRITION_DATA` signal (per-nutrient for tracked nutrients). Cost/budget out of scope; recipe-level cost drop deferred. |
+| p2-003-feasible-meal-plan-solving          | partial — impl complete | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                         | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                           | Plan feasibility result with named binding constraints (deterministic individually-binding set), reasoning structure sufficient for downstream explanation, and the recipe-level nutrition drop behavior consuming p2-002's item-level `PARTIAL_NUTRITION_DATA` signal (per-nutrient for tracked nutrients). Cost/budget out of scope; recipe-level cost drop deferred to p3-004. |
 | p3-001-workflow-recommendation-service     | partial | p2-003-feasible-meal-plan-solving                                                                               | p3-002-explainable-response-contract, p3-003-web-planner-experience, p3-004-conversational-constraint-interface   | Recommendation execution result and trace boundary                                                                                   |
 | p3-002-explainable-response-contract       | partial | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation, p3-001-workflow-recommendation-service | p3-001-workflow-recommendation-service, p3-003-web-planner-experience, p3-004-conversational-constraint-interface | Three-level user explanation and audit-provenance separation                                                                         |
 | p3-003-web-planner-experience              | partial | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                    | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                      | Web request/response contract for meal-plan recommendations                                                                          |
@@ -260,26 +260,39 @@ tracking the finding as a p2 risk.
   one to the spec (the initial spec's freshness and eligibility rules did not
   match the deployed schema, resolved by amendments A-001..A-004). (serves
   G-1, G-3)
-- **p2-003-feasible-meal-plan-solving** *(partial)* — Existing planning API.
-  Remaining work: verify satisfiable returns a plan and unsatisfiable returns no
-  plan with a deterministic minimal set of named binding constraints (R-14, as
-  amended by A-005); confirm the plan result carries per-requirement outcomes,
-  drop causes, selected offers, and resolved concepts so that p3 can explain
-  without re-deriving. p2-003 consumes p2-002's item-level
-  `PARTIAL_NUTRITION_DATA` signal as the recipe-level nutrition drop trigger
-  (per tracked nutrient; a nutrient is tracked when the request supplies a
-  `limit` or a `goal`), and p2-001's per-constraint outcomes and unmapped-
-  requirement tracking. `unmapped` is a top-level drop cause distinct from
-  `evidence-absent` and `present-evidence-excludes`; precedence is
-  `present-evidence-excludes` → `evidence-absent` → `unmapped`. The relaxation
-  set is nutrient-bound widening only (`nutrient_tolerance_pct`, integer
-  `[0, 25]`, default 0); structural relaxations are prohibited; a request
-  satisfiable only under a structural relaxation returns a hard infeasibility
-  failure. Cost and budget are out of scope for this feature (per A-006); the
-  calculator's `MISSING_PACKAGE_DATA` signal is not consumed here, and the
-  recipe-level cost drop is **deferred to p3-004-conversational-constraint-
-  interface**. The solver-unavailable case is a hard failure (no degraded plan).
-  (serves G-1)
+- **p2-003-feasible-meal-plan-solving** *(partial — implementation complete,
+  pending phase review of data findings)* — Existing planning API. The plan
+  path is implemented: satisfiable requests return a plan; unsatisfiable
+  requests return no plan with a deterministic set of individually-binding
+  constraints (R-14, per A-005); the plan result carries three-level reasoning
+  (plan / recipe / constraint) with distinct drop causes and precedence
+  `present-evidence-excludes` → `evidence-absent` → `unmapped`; the
+  user-facing response excludes audit provenance; the trace is separate from
+  p2-002's `CalculationTrace`. p2-003 consumes p2-002's item-level
+  `PARTIAL_NUTRITION_DATA` signal per tracked nutrient. Cost and budget are
+  out of scope (A-006); the recipe-level cost drop is deferred to p3-004.
+  Solver-unavailable is a hard failure.
+
+  **Implementation surfaced a systemic data-coverage problem** that limits the
+  plan's usable candidate pool. Every filter the plan correctly applies removes
+  most of the recipe graph:
+
+  | Filter | Recipes removed | Source |
+    |---|---:|---|
+  | `REQUIRES` edges with null/zero `quantity` or `unit` | ~12,892 of ~15,000 (86%) | Recipe parser |
+  | No `BEST_FULFILLMENT` for a required `FoodConcept` | ~13,197 (88%) | `FULFILLS` coverage: 2,532 of 31,630 concepts have products |
+  | `Food` node missing one or more canonical nutrients | 1,643 of 8,966 Foods (18%) | Nutrition pipeline |
+  | Sparse dietary/allergen evidence | 5,408 of 9,700 `FULFILLS` edges (56%) have `unknown` allergen status; halal/vegetarian non-`unknown` on <2% of edges | Screening pipeline |
+  | No recipe yield (`servings`/`yield`) | ~all | Recipe dataset |
+
+  The intersection is a small fraction of the graph. Recipes that survive all
+  filters are dominated by a subset with complete coverage on every dimension,
+  which is why the plan's output looks nutritionally odd (sauces and
+  condiments as "meals", whole-batch nutrient totals reported as one serving).
+
+  **The plan's behavior is correct given the data.** The findings are
+  data-preparation problems, not p2-003 bugs. See "Phase p2 data-quality
+  findings" below for the full list. (serves G-1)
 
 ### Exit criteria
 
@@ -314,6 +327,12 @@ tracking the finding as a p2 risk.
   divergence), and N-1 (cross-feature test imports) are tracked for phase
   review. p2-003's A-005 and A-006 are new amendments; their impact is tracked
   above.*
+- **Data-coverage acknowledgment.** The phase exits with the DQ-1..DQ-7
+  findings tracked (see "Phase p2 data-quality findings"). The plan's
+  candidate pool is limited by the deployed graph's coverage; the plan's
+  behavior is correct given the data. The phase review decides whether the
+  findings block the p2→p3 transition or are tracked as data-preparation
+  follow-ups.
 
 ### Risks & unknowns
 
@@ -359,6 +378,16 @@ tracking the finding as a p2 risk.
   out of scope for p2-003, so this does not change p2-003's behavior directly;
   but the shared contract with the future budget feature is affected. Triage
   F-B before the budget feature's plan.
+- **Systemic data-coverage gap in the deployed recipe graph (surfaced by
+  p2-003).** Seven findings (DQ-1..DQ-7, see "Phase p2 data-quality findings")
+  describe coverage gaps that together reduce the plan's usable candidate
+  pool to a small fraction of the recipe graph. The plan's behavior is correct
+  at each filter; the graph's coverage is the limiting factor. The phase
+  review must decide the posture: proceed with the current coverage, or
+  block phase p2 exit pending data-preparation fixes. Findings DQ-2 and DQ-3
+  are the largest (86% and 88% of recipes removed respectively); their
+  intersection with the other filters leaves a very small usable set. **Owner:**
+  data-preparation. Tracked for phase review.
 
 ### Phase p2 progress
 
@@ -371,8 +400,88 @@ tracking the finding as a p2 risk.
   divergence from the constitution), N-1 (cross-feature test imports). CI
   PASS on the corrected check set (`tests/features/calculator`,
   `src/api/features/calculator`).
-- p2-003: not started. Will consume p2-002's item-level evidence-absent
-  signals as the recipe-level drop trigger.
+- p2-003: implementation complete (pending phase review of data findings).
+  The plan path is implemented; all acceptance criteria are covered by
+  fixtures. CI PASS on `tests/features/plan` and the extended
+  `tests/features/calculator` check set. Seven data-quality findings
+  (DQ-1..DQ-7) surfaced during implementation; all are upstream of p2-003
+  in the data-preparation package. The plan's output quality is limited by
+  the graph's coverage, not by the plan's logic. See "Phase p2 data-quality
+  findings."
+
+### Phase p2 data-quality findings
+
+The p2-003 implementation surfaced the following data problems in the deployed
+recipe graph. They are owned by the data-preparation package, not by any p2
+feature. The phase review must decide whether to track them as p3 blockers or
+accept the current coverage for the phase p2 exit.
+
+**Finding DQ-1 — no recipe yield.** `Recipe` nodes carry
+`[recipe_id, source, source_license, Title, Instructions, Image_Name,
+projection_owner]` — no `servings`, `yield`, or `portions` field. The plan
+reports whole-recipe nutrient totals as one meal. A "Big-Batch Parmesan
+Polenta" (yields ~8-10 servings) is reported as 1900 kcal and 14,655mg sodium
+for one meal; the arithmetic is correct for the whole recipe, but the
+semantics (recipe vs. serving) are unsupported. **Owner:** data-preparation.
+Add a `servings`/`yield` property from the raw recipe dataset.
+
+**Finding DQ-2 — `REQUIRES` edges with null/zero quantity or unit.**
+12,892 of ~15,000 recipes (86%) have at least one `REQUIRES` edge whose
+`unit` is null, empty, or the string `"null"`, or whose `quantity` is null or
+zero. The plan filters those recipes out at the query level rather than
+guessing a unit (guessing would silently zero the ingredient). **Owner:**
+data-preparation. The recipe parser that emits `REQUIRES` edges produces
+null `unit` or `quantity` for most recipes; that is a parsing gap.
+
+**Finding DQ-3 — `FoodConcept` vocabulary has thin `FULFILLS` coverage.**
+31,630 concepts total; 2,532 have any `FULFILLS` edge (8%); 29,098 have none.
+`BEST_FULFILLMENT` is correctly built for the 2,532 that have `FULFILLS`
+(one-to-one match verified). 60,341 `REQUIRES` edges across 13,197 recipes
+(~88% of the graph) point at concepts with no `BEST_FULFILLMENT`, so those
+recipes are dropped for `unmapped`. **Owner:** data-preparation. Either the
+product→concept matching is too strict, or the product set is too small
+relative to the concept vocabulary.
+
+**Finding DQ-4 — sparse dietary and allergen evidence.** `FULFILLS` edges:
+9,700 total. `halal_status`: 160 non-`unknown` (1.6%). `vegetarian_status`:
+1,241 non-`unknown` (12.8%). `allergen_screening_status`: 5,408 `unknown`
+(56%). `may_allergic`: 4,292 `TRUE`, 5,408 `FALSE`. Dietary-filtered and
+allergen-filtered requests operate on a small non-`unknown` slice; recipes
+with `unknown` status on a declared constraint are dropped. **Owner:**
+data-preparation. Broaden the dietary/allergen screening coverage.
+
+**Finding DQ-5 — `REQUIRES` unit vocabulary is inconsistent.** The
+`_UNIT_TO_GRAMS` table covers ~40 units. The recipe dataset uses arbitrary
+strings, some outside the table (`"tbsp."`, `"T"`, `"c"`, `"large"`,
+`"small"`). Unrecognized units raise `UnitConversionError`, and the caller
+skips the ingredient — a second silent-zero path distinct from DQ-2.
+**Owner:** data-preparation (normalize the unit field) or the domain layer
+(extend the table and use the error signal to surface the gap rather than
+swallow it).
+
+**Finding DQ-6 — 18% of `Food` nodes have a missing canonical nutrient.**
+1,643 of 8,966 `Food` nodes (18%) have at least one of the nine canonical
+nutrients missing. Per-nutrient: energy 567, protein 552, fat 576, saturated
+fat 1,218, carbohydrates 558, fiber 1,387, sugars 1,057, sodium 565,
+cholesterol 1,331. A request tracking a nutrient from the high-gap cluster
+(saturated fat, fiber, sugars, cholesterol) drops 12-15% of recipes for that
+nutrient alone; tracking multiple nutrients compounds the loss. **Owner:**
+data-preparation. Fill missing nutrient values, or distinguish "USDA
+genuinely lacks this field" from "the pipeline dropped it."
+
+**Finding DQ-7 (resolved, no issue) — `nutrition_basis` is uniformly
+`per_100g`.** All 8,966 `Food` nodes are `per_100g`. No `per_serving` or
+other-basis values exist. The `per_serving` code path in
+`_normalise_food_nutrients` is dead code against the deployed graph; no
+silent-zero path here.
+
+**Cumulative effect.** Each finding removes recipes. The intersection of
+recipes surviving every filter is a small fraction of the graph. The plan's
+output quality is limited entirely by the graph's coverage, not by the plan's
+logic. **The phase review must decide** whether these findings block the
+phase p2 exit (and become p3 prerequisites), or whether the phase exits on
+the current fixture-verified posture with the findings tracked as
+data-preparation follow-ups.
 
 ## Phase p3 - explainable recommendation delivery
 
@@ -545,3 +654,17 @@ Status: planned
   feature does not execute; both required amendments rather than spec-only
   readings, matching the A-001..A-004 precedent from p2-002. The owner of the
   deferred cost drop is p3-004, named in A-006 and in p3-004's entry.
+
+- 2026-10-10 — p2-003 implementation complete; seven data-quality findings
+  (DQ-1..DQ-7) surfaced during implementation and are recorded in a new
+  "Phase p2 data-quality findings" subsection. Updated the p2-003 feature
+  entry to distinguish implementation completion from phase-review pending;
+  corrected the shared-contract column's R-14 wording from "minimal set" to
+  "individually-binding set" per the amended AC-2. Added a phase p2 risk
+  naming the systemic data-coverage gap, and a phase p2 exit-criteria clause
+  requiring the phase review to decide whether the findings block p2 exit or
+  are tracked as data-preparation follow-ups. Reason: the plan's logic is
+  correct at every filter, but the graph's coverage gaps (86% loss from
+  DQ-2, 88% from DQ-3, 18% from DQ-6, plus DQ-1, DQ-4, DQ-5) reduce the
+  usable pool to a small fraction of the recipe graph. The phase review
+  needs the full picture to decide the phase-exit posture.
