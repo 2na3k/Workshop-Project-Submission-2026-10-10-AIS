@@ -460,7 +460,7 @@ is not work this feature performs, but it is on the critical path.
     - `cd SystemCode && uv run lint-imports` reports 4 kept, 0 broken.
     - `langchain` and `langchain-ollama` are added to `remy/workflows/pyproject.toml`'s dependencies; `uv sync --all-packages` succeeds.
 
-- [ ] **T-2** Create the `workflows` package skeleton (models, state, port, trace envelope) — no nodes yet
+- [x] **T-2** Create the `workflows` package skeleton (models, state, port, trace envelope) — no nodes yet
   - Type: impl
   - Covers: AC-4, AC-10, AC-16 (structural prerequisites)
   - Files: `SystemCode/remy/workflows/src/workflows/__init__.py`, `state.py`, `models.py`, `plan_port.py`, `trace.py`
