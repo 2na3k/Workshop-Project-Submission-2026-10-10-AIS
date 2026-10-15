@@ -15,6 +15,7 @@ from workflows.models import (
     LLMInvocation,
     Outcome,
     NutrientConstraint,
+    PlanInput,
 )
 from workflows.trace import assemble_trace
 
@@ -86,4 +87,48 @@ def extract_constraints(state: dict[str, Any], *, llm: Any) -> dict[str, Any]:
         outcome = Outcome("failure", node="Extract Constraints", reason=str(exc), unapplied_constraints=tuple(state.get("unapplied_constraints", [])))
         updated = {**state, "outcome": outcome, "llm_invocations": invocations}
         updated["trace"] = assemble_trace(raw_message=raw_message, parsed_constraints=None, unapplied_constraints=outcome.unapplied_constraints, outcome=outcome, llm_invocations=tuple(invocations))
+        return updated
+
+
+def plan(state: dict[str, Any], *, port: Any) -> dict[str, Any]:
+    """Delegate planning to the workflow-owned plan port."""
+    raw_message = state.get("raw_message", "")
+    constraints = state.get("parsed_constraints")
+    try:
+        if not isinstance(constraints, ConstraintSet):
+            raise ValueError("parsed constraints are required")
+        request = PlanInput(
+            horizon_days=constraints.horizon_days,
+            meals_per_day=constraints.meals_per_day,
+            servings=constraints.servings,
+            allergies=constraints.allergies,
+            dietary=constraints.dietary,
+            nutrients=constraints.nutrients,
+            nutrient_tolerance_pct=constraints.nutrient_tolerance_pct,
+        )
+        result, trace_view = port.generate(request)
+        kind = "infeasible" if result.feasibility_outcome == "infeasible" else "plan"
+        outcome = Outcome(kind, plan=result, reason=trace_view.reason, unapplied_constraints=tuple(state.get("unapplied_constraints", [])))
+        updated = {**state, "plan_result": result, "plan_trace": trace_view, "outcome": outcome}
+        updated["trace"] = assemble_trace(
+            raw_message=raw_message,
+            parsed_constraints=constraints,
+            unapplied_constraints=outcome.unapplied_constraints,
+            outcome=outcome,
+            node_runs=tuple(state.get("node_runs", [])),
+            llm_invocations=tuple(state.get("llm_invocations", [])),
+            plan_trace=trace_view,
+        )
+        return updated
+    except Exception as exc:
+        outcome = Outcome("failure", node="Plan", reason=str(exc), unapplied_constraints=tuple(state.get("unapplied_constraints", [])))
+        updated = {**state, "plan_result": None, "plan_trace": None, "outcome": outcome}
+        updated["trace"] = assemble_trace(
+            raw_message=raw_message,
+            parsed_constraints=constraints if isinstance(constraints, ConstraintSet) else None,
+            unapplied_constraints=outcome.unapplied_constraints,
+            outcome=outcome,
+            node_runs=tuple(state.get("node_runs", [])),
+            llm_invocations=tuple(state.get("llm_invocations", [])),
+        )
         return updated

@@ -505,7 +505,7 @@ is not work this feature performs, but it is on the critical path.
     - AC-19: a mild-allergen ingredient warning is present in the outcome.
     - AC-20: a horizon-only request produces an empty constraint set and the port decides on horizon coverage.
 
-- [ ] **T-6** Implement the Plan node
+- [x] **T-6** Implement the Plan node
   - Type: impl
   - Covers: AC-5, AC-6, AC-7, AC-13, AC-15, AC-19, AC-20
   - Files: `SystemCode/remy/workflows/src/workflows/nodes.py`, `graph.py` (Plan node + its early-exit edge)
