@@ -56,6 +56,12 @@ services:
       LANGFUSE_ENVIRONMENT: ${DBT_TARGET:-nonprod}
       REMY_EVALUATION_TOKEN: ${REMY_EVALUATION_TOKEN:?Run scripts/init_langfuse.py and load .env.nonprod}
       REMY_EVALUATION_DB: /workspace/target/evaluations.sqlite3
+      # rule = nutrient ranking (default). jev = Jev reranks the pool and needs JEV_API_KEY.
+      RANKER_MODE: ${RANKER_MODE:-rule}
+      JEV_API_KEY: ${JEV_API_KEY:-}
+      JEV_MODEL: ${JEV_MODEL:-jev-latest}
+      # jev = grade the final pool after generate (default); needs JEV_API_KEY. off = no judge task.
+      JUDGE_MODE: ${JUDGE_MODE:-jev}
       # Plan-run checkpoints (LangGraph) live in the remy_main database, schema langgraph.
       REMY_CHECKPOINT_DB_URL: postgresql://remy:${REMY_POSTGRES_PASSWORD:?Set it in .env.nonprod or .env.prod}@postgres:5432/remy_main
       # Inside the container localhost is not the host, so a local Neo4j needs NEO4J_DOCKER_URI.

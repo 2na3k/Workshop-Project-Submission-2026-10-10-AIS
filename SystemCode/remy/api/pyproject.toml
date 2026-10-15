@@ -5,6 +5,7 @@ description = "Remy API"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi>=0.115,<1",
+    "httpx==0.28.1",
     "inflect>=7.5.0",
     "langfuse>=3,<4",
     "langgraph>=0.6,<0.7",

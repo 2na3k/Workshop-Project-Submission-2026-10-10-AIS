@@ -63,6 +63,7 @@ lerna-debug.log*
 .next/
 out/
 coverage/
+.env.nonprod
 
 # IDEs and editors
 .idea/

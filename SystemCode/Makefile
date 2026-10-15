@@ -10,9 +10,9 @@ export DBT_TARGET
 
 -include .env.$(DBT_TARGET)
 export NEO4J_URI NEO4J_USERNAME NEO4J_PASSWORD NEO4J_DATABASE NEO4J_HTTP NEO4J_USER NEO4J_BATCH_SIZE \
-       AURA_INSTANCEID AURA_INSTANCENAME
+       AURA_INSTANCEID AURA_INSTANCENAME JEV_API_KEY JEV_MODEL RANKER_MODE
 
-.PHONY: help prepare-data up install sync lock check build build-all up-prod up-all down logs langfuse langfuse-init \
+.PHONY: help eval-jev prepare-data up install sync lock check build build-all up-prod up-all down logs langfuse langfuse-init \
         api crawler dbt dbt-all serve-neo4j serve-neo4j-replace fulfillment frontend-install clean _neo4j-creds \
         _seeds-check _nonprod-only
 
@@ -20,6 +20,7 @@ help:
 	@printf '%s\n' \
 		'make prepare-data     Full data pipeline (nonprod): deps, seeds check, dbt, local Neo4j, graph, fulfillment' \
 		'make up               Start the whole stack in Docker (nonprod adds local Neo4j) and wait until healthy' \
+		'make eval-jev         Grade human-graded plans with the Jev judge and report agreement (needs JEV_API_KEY)' \
 		'make fulfillment      Rebuild :BEST_FULFILLMENT edges in Neo4j (run after serve-neo4j)' \
 		'make install          Install all Python workspace dependencies' \
 		'make lock             Resolve and update uv.lock' \
@@ -86,6 +87,13 @@ prepare-data: _nonprod-only _neo4j-creds install _seeds-check
 	$(MAKE) serve-neo4j DBT_TARGET=$(DBT_TARGET)
 	$(MAKE) fulfillment DBT_TARGET=$(DBT_TARGET)
 	@echo "Data ready: local Neo4j loaded and :BEST_FULFILLMENT rebuilt. Run 'make up' next."
+
+# Runs inside the API container, where the evaluation database lives, then copies the report out.
+eval-jev:
+	@test -n "$$JEV_API_KEY" || { echo 'Set JEV_API_KEY in .env.$(DBT_TARGET) first'; exit 1; }
+	$(COMPOSE) exec -T api /workspace/.venv/bin/python -m api.features.plan.judge_eval --out /workspace/target/eval/jev_report.json
+	$(COMPOSE) cp api:/workspace/target/eval/jev_report.json target/eval/jev_report.json
+	@echo 'Report: target/eval/jev_report.json'
 
 fulfillment: _neo4j-creds
 	$(UV) run --package $(API_PACKAGE) python remy/data-preparation/scripts/rebuild_best_fulfillment.py

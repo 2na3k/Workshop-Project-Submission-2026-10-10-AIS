@@ -9,9 +9,10 @@ from typing import Any, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
+from .judge import judge_candidates
 from .state import decode_days, decode_recipes, encode_days, encode_recipes
 
-NODES = ("retrieve", "filter", "rank", "solve", "generate")
+NODES = ("retrieve", "filter", "rank", "solve", "generate", "judge")
 
 
 class PlanState(TypedDict, total=False):
@@ -22,6 +23,8 @@ class PlanState(TypedDict, total=False):
     days: list
     relaxations: list
     response: Any
+    judgments: dict
+    metrics: dict
 
 
 def build_plan_graph(service, checkpointer=None):
@@ -44,8 +47,12 @@ def build_plan_graph(service, checkpointer=None):
         response = service.build_response(decode_days(state["days"]), state["relaxations"], state["request"])
         return {"response": response}
 
+    def judge(state: PlanState):
+        judgments, metrics = judge_candidates(decode_recipes(state["candidates"]), state["request"])
+        return {"judgments": judgments, "metrics": metrics}
+
     builder = StateGraph(PlanState)
-    for name, node in zip(NODES, (retrieve, filter_, rank, solve, generate)):
+    for name, node in zip(NODES, (retrieve, filter_, rank, solve, generate, judge)):
         builder.add_node(name, node)
     builder.add_edge(START, NODES[0])
     for before, after in zip(NODES, NODES[1:]):

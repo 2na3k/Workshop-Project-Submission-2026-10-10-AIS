@@ -8,6 +8,8 @@ from psycopg_pool import ConnectionPool
 from langgraph.checkpoint.postgres import PostgresSaver
 
 from .monitoring import get_client, shutdown_monitoring
+from api.features.plan.jev_ranking import validate_ranker_config
+from api.features.plan.judge import validate_judge_config
 
 CHECKPOINT_SCHEMA = "langgraph"
 
@@ -39,6 +41,8 @@ def create_checkpointer():
 
 @asynccontextmanager
 async def lifespan(app):
+    validate_ranker_config()
+    validate_judge_config()
     app.state.neo4j_driver = create_driver()
     app.state.checkpoint_pool, app.state.checkpointer = create_checkpointer()
     get_client()

@@ -191,3 +191,22 @@ retrieve, filter, rank, solve, generate. Each node's output is saved to Postgres
 
 Checked against the running stack: a run crashed inside `solve` in one process and
 was resumed in a second process, which made no Neo4j fetch and returned the plan.
+
+## Reranker mode and the Jev eval
+
+- `RANKER_MODE=rule` (default): the nutrient ranking.
+- `RANKER_MODE=jev`: Jev reranks the top 2K by probability that each recipe is a good fit,
+  and keeps the top K. This needs `JEV_API_KEY` in the settings file. Without it the API
+  refuses to start. A failed Jev call fails the plan; it does not fall back to the rule ranking.
+- The snapshot records which ranker ran (`ranking_version`).
+
+Eval task: grade the human-graded plans with the Jev judge and report agreement:
+
+```bash
+make eval-jev   # needs JEV_API_KEY; writes target/eval/jev_report.json
+```
+
+It reports agreement with the human grades (exact, within-one, quadratic kappa,
+Spearman, relevance precision and recall), and nDCG@3, Precision@3 and pairwise
+accuracy for the judge's ordering and the rule ordering. It needs at least 30
+human-graded plans (`--min-evaluations`). Judge results are cached, so reruns are cheap.

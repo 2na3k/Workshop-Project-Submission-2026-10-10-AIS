@@ -1,4 +1,4 @@
-"""Persist ranking snapshots and collect protected, blind human judgments."""
+"""Persist ranking snapshots and serve them for review."""
 
 import json
 import os
@@ -6,15 +6,12 @@ import secrets
 import sqlite3
 from contextlib import closing, contextmanager
 from pathlib import Path
-from typing import Annotated
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from pydantic import BaseModel, ConfigDict, Field, StrictInt
 
-from api.core.monitoring import enqueue_scores
-from .metrics import ranking_metrics
+from .jev_ranking import ranking_version
 
 
 @contextmanager
@@ -38,7 +35,7 @@ def save_evaluation(trace_id, plan_id, request, recipes):
     snapshot = {
         "plan_id": plan_id,
         "request": request.model_dump(mode="json"),
-        "ranking_version": "nutrient-deviation-v1",
+        "ranking_version": ranking_version(),
         "data_version": os.getenv("REMY_DATA_VERSION", "unspecified"),
         "candidates": [{
             "recipe_id": recipe.recipe_id, "title": recipe.title,
@@ -65,12 +62,6 @@ def require_reviewer(credentials: HTTPAuthorizationCredentials | None = Depends(
         raise HTTPException(401, "Invalid reviewer token", headers={"WWW-Authenticate": "Bearer"})
 
 
-class HumanGrades(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    grades: dict[Annotated[str, Field(min_length=1, max_length=128)],
-                 Annotated[StrictInt, Field(ge=0, le=3)]] = Field(min_length=1, max_length=300)
-
-
 router = APIRouter(dependencies=[Depends(require_reviewer)])
 
 
@@ -92,23 +83,3 @@ def blind_candidates(evaluation_id: UUID):
     # No original ranking, algorithm scores, trace link, plan order, or previous grades.
     return {"evaluation_id": str(evaluation_id), "request": snapshot["request"],
             "candidates": candidates, "grade_range": [0, 3], "relevant_min_grade": 2}
-
-
-@router.post("/{evaluation_id}/grades")
-def submit_grades(evaluation_id: UUID, body: HumanGrades):
-    with evaluation_db() as db:
-        db.execute("BEGIN IMMEDIATE")
-        trace_id, raw, previous, _ = read_record(db, evaluation_id)
-        if previous is not None and json.loads(previous) != body.grades:
-            raise HTTPException(409, "Grades are immutable; retry with the same grades")
-        ranked_ids = [candidate["recipe_id"] for candidate in json.loads(raw)["candidates"]]
-        try:
-            metrics = ranking_metrics(ranked_ids, body.grades)
-        except ValueError as exc:
-            raise HTTPException(422, str(exc)) from exc
-        # Commit before enqueueing. A network failure never loses the judgments.
-        db.execute("UPDATE ranking_evaluations SET grades = ?, metrics = ? WHERE id = ?",
-                   (json.dumps(body.grades), json.dumps(metrics), str(evaluation_id)))
-    queued = enqueue_scores(str(evaluation_id), trace_id, metrics)
-    return {"evaluation_id": str(evaluation_id), "trace_id": trace_id, "metrics": metrics,
-            "langfuse_scores_queued": queued}
