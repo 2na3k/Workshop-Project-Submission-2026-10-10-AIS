@@ -19,6 +19,7 @@ package = false
 members = [
     "remy/domain",
     "remy/api",
+    "remy/app",
     "remy/workflows",
     "remy/data-crawler",
     "remy/data-preparation",

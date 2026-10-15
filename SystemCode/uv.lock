@@ -11,6 +11,7 @@ resolution-markers = [
 members = [
     "remy",
     "remy-api",
+    "remy-app",
     "remy-data-crawler",
     "remy-data-preparation",
     "remy-domain",
@@ -1431,6 +1432,21 @@ requires-dist = [
     { name = "remy-domain", editable = "remy/domain" },
     { name = "remy-workflows", editable = "remy/workflows" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30,<1" },
+]
+
+[[package]]
+name = "remy-app"
+version = "0.1.0"
+source = { editable = "remy/app" }
+dependencies = [
+    { name = "remy-api" },
+    { name = "remy-workflows" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "remy-api", editable = "remy/api" },
+    { name = "remy-workflows", editable = "remy/workflows" },
 ]
 
 [[package]]
