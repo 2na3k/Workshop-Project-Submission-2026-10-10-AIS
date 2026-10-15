@@ -23,31 +23,17 @@ already permitted by `.importlinter`.
 
 ## Prerequisites
 
-**P-1 — p2-003's C-7 reopen lands before this feature's implementation begins.**
+**P-1 — p2-003's C-7 reopen has landed.**
 
-The C-7 reopen is two additive changes to closed p2-003:
+The reopen (committed 2026-10-15) made the two additive changes:
+1. `plan/schemas.py` — `recipe_outcomes` and `constraint_outcomes` are
+   re-enabled on `PlanResponse`.
+2. `plan/service.py` — `PlanService.generate` returns
+   `tuple[PlanResponse, PlanTrace]`; the router unpacks and serializes only
+   the response.
 
-1. `plan/schemas.py` — uncomment `recipe_outcomes` and `constraint_outcomes` on
-   `PlanResponse`. Both are already defined in `plan/trace.py` as
-   `RecipeOutcome` / `RequirementOutcome`; the schema fields just need their
-   response-model wrappers re-enabled.
-2. `plan/service.py` — change `PlanService.generate`'s return type to
-   `tuple[PlanResponse, PlanTrace]` (matching
-   `CostNutritionService.calculate`'s `(CostNutritionResponse,
-   CalculationTrace)` pattern). Remove the `self.last_trace` side effect (or
-   keep it for backward compatibility but the tuple is the contract); update
-   the router to unpack and serialize only the response.
-
-Both changes route through p2-003's owner (the feature is closed). The reopen
-is a small, additive fix and matches the earlier p2-002 T-20 pattern.
-
-**The C-7 reopen must be committed before p3-001's implementation begins.**
-The adapter is written against the post-reopen shape and calls the real
-`generate` returning the tuple; there is no fallback, no stateful side channel,
-and no deferred integration edge.
-
-If the reopen does not land, p3-001 cannot be implemented as specified; the
-sequencing must be resolved at phase review before implementation starts.
+The adapter is written against this shape; there is no fallback, no stateful
+side channel, and no deferred integration edge.
 
 **P-2 — `langchain` and `langchain-ollama` are added to
 `remy/workflows/pyproject.toml`.** These are currently missing from the
@@ -458,3 +444,161 @@ is not work this feature performs, but it is on the critical path.
   workflow-side tests stay aligned with the constitution's named api fixtures:
   same allowed-key set, same distinct-cause contract, drift surfaces as a test
   failure.
+
+## Tasks
+
+### Group 0 — prerequisites & scaffolding
+
+- [x] **T-1** Verify P-1 (C-7 reopen) landed; add langchain deps (P-2)
+  - Type: admin
+  - Covers: Prerequisites P-1, P-2
+  - Files: `SystemCode/remy/workflows/pyproject.toml`
+  - Done when:
+    - `uv run --package remy-api python -c "import inspect; from api.features.plan.service import PlanService; print(inspect.signature(PlanService.generate).return_annotation)"` prints `tuple[PlanResponse, PlanTrace]` (or its typing equivalent); if not, **stop** and report — P-1 hasn't landed.
+    - `uv run --package remy-api python -c "from api.features.plan.schemas import PlanResponse; print('recipe_outcomes' in PlanResponse.model_fields, 'constraint_outcomes' in PlanResponse.model_fields)"` prints `True True`.
+    - `cd SystemCode/remy/api && uv run --package remy-api pytest -q tests/features/plan` passes.
+    - `cd SystemCode && uv run lint-imports` reports 4 kept, 0 broken.
+    - `langchain` and `langchain-ollama` are added to `remy/workflows/pyproject.toml`'s dependencies; `uv sync --all-packages` succeeds.
+
+- [ ] **T-2** Create the `workflows` package skeleton (models, state, port, trace envelope) — no nodes yet
+  - Type: impl
+  - Covers: AC-4, AC-10, AC-16 (structural prerequisites)
+  - Files: `SystemCode/remy/workflows/src/workflows/__init__.py`, `state.py`, `models.py`, `plan_port.py`, `trace.py`
+  - Done when:
+    - `models.py` defines workflow-owned dataclasses: `ConstraintSet`, `PlanInput`, `PlanResult`, `PlanTraceView` (a full mirror of `PlanTrace` with workflow-owned sub-views: `NamedConstraintView`, `RecipeOutcomeView`, `RequirementOutcomeView`), `Outcome` (discriminated: `plan | infeasible | failure`), `TraceEnvelope`. No imports from `api`.
+    - `plan_port.py` defines a `Protocol` (or ABC) with one method returning `(PlanResult, PlanTraceView)`, typed entirely in workflow models.
+    - `trace.py` assembles the versioned envelope: schema version, outcome, input (raw message, parsed set, unapplied constraints), one entry per node run, one entry per LLM invocation.
+    - `state.py` defines the graph state `TypedDict` carrying: raw message, parsed set, unapplied constraints, `PlanResult`, `PlanTraceView`, generation structured output, generation text, `TraceEnvelope`, `Outcome`.
+    - `uv run --package remy-workflows mypy src/workflows` clean; `uv run lint-imports` still 4 kept.
+
+### Group 1 — Extract Constraints (LLM node)
+
+- [ ] **T-3** Write failing tests: Extract Constraints behavior
+  - Type: test
+  - Covers: AC-2, AC-3, AC-14, AC-17, AC-18
+  - Files: `SystemCode/remy/workflows/tests/__init__.py`, `tests/conftest.py` (fake LLM fixture), `tests/test_extract.py`
+  - Done when: tests fail because `nodes.extract_constraints` does not exist; the tests drive the node directly with a fake LLM and assert:
+    - AC-2: natural-language input yields a parsed constraint set; both the raw LLM response and the parsed set are recorded in the trace.
+    - AC-3: a structured constraint set is used unaltered; the fake LLM is not called.
+    - AC-14: missing horizon / `nutrient_tolerance_pct` out of `[0,25]` / unknown nutrient code / `min > max` each produce a `failure` outcome before the port is invoked; no field is silently coerced.
+    - AC-17: a stated allergen or dietary flag appears in the set; a stated cost/dislike/cuisine is listed as `unapplied` in both the outcome and the trace.
+    - AC-18: an ambiguous severity phrase does not produce `mild`; `nutrient_tolerance_pct` is 0 unless explicitly requested; a stated severity is never downgraded.
+
+- [ ] **T-4** Implement the LLM client wrapper and the Extract Constraints node
+  - Type: impl
+  - Covers: AC-2, AC-3, AC-14, AC-17, AC-18
+  - Files: `SystemCode/remy/workflows/src/workflows/llm.py`, `nodes.py`, `graph.py` (partially — the extract node and its early-exit edge)
+  - Done when: T-3 passes; the LLM wrapper is a thin layer over `init_chat_model`, default provider Ollama; provider and model are configuration (env), not failover; the node accepts an injected LLM client so tests use the fake.
+
+### Group 2 — Plan node (port delegation)
+
+- [ ] **T-5** Write failing tests: Plan node maps the port's result to a workflow outcome, no fabrication
+  - Type: test
+  - Covers: AC-5, AC-6, AC-7, AC-13, AC-15, AC-19, AC-20
+  - Files: `SystemCode/remy/workflows/tests/test_plan_node.py`, `tests/conftest.py` (fake port fixture)
+  - Done when: tests fail because `nodes.plan` does not exist; the tests drive the node with a fake port and assert:
+    - AC-5: feasible result carries slots and three-level reasoning (plan/recipe/constraint) unchanged.
+    - AC-6: infeasible result carries the binding constraints and three-level reasoning, including dropped candidates; no fabricated plan.
+    - AC-7: a relaxed plan carries the relaxed label and applied tolerance unchanged.
+    - AC-13: the port raising yields `failure(Plan, ...)`; no trace claims feasibility.
+    - AC-15: `no-recipes-survived` and `no-assignment` are distinct in the outcome.
+    - AC-19: a mild-allergen ingredient warning is present in the outcome.
+    - AC-20: a horizon-only request produces an empty constraint set and the port decides on horizon coverage.
+
+- [ ] **T-6** Implement the Plan node
+  - Type: impl
+  - Covers: AC-5, AC-6, AC-7, AC-13, AC-15, AC-19, AC-20
+  - Files: `SystemCode/remy/workflows/src/workflows/nodes.py`, `graph.py` (Plan node + its early-exit edge)
+  - Done when: T-5 passes; the node builds `PlanInput` from the constraint set, calls the port, records `PlanResult` and `PlanTraceView` into state and trace, and maps the result to a `plan | infeasible` outcome.
+
+### Group 3 — Generate Response (LLM + deterministic check)
+
+- [ ] **T-7** Write failing tests: Generate Response's structured check and evidence-absent preservation
+  - Type: test
+  - Covers: AC-8, AC-9, AC-11, AC-12
+  - Files: `SystemCode/remy/workflows/tests/test_generate.py`, `tests/conftest.py` (extend the fake LLM to return structured output)
+  - Done when: tests fail because `nodes.generate_response` does not exist; the tests assert:
+    - **AC-11's structured check (F-2 resolution):** the check is (a) every recipe ID / requirement ID referenced in the structured output is a subset of those in the plan result; (b) every drop-cause code in the structured output maps 1:1 to a plan cause; and (c) if a recipe appears as "selected" in the structured output but its cause code is `evidence-absent`, the check fails. The assertion is on the **structured output**, not on parsing the text; "permissive phrasing" is not asserted at the structured layer (the check ensures the structured output doesn't contradict the plan; the LLM is separately instructed not to phrase permissively, and that instruction is tested by one negative case where the structured output contradicts the plan).
+    - AC-8: an evidence-absent drop stays distinct in the outcome; the text does not restate it as permissive (verified against the structured output's cause codes).
+    - AC-9: the node's input excludes `confidence`, `normalization_version`, `source_*`, `*_id`; the user-displayable payload excludes them too.
+    - AC-12: the fake LLM raising or timing out yields `failure(GenerateResponse, ...)`; no trace claims a recommendation.
+
+- [ ] **T-8** Implement the Generate Response node
+  - Type: impl
+  - Covers: AC-8, AC-9, AC-11, AC-12
+  - Files: `SystemCode/remy/workflows/src/workflows/nodes.py`, `graph.py` (Generate Response node + its early-exit edge)
+  - Done when: T-7 passes; the node produces structured output alongside the text; the check runs before user-facing serialization; the LLM input is filtered to exclude R-16 provenance fields.
+
+### Group 4 — workflow assembly, trace envelope, end-to-end
+
+- [ ] **T-9** Write failing tests: graph order, single outcome+trace, early-exit, trace envelope
+  - Type: test
+  - Covers: AC-1, AC-10, AC-21
+  - Files: `SystemCode/remy/workflows/tests/test_graph_order.py`, `tests/test_trace_envelope.py`, `tests/test_integration_workflow_envelope.py`
+  - Done when: tests fail because `graph.build()` does not exist; the tests assert:
+    - AC-1: the three nodes run in order; a single outcome and a single trace envelope are returned; early-exit skips later nodes; the Plan node appears as one entry in the trace.
+    - AC-10: the envelope records schema version, outcome, input (raw message, parsed set, unapplied constraints), one entry per node run, one entry per LLM invocation (node, provider, model, prompt, raw response, parsed response, duration), and the embedded `PlanTraceView`; the three-level reasoning is reachable through the envelope.
+    - AC-21 (user-payload portion): the user-displayable portion of the outcome excludes `confidence`, `normalization_version`, `source_*`, `*_id`. The workflow-side R-17 assertion (three levels, distinct causes) passes.
+    - AC-21 (trace-side R-16): the trace-side assertion is expected to **xfail** with a reason referencing F-P3-1 (PlanTrace carries no provenance). The test exists, is marked `xfail`, and documents the gap.
+
+- [ ] **T-10** Assemble the graph and the trace envelope
+  - Type: impl
+  - Covers: AC-1, AC-10, AC-21
+  - Files: `SystemCode/remy/workflows/src/workflows/graph.py`, `trace.py`
+  - Done when: T-9 passes; the `StateGraph` is assembled with the three nodes, the early-exit edges, and the entry/terminal; the trace envelope assembles at every exit.
+
+- [ ] **T-11** Write failing tests: integration edges inside the workflow
+  - Type: integration
+  - Covers: four edges — Extract→Plan, Generate→outcome, workflow→caller
+  - Files: `SystemCode/remy/workflows/tests/test_integration_extract_to_plan.py`, `tests/test_integration_generate_to_outcome.py`
+  - Done when: the tests assert the parsed constraint set flows into the Plan node's `PlanInput`; the Generate Response's structured output drives the outcome and the check; the workflow→caller edge produces the envelope (covered end-to-end in T-9's integration test); code under test is real (nodes); fakes only at the LLM and port.
+
+### Group 5 — adapter in `app`
+
+- [ ] **T-12** Write failing tests: adapter maps the real `(PlanResponse, PlanTrace)` losslessly; P-1 guard
+  - Type: contract + integration
+  - Covers: AC-4, AC-16; F-3
+  - Files: `SystemCode/remy/app/tests/__init__.py`, `tests/conftest.py`, `tests/test_plan_adapter.py`, `tests/test_integration_adapter_plan.py`, `tests/test_import_boundary.py`
+  - Done when: tests fail because `app.plan_adapter` does not exist; the tests assert:
+    - **AC-16 (contract, F-3):** the adapter maps a real `(PlanResponse, PlanTrace)` — constructed from the real api dataclass, not a hand-built dict — to workflow `PlanResult` + `PlanTraceView` field-for-field. **The test constructs the tuple by calling a real `PlanService.generate` (with the Neo4j driver mocked) so that if P-1 hasn't landed, the failure message reads "generate did not return a tuple; P-1 prerequisite missing" — not a confusing mapping error.** R-7's drift risk is covered because the fixture uses the real api dataclass.
+    - **AC-4 (import boundary):** `uv run lint-imports` passes 4 kept / 0 broken when run from `SystemCode/`; `workflows` does not import `api`; `app` may import both.
+
+- [ ] **T-13** Implement the adapter and composition root wiring
+  - Type: impl
+  - Covers: AC-4, AC-16
+  - Files: `SystemCode/remy/app/src/app/plan_adapter.py`, `composition.py`, `pyproject.toml` (add pytest test-dep if missing)
+  - Done when: T-12 passes; the adapter implements the workflow-owned port by calling `PlanService.generate` and unpacking the tuple; the adapter is the only place that maps between workflow and api models; the composition root wires the adapter and the LLM client into the workflow.
+
+### Group 6 — CI config
+
+- [ ] **T-14** Update `sdd.json` check set
+  - Type: impl
+  - Covers: AC-4; CI scope
+  - Files: `sdd.json`
+  - Done when: `test` covers `remy/api/tests/features/plan` (regression guard for the C-7 reopen), `remy/workflows/tests`, `remy/app/tests`; `lint` and `typecheck` cover `src/workflows` and `src/app`; a new `lint-imports` check runs `uv run lint-imports` **from `SystemCode/`** (where `.importlinter` lives) so the working-directory is explicit (per the plan review's nit).
+
+- [ ] **T-15** Add a workflow-side R-16/R-17 conformance test
+  - Type: test
+  - Covers: AC-21
+  - Files: `SystemCode/remy/workflows/tests/test_response_schema_workflow.py`, `tests/test_explanation_shape_workflow.py`
+  - Done when: the workflow-side tests import the same allowed-key set and the same distinct-cause contract as the constitution's named api fixtures (`tests/api/test_response_schema.py`, `tests/api/test_explanation_shape.py`); the user-payload portion passes; the trace-side R-16 assertion is `xfail` with a reason referencing F-P3-1. A comment in each file points to the api test as the authority so drift surfaces.
+
+### Group 7 — closing admin
+
+- [ ] **T-16** Record decisions
+  - Type: admin
+  - Covers: F-P3-1, F-2, Q2, P-1, P-2
+  - Files: `docs/sdd/features/p3-001-workflow-recommendation-service/decisions.md`
+  - Done when: the decisions file records (a) F-P3-1 as a tracked finding owned by p2-003 (R-16 trace-side retention + R-13 confidence-in-trace are not satisfiable through p3-001); (b) F-2's deferral of AC-21's trace-side assertion; (c) the Q2 resolution (already in codebase); (d) P-1 as a landed prerequisite; (e) P-2 (langchain deps); (f) F-1's spec-sync to-do (port returns workflow models; the adapter returns the real tuple — spec's C-1 wording to be corrected at next spec touch).
+
+- [ ] **T-17** Run the full suite and CI
+  - Type: verification
+  - Covers: all ACs and interfaces
+  - Files: (all above)
+  - Done when:
+    - `cd SystemCode/remy/api && uv run --package remy-api pytest -q tests/features/plan tests/features/calculator` passes.
+    - `cd SystemCode/remy/workflows && uv run --package remy-workflows pytest -q` passes; the AC-21 trace-side test reports `xfail`, not `fail`.
+    - `cd SystemCode/remy/app && uv run --package remy-app pytest -q` passes.
+    - `cd SystemCode && uv run lint-imports` reports 4 kept, 0 broken.
+    - `sdd.py ci p3-001-workflow-recommendation-service` reports `OVERALL: PASS`.
+    - The `data-prep-price-path` finding remains the tracked deferral; the workflow→plan integration uses a real `PlanService` with a mocked Neo4j driver.
