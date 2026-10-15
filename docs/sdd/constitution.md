@@ -107,10 +107,13 @@ layers must comply or the constitution must be amended.
   candidate pool it sees, and the cost calculation layer filters the packages
   it selects from, so that a non-fresh offer cannot reach cost output by any
   path. If no fresh offer exists for a requirement, the requirement's cost
-  cannot be computed and the recipe must be dropped as evidence-absent. The
-  check is a status comparison, not a timestamp comparison; a future
-  timestamp-based freshness signal requires a further amendment and a
-  producer that writes it.
+  cannot be computed and the calculator reports the requirement with its
+  item-level evidence-absent signal. The recipe-level cost drop is owned by
+  p3-004-conversational-constraint-interface, which evaluates budget
+  constraints; until p3-004 ships the drop, the calculator's item-level signal
+  is the sole cost enforcement point. The check is a status comparison, not a
+  timestamp comparison; a future timestamp-based freshness signal requires a
+  further amendment and a producer that writes it.
 - Why: Q3; Behavioral Rule Price Snapshot Staleness; known temporal
   degradation of retail data; deployed `FULFILLS` schema carries a status, not
   a timestamp; the calculation API resolves ingredient names directly and
@@ -121,8 +124,9 @@ layers must comply or the constitution must be amended.
   (`tests/features/calculator/test_domain_cost.py`) asserts a package whose
   `freshness_status` is not `fresh` is not selected, and that a requirement
   left with no fresh package carries the calculator's evidence-absent signal
-  (`MISSING_PACKAGE_DATA`) with absent cost fields. The two layers are checked
-  separately because they enforce the same rule at different boundaries.
+  (`MISSING_PACKAGE_DATA`) with absent cost fields. **The recipe-level drop is
+  asserted by the budget-owning feature's fixture once that feature ships; no
+  p2-003 fixture asserts a recipe-level cost drop.**
 
 ### R-9 Nutrient constraints require a profile
 - Rule: A nutrient constraint is evaluable only when every contributing
@@ -159,13 +163,13 @@ layers must comply or the constitution must be amended.
   `span_reference`, `nutrition_only`, or any other value is ineligible.
   `cost_basis_compatible` is **not** part of the eligibility rule; the flag is
   informational and may be false on eligible packages.
-  At the calculator layer, an ingredient whose resolved key has no eligible
-  package remains in the itemized result with null cost fields and carries a
-  `MISSING_PACKAGE_DATA` warning. The recipe-level drop is **p2-003's**
-  responsibility: when p2-003 determines that a requirement has no eligible
-  package, the recipe is dropped from the eligible pool with an evidence-absent
-  cause, reading the calculator's `MISSING_PACKAGE_DATA` signal as that
-  evidence.
+  At the calculator layer, an ingredient whose resolved key has no
+  eligible package remains in the itemized result with null cost fields and
+  carries a `MISSING_PACKAGE_DATA` warning. The recipe-level cost drop is
+  owned by p3-004-conversational-constraint-interface; until p3-004 ships the
+  drop, the calculator's item-level signal is the sole cost enforcement point
+  in p2, and the recipe is not dropped for the absence of a cost-eligible
+  package.
 - Why: Q2; Behavioral Rule Compatible Unit Basis Required; deployed `FULFILLS`
   schema declares eligibility via `price_status`, `price_match_status`, and
   `price_basis`, not via `cost_basis_compatible`.
@@ -175,10 +179,8 @@ layers must comply or the constitution must be amended.
   `accepted`, or whose `price_basis` is not in the cost-convertible set, is
   excluded from cost; that a `package_volume` package is eligible and
   converted; and that a package with `cost_basis_compatible = FALSE` and an
-  otherwise-convertible basis is eligible.
-  p2-003's fixture asserts that a requirement left with no eligible package
-  drops with an evidence-absent cause, consuming the calculator's
-  `MISSING_PACKAGE_DATA` signal.
+  otherwise-convertible basis is eligible. **The recipe-level drop is asserted by p3-004's 
+  fixture once p3-004 ships; no p2 fixture asserts a recipe-level cost drop**
 
 ## Cost & nutrition correctness
 
@@ -215,15 +217,32 @@ layers must comply or the constitution must be amended.
   candidate's confidence appears in the trace.
 
 ### R-14 Feasibility floor names the binding constraint
-- Rule: If, after filtering and all permitted relaxations, no set of retained
-  recipes satisfies `horizon_days × meals_per_day`, the plan must not be produced
-  and the response must name the binding constraint(s). A plan must never be
-  returned as unfeasible while a producible plan exists.
-- Why: Proposal G-1; Behavioral Rule Plan Feasibility Floor.
-- Check: Named test fixture — `tests/features/plans/test_domain_solver.py`
-  asserts (a) an infeasible request returns no plan with named binding
-  constraint(s), and (b) a satisfiable request returns a plan rather than an
-  unfeasible result.
+- Rule: If, after filtering, dropping, and every permitted relaxation, no set
+  of retained recipes satisfies `horizon_days × meals_per_day`, the plan must
+  not be produced and the response must name the binding constraint(s) — a
+  individually-binding set of constraints whose relaxation would admit a
+  plan. A plan must never be returned as unfeasible while a producible plan
+  exists. **Only nutrient-bound widening is a permitted relaxation: a
+  nutrient `min` bound may be loosened downward and a nutrient `max` bound
+  widened upward by a declared tolerance; the tolerance is applied to bounds,
+  not to goals. Structural relaxations — allowing additional recipe repeats,
+  or dropping the no-consecutive rule — are prohibited.** Cost and budget are
+  out of scope for the feasibility floor; the feature that owns budget
+  evaluation declares its own floor. If the solver cannot produce a plan
+  within the permitted relaxation set, the response is a hard infeasibility
+  failure naming the binding constraint(s); no structurally relaxed plan is
+  returned.
+- Why: Proposal G-1; Behavioral Rule Plan Feasibility Floor; the existing
+  solver's relaxation ladder predates the constitution and mixes nutrient and
+  structural relaxations, which the R-14 floor must distinguish.
+- Check: Named test fixture — `tests/features/plan/test_domain_solver.py`
+  asserts (a) an infeasible request returns no plan with a deterministic
+  named binding constraint set; (b) a satisfiable request returns a plan
+  rather than an unfeasible result; (c) a request satisfiable only under
+  nutrient-bound widening returns a plan labeled relaxed and records the
+  applied tolerance; (d) a request satisfiable only under a structural
+  relaxation (additional repeats or dropped no-consecutive) returns a hard
+  infeasibility failure, not a relaxed plan.
 
 ## Data reproducibility & provenance
 

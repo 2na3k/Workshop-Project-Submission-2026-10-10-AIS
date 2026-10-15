@@ -37,7 +37,7 @@ of a "binding constraint."
 > - Rule: If, after filtering, dropping, and every permitted relaxation, no set
     >   of retained recipes satisfies `horizon_days × meals_per_day`, the plan must
     >   not be produced and the response must name the binding constraint(s) — a
-    >   deterministic minimal set of constraints whose relaxation would admit a
+    >   deterministic individually-binding set of constraints whose relaxation would admit a
     >   plan. A plan must never be returned as unfeasible while a producible plan
     >   exists. **Only nutrient-bound widening is a permitted relaxation: a
     >   nutrient `min` bound may be loosened downward and a nutrient `max` bound

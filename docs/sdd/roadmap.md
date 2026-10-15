@@ -35,9 +35,9 @@ test"; where nothing exists, it is "new".
 | p2-001-constraint-evidence-filtering       | done    | p1-002-provenance-graph-model                                                                                   | p2-002-cost-nutrition-calculation, p2-003-feasible-meal-plan-solving                                              | Candidate evaluation outcome and distinct evidence-absent/present-exclusion causes                                                   |
 | p2-002-cost-nutrition-calculation          | done    | p1-002-provenance-graph-model, p2-001-constraint-evidence-filtering                                             | p2-001-constraint-evidence-filtering, p2-003-feasible-meal-plan-solving                                           | Portion nutrient and consumed/package cost result contract; item-level evidence-absent signals (`MISSING_PACKAGE_DATA`, `PARTIAL_NUTRITION_DATA`) consumed by p2-003 as the recipe-level drop trigger (per-nutrient for partial nutrition) |
 | p2-003-feasible-meal-plan-solving          | partial — impl complete | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                         | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                           | Plan feasibility result with named binding constraints (deterministic individually-binding set), reasoning structure sufficient for downstream explanation, and the recipe-level nutrition drop behavior consuming p2-002's item-level `PARTIAL_NUTRITION_DATA` signal (per-nutrient for tracked nutrients). Cost/budget out of scope; recipe-level cost drop deferred to p3-004. |
-| p3-001-workflow-recommendation-service     | partial | p2-003-feasible-meal-plan-solving                                                                               | p3-002-explainable-response-contract, p3-003-web-planner-experience, p3-004-conversational-constraint-interface   | Recommendation execution result and trace boundary                                                                                   |
-| p3-002-explainable-response-contract       | partial | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation, p3-001-workflow-recommendation-service | p3-001-workflow-recommendation-service, p3-003-web-planner-experience, p3-004-conversational-constraint-interface | Three-level user explanation and audit-provenance separation                                                                         |
-| p3-003-web-planner-experience              | partial | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                    | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                      | Web request/response contract for meal-plan recommendations                                                                          |
+| p3-001-workflow-recommendation-service     | new     | p2-003-feasible-meal-plan-solving                                                                               | p3-002-explainable-response-contract, p3-003-web-planner-experience, p3-004-conversational-constraint-interface   | Recommendation execution result and trace boundary                                                                                   |
+| p3-002-explainable-response-contract       | new     | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation, p3-001-workflow-recommendation-service | p3-001-workflow-recommendation-service, p3-003-web-planner-experience, p3-004-conversational-constraint-interface | Three-level user explanation and audit-provenance separation                                                                         |
+| p3-003-web-planner-experience              | out of scope | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                    | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                      | Web request/response contract for meal-plan recommendations. **Owned by a separate frontend effort, not this SDD effort.** |
 | p3-004-conversational-constraint-interface | new     | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                    | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract, p3-003-web-planner-experience       | Conversational constraint extraction, turn-level recommendation delivery, safe re-expression of deterministic explanation causes, **and the recipe-level cost drop inherited from R-8/R-10 per A-006** |
 
 ## Phase p1 - reproducible data and graph foundation
@@ -193,7 +193,7 @@ data-preparation price-path finding.
 
 ## Phase p2 - deterministic constraint evaluation and plan solving
 
-Status: active
+Status: done
 
 ### Outcome
 
@@ -485,10 +485,35 @@ data-preparation follow-ups.
 
 ## Phase p3 - explainable recommendation delivery
 
-Status: planned
+Status: planned (greenfield)
+
+### Outcome
+
+The backend recommendation surface is built end-to-end: a LangGraph workflow orchestrates constraint extraction, plan generation (via p2-003), and explanation assembly; a response contract exposes three-level reasoning (plan / recipe / constraint) with the drop-cause distinctions p2 established; a conversational interface accepts natural-language requests, preserves the deterministic explanation causes, and surfaces cost on follow-up turns. The frontend (web planner UI) is owned by a separate effort and is out of scope for this SDD effort.
+
+### Goals served
+
+- G-2
+- G-6
 
 ### Features
 
+- **p3-001-workflow-recommendation-service** *(new)* — A LangGraph-based
+  workflow that orchestrates recommendation generation: receives a user
+  request, invokes the plan solver (p2-003), attaches the reasoning trace, and
+  returns the recommendation result plus a workflow-level trace. The workflow
+  defines the trace boundary that p3-002 consumes for explanation assembly.
+  (serves G-2, G-6)
+- **p3-002-explainable-response-contract** *(new)* — The user-facing response
+  contract exposing three-level explanations (plan, recipe, constraint) with
+  the drop causes p2 established (`evidence-absent`, `present-evidence-excludes`,
+  `unmapped`), and strict separation of audit-only provenance (mapping
+  confidence, normalization version, source identifiers) to the execution
+  trace. Consumes p3-001's trace and p2-001/p2-002's outcome contracts.
+  (serves G-2, G-6)
+- **p3-003-web-planner-experience** *(new)* — The web request/response
+  contract for meal-plan recommendations: the client-facing API surface that
+  delivers p3-002's response shape to the web planner UI. (serves G-6)
 - **p3-004-conversational-constraint-interface** *(new)* — Conversational
   constraint extraction, turn-level recommendation delivery, and safe
   re-expression of deterministic explanation causes. **Additionally, p3-004
@@ -497,8 +522,61 @@ Status: planned
   amended R-8/R-10), p3-004 drops the recipe from the eligible pool with an
   evidence-absent cause, asserting R-8's and R-10's recipe-level fixtures.
   Until p3-004 ships, the calculator's item-level signal is the sole cost
-  enforcement point. (serves G-1, and closes the R-8/R-10 check obligation
-  deferred from p2)
+  enforcement point. (serves G-1's budget aspect, closes the R-8/R-10 check
+  obligation deferred from p2)
+
+### Exit criteria
+
+- A LangGraph workflow exists that accepts a request, invokes p2-003's plan
+  path, and returns a result plus a trace. *New; no fixture exists.*
+- The workflow's trace boundary is explicit: what the trace carries, where it
+  stops, and which downstream feature reads it. *New.*
+- The response contract exposes three-level explanations with the p2 drop
+  causes and no audit provenance in the user payload. *New.*
+- The web planner UI consumes the response contract end-to-end. *New.*
+- The conversational interface extracts constraints from natural language,
+  delivers turn-level recommendations, and re-expresses explanation causes
+  without paraphrasing them into permissive statements. *New.*
+- Cost and budget evaluation is in scope for p3-004 (per A-006); R-8's and
+  R-10's recipe-level fixtures are satisfied by p3-004. *Owner: p3-004.*
+- **Data-coverage acknowledgment (carried from p2).** p2-003's data-quality
+  findings (DQ-1..DQ-7) limit the plan's candidate pool. Phase p3 builds the
+  delivery surface against whatever the plan produces; the plan's output
+  quality is upstream of p3. The phase review at p2 exit decides whether the
+  findings must resolve before p3 begins or are tracked as data-preparation
+  follow-ups. If they must resolve, p3 planning is blocked until then.
+- No unresolved blocking findings.
+
+### Risks & unknowns
+
+- **Greenfield scope.** No p3 code exists. The phase builds the workflow,
+  response contract, web surface, and chat interface from scratch. The effort
+  is significantly larger than p1/p2's prove-and-fix features.
+- **Dependency on p2-003's data quality.** The plan's output is limited by the
+  deployed graph's coverage (DQ-1..DQ-7). If the plan's usable pool is a small
+  biased slice, p3's explanations describe a small biased slice. The phase
+  review at p2 exit decides whether this blocks p3.
+- **Trace boundary is new.** p2's traces (`CalculationTrace`, plan-level
+  trace) exist; p3-001 composes them or adds a workflow-level trace. The
+  boundary's shape is a p3-001 design decision, not a spec decision. The spec
+  names the contract; the plan designs it.
+- **LangGraph dependency is new.** p1/p2 don't use LangGraph. p3-001 introduces
+  it. The roadmap's `R-3` (stack shape fixed) permits it — LangGraph is the
+  workflow orchestration layer the constitution's stack description names.
+- **Streaming/SSE contract.** If p3-004's chat interface uses SSE (per the API
+  doc), the event protocol is new and requires its own design. p3-001's
+  workflow may need to support streaming, or the streaming layer may be
+  p3-004's.
+- **Web UI tech stack.** p3-003 assumes a web frontend. The stack
+  (framework, build tooling) isn't specified in the constitution. Confirm
+  during p3-003's spec.
+
+### Phase p3 progress
+
+- p3-001: not started.
+- p3-002: not started.
+- p3-003: not started.
+- p3-004: not started.
 
 ## Re-plan log
 
@@ -668,3 +746,15 @@ Status: planned
   DQ-2, 88% from DQ-3, 18% from DQ-6, plus DQ-1, DQ-4, DQ-5) reduce the
   usable pool to a small fraction of the recipe graph. The phase review
   needs the full picture to decide the phase-exit posture.
+
+- 2026-10-14 — Corrected phase p3's status from "planned" (implying partial
+  code) to "planned (greenfield)". Marked p3-001, p3-002, and p3-003 as `new`
+  in the feature table (previously `partial`). Rewrote the phase p3 section:
+  added an Outcome describing the recommendation surface end-to-end, moved
+  goals served to G-2/G-6, expanded the feature entries with descriptions for
+  each, added exit criteria (new, not "prove"), and added greenfield-specific
+  risks (new scope, p2 data-quality dependency, LangGraph introduction,
+  streaming contract, web UI stack). Reason: verification found no p3
+  implementation exists — the workflow, response contract, web planner, and
+  chat interface are all to be built. The roadmap's `partial` status assumed
+  pre-existing code; the brownfield posture does not apply to phase p3.

@@ -1,4 +1,3 @@
-adfa
 ```mermaid
 ---
 config:
