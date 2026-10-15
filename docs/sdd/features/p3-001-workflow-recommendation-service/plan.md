@@ -531,7 +531,7 @@ is not work this feature performs, but it is on the critical path.
 
 ### Group 4 — workflow assembly, trace envelope, end-to-end
 
-- [ ] **T-9** Write failing tests: graph order, single outcome+trace, early-exit, trace envelope
+- [x] **T-9** Write failing tests: graph order, single outcome+trace, early-exit, trace envelope
   - Type: test
   - Covers: AC-1, AC-10, AC-21
   - Files: `SystemCode/remy/workflows/tests/test_graph_order.py`, `tests/test_trace_envelope.py`, `tests/test_integration_workflow_envelope.py`
