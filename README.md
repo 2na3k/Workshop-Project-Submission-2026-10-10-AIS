@@ -86,6 +86,11 @@ everything is ready, and shows the logs. Press Ctrl+C to stop it.
 
 The demo account is `demo` / `remy-demo-account`, or click **Try the demo**.
 
+**Accounts:** the app has no admin account and no roles. The only account it seeds is
+the public `demo` account (`remy/backend/db.sql`); its password is in the frontend
+bundle, so treat it as public. Anyone else signs up for their own account. The Langfuse
+dashboard has a separate admin login from `.env.nonprod`.
+
 **4. Use it**
 
 Create an account, set your diet and goals under **Your preferences**, then build a

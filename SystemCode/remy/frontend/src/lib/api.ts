@@ -7,7 +7,14 @@
 
 import type { PlanMeal } from "@/lib/plan-api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// The session cookie is scoped to the host that answered the sign-in. Use the
+// host the page itself was opened on (localhost or 127.0.0.1), or the browser
+// treats the API as another site and drops the cookie.
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_URL =
+  typeof window === "undefined"
+    ? configuredApiUrl
+    : configuredApiUrl.replace(/\/\/[^/:]+/, `//${window.location.hostname}`);
 
 export class ApiError extends Error {
   readonly status: number;
