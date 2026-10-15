@@ -492,7 +492,7 @@ is not work this feature performs, but it is on the critical path.
 
 ### Group 2 — Plan node (port delegation)
 
-- [ ] **T-5** Write failing tests: Plan node maps the port's result to a workflow outcome, no fabrication
+- [x] **T-5** Write failing tests: Plan node maps the port's result to a workflow outcome, no fabrication
   - Type: test
   - Covers: AC-5, AC-6, AC-7, AC-13, AC-15, AC-19, AC-20
   - Files: `SystemCode/remy/workflows/tests/test_plan_node.py`, `tests/conftest.py` (fake port fixture)
