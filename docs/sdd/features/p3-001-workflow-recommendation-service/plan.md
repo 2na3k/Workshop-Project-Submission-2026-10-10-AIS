@@ -555,7 +555,7 @@ is not work this feature performs, but it is on the critical path.
 
 ### Group 5 — adapter in `app`
 
-- [ ] **T-12** Write failing tests: adapter maps the real `(PlanResponse, PlanTrace)` losslessly; P-1 guard
+- [x] **T-12** Write failing tests: adapter maps the real `(PlanResponse, PlanTrace)` losslessly; P-1 guard
   - Type: contract + integration
   - Covers: AC-4, AC-16; F-3
   - Files: `SystemCode/remy/app/tests/__init__.py`, `tests/conftest.py`, `tests/test_plan_adapter.py`, `tests/test_integration_adapter_plan.py`, `tests/test_import_boundary.py`
