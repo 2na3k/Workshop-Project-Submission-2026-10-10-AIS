@@ -17,7 +17,7 @@ from domain.types import CheckState
 # Load animal-derived lexicon at import time
 # ---------------------------------------------------------------------------
 
-_DATA_FILE = resources.files("workflows.rules.data").joinpath("animal_derived.json")
+_DATA_FILE = resources.files("domain.data").joinpath("animal_derived.json")
 _ANIMAL_DERIVED: dict[str, list[str]] = json.loads(_DATA_FILE.read_text("utf-8"))
 
 # Flatten into a single set for fast lookup.

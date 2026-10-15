@@ -2,7 +2,7 @@
 
 The canonical allergen keys come from the data-preparation contract test
 (``mart_allergen_screening_contract.sql``).  Aliases are loaded at import
-time from ``rules/data/allergen_aliases.json``.
+time from ``domain/data/allergen_aliases.json``.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from domain.types import CheckState
 # Load allergen alias dictionary at import time
 # ---------------------------------------------------------------------------
 
-_ALIAS_FILE = resources.files("workflows.rules.data").joinpath("allergen_aliases.json")
+_ALIAS_FILE = resources.files("domain.data").joinpath("allergen_aliases.json")
 _ALLERGEN_ALIASES: dict[str, list[str]] = json.loads(_ALIAS_FILE.read_text("utf-8"))
 
 # Pre-compile a flat lookup: alias_term → canonical_key
