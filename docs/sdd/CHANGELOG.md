@@ -141,6 +141,12 @@
   - Added hard-failure error handling raising `SolverUnavailable` (503 Service Unavailable) when OR-Tools CP-SAT is unavailable, prohibiting degraded fallback plans (AC-15, C-6).
   - Updated `/plan` endpoint documentation in `API_doc.md` to reflect `nutrient_tolerance_pct`, `relaxed`, `applied_tolerance_pct`, and the three-level outcome response contract (R-1).
   - Added comprehensive unit and integration test coverage across solver, service, repository, calculator candidate inspection, and response contracts (`tests/features/plan/`, `tests/features/calculator/test_inspect_candidates.py`).
+  - **Reopen (2026-10-15):** `PlanService.generate` now returns
+    `(PlanResponse, PlanTrace)`, matching `CostNutritionService.calculate`'s
+    tuple pattern. `PlanResponse` re-enables `recipe_outcomes` and
+    `constraint_outcomes`; the three-level reasoning is now in both the
+    response and the trace. The router unpacks and serializes only the
+    response. Prerequisite for p3-001's workflow adapter.
 - Acceptance criteria: AC-1 .. AC-15
 - Decisions: docs/sdd/features/p2-003-feasible-meal-plan-solving/decisions.md
 - Breaking: none

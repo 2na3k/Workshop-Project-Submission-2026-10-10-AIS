@@ -90,7 +90,7 @@ def test_tracked_partial_nutrition_drops():
         _row("complete"),
     )
 
-    response = service.generate(_sodium_request())
+    response, _trace = service.generate(_sodium_request())
 
     outcome = _outcome(response, "partial")
     assert outcome.outcome == "dropped"
@@ -105,7 +105,7 @@ def test_drop_categorized_under_nutrient():
         _row("complete"),
     )
 
-    response = service.generate(_sodium_request())
+    response, _trace = service.generate(_sodium_request())
 
     assert any(
         item.recipe_id == "partial"
@@ -123,7 +123,7 @@ def test_goal_on_missing_nutrient_drops():
         _row("complete"),
     )
 
-    response = service.generate(_sodium_request(goal=True))
+    response, _trace = service.generate(_sodium_request(goal=True))
 
     assert _outcome(response, "partial").cause == "evidence-absent"
 
@@ -135,7 +135,7 @@ def test_untracked_partial_nutrition_retained():
     )
     request = PlanRequest(horizon_days=1, meals_per_day=1)
 
-    response = service.generate(request)
+    response, _trace = service.generate(request)
 
     assert _outcome(response, "partial").outcome == "selected"
 

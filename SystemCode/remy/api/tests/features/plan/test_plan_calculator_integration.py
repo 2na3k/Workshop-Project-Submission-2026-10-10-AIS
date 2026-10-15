@@ -251,7 +251,7 @@ def test_plan_consumes_calculator_partial_nutrition():
         ],
     )
 
-    response = service.generate(request)
+    response, _trace = service.generate(request)
 
     outcomes = {item.recipe_id: item for item in response.recipe_outcomes}
     assert outcomes["a-incomplete"].outcome == "dropped"

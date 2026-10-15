@@ -11,7 +11,8 @@ def create_plan(
         request: PlanRequest,
         service: PlanService = Depends(get_plan_service)
 ):
-    return service.generate(request)
+    response, _trace = service.generate(request)
+    return response
 
 @router.post("/v2", response_model=PlanResponse)
 def create_plan_v2(

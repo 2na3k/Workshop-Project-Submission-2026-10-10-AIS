@@ -206,7 +206,7 @@ def test_generate_v2_matches_generate_and_fetches_selected_ingredients_only():
             return results
 
     request = PlanRequest(horizon_days=1, meals_per_day=1)
-    old_response = PlanService(
+    old_response, _trace = PlanService(
         PlanRepository(Driver(full_rows)), calculator_service=Inspector()
     ).generate(request)
     v2_response = PlanService(
@@ -277,7 +277,7 @@ def test_service_propagates_distinct_filter_outcomes():
     )
     request = PlanRequest(horizon_days=1, meals_per_day=1,
                           dietary=[DietaryRequest(code="halal")])
-    response = service.generate(request)
+    response, _trace = service.generate(request)
     assert response.days[0].meals[0].recipe_id == "r-1"
     assert response.recipe_outcomes[0].outcome == "selected"
     assert response.relaxed is False
@@ -372,7 +372,7 @@ def test_unmapped_fact_and_relaxed_label_survive_service_path():
         ],
     )
 
-    response = service.generate(request)
+    response, _trace = service.generate(request)
 
     assert response.status == "partial"
     assert response.relaxed is True

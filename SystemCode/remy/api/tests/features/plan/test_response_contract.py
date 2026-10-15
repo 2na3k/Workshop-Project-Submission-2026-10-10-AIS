@@ -121,7 +121,7 @@ def test_deterministic_across_runs():
 
 
 def test_plan_level_record():
-    response = _plan_response()
+    response, _trace = _plan_response()
 
     assert response.feasibility_outcome == "plan-produced"
     assert response.relaxed is False
@@ -129,7 +129,7 @@ def test_plan_level_record():
 
 
 def test_recipe_level_record():
-    response = _plan_response()
+    response, _trace = _plan_response()
 
     assert [(item.recipe_id, item.outcome, item.cause) for item in response.recipe_outcomes] == [
         ("recipe-1", "selected", None)
@@ -137,7 +137,7 @@ def test_recipe_level_record():
 
 
 def test_constraint_level_record():
-    response = _plan_response()
+    response, _trace = _plan_response()
 
     requirement = next(
         item for item in response.constraint_outcomes if item.constraint == "requirement"
@@ -151,7 +151,8 @@ def test_constraint_level_record():
 
 
 def test_no_audit_provenance_in_response():
-    payload = _plan_response().model_dump(mode="json")
+    response, _trace = _plan_response()
+    payload = response.model_dump(mode="json")
 
     def keys(value):
         if isinstance(value, dict):

@@ -188,7 +188,7 @@ class PlanService:
         )
         self.last_trace: PlanTrace | None = None
 
-    def generate(self, request):
+    def generate(self, request) -> tuple[PlanResponse, PlanTrace]:
         for nutrient in request.nutrients or []:
             if nutrient.code not in REQUEST_TO_CANONICAL:
                 raise UnknownNutrient(f"Unknown nutrient: {nutrient.code}")
@@ -311,12 +311,10 @@ class PlanService:
                 ))
 
         applied_tolerance = request.nutrient_tolerance_pct if relaxations else 0
-        self.last_trace = PlanTrace(
-            feasibility_outcome="plan-produced",
-            applied_tolerance_pct=applied_tolerance,
-            recipes=recipe_records,
-            requirements=constraint_records,
-        )
+        trace = PlanTrace(feasibility_outcome="plan-produced",
+                               applied_tolerance_pct=applied_tolerance, recipes=recipe_records,
+                               requirements=constraint_records, )
+        self.last_trace = trace
 
         response_days = []
         for day_number, meals in enumerate(days, 1):
@@ -387,7 +385,7 @@ class PlanService:
             relaxations=relaxations,
             horizon_totals=aggregate(days, request),
             days=response_days,
-        )
+        ), trace
 
     def generate_v2(self, request):
         """Generate a plan from nutrient skeletons, fetching details post-solve."""

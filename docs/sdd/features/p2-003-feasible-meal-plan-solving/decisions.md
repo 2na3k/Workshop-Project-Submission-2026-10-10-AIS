@@ -42,6 +42,29 @@
 - Affects: AC-9, AC-10, AC-14b, response compatibility, R-14.
 - Source: Plan review F-5; Amendment A-005; Spec Clarification C-2; Tasks T-2, T-3.
 
+### D-6 — `generate` returns `(PlanResponse, PlanTrace)`; response carries the three-level reasoning
+
+- Date: 2026-10-15
+- Status: adopted (reopen; prerequisite for p3-001)
+- Context: p3-001's workflow adapter needs both the plan result and the
+  three-level recipe/constraint reasoning. Before the reopen, `generate`
+  returned only `PlanResponse`, and `recipe_outcomes`/`constraint_outcomes`
+  were commented out on `PlanResponse` — the reasoning lived only in
+  `PlanTrace`, reachable via the stateful `self.last_trace` side effect.
+- Decision: `PlanService.generate` returns `tuple[PlanResponse, PlanTrace]`,
+  matching `CostNutritionService.calculate`'s
+  `tuple[CostNutritionResponse, CalculationTrace]` pattern. `PlanResponse`
+  re-enables `recipe_outcomes` and `constraint_outcomes`. The router unpacks
+  the tuple and serializes only the response; the trace is not exposed by the
+  router (its exposure is p3-002's / p3-004's).
+- Alternatives: keep the side-effect-only trace and have the adapter read
+  `service.last_trace` (rejected: stateful, non-reentrant, fragile); a shared
+  contract package (rejected: reopens p2-003 more than necessary).
+- Affects: `plan/service.py`, `plan/schemas.py`, `plan/router.py`,
+  `plan/tests/features/plan/`; the p3-001 workflow adapter (its
+  workflow-owned port returns the tuple).
+- Source: p3-001's spec C-7; the plan's Prerequisite P-1.
+
 ## Consequential clarifications
 
 - **C-1 — Cost and budget remain non-gating in p2-003.** The plan does not

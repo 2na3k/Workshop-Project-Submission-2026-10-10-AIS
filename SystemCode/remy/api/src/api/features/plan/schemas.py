@@ -162,8 +162,8 @@ class PlanResponse(BaseModel):
     relaxed: bool = False
     applied_tolerance_pct: int = 0
     binding_constraints: list[NamedConstraintResponse] | None = None
-    # recipe_outcomes: list[RecipeOutcomeResponse] = Field(default_factory=list)
-    # constraint_outcomes: list[ConstraintOutcomeResponse] = Field(default_factory=list)
+    recipe_outcomes: list[RecipeOutcomeResponse] = Field(default_factory=list)
+    constraint_outcomes: list[ConstraintOutcomeResponse] = Field(default_factory=list)
     relaxations: list[RelaxationRecord] = Field(default_factory=list)
     horizon_totals: dict[str, float]
     days: list[DayResponse]
