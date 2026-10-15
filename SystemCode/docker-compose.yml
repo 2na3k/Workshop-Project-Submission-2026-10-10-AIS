@@ -56,6 +56,8 @@ services:
       LANGFUSE_ENVIRONMENT: ${DBT_TARGET:-nonprod}
       REMY_EVALUATION_TOKEN: ${REMY_EVALUATION_TOKEN:?Run scripts/init_langfuse.py and load .env.nonprod}
       REMY_EVALUATION_DB: /workspace/target/evaluations.sqlite3
+      # Plan-run checkpoints (LangGraph) live in the remy_main database, schema langgraph.
+      REMY_CHECKPOINT_DB_URL: postgresql://remy:${REMY_POSTGRES_PASSWORD:?Set it in .env.nonprod or .env.prod}@postgres:5432/remy_main
       # Inside the container localhost is not the host, so a local Neo4j needs NEO4J_DOCKER_URI.
       NEO4J_URI: ${NEO4J_DOCKER_URI:-${NEO4J_URI}}
     ports:
@@ -63,6 +65,8 @@ services:
     volumes:
       - remy_evaluations:/workspace/target
     depends_on:
+      postgres:
+        condition: service_healthy
       neo4j:
         condition: service_started
         required: false

@@ -104,15 +104,12 @@ remy/
 │       └── contracts/
 │           └── test_allergen_screening_contract.py
 │
-└── workflows/                              # recommendation workflows (LangGraph)
+└── workflows/                              # rule checks used by the plan filter
     ├── pyproject.toml
     ├── src/
     │   └── workflows/
     │       ├── __init__.py
     │       ├── state.py                    # re-exports CheckState from domain.types
-    │       ├── graph.py                    # LangGraph wiring (future)
-    │       ├── nodes/                      # LangGraph nodes (future)
-    │       │   └── ...
     │       └── rules/
     │           ├── __init__.py
     │           ├── allergen.py             # check_allergen*, resolve_allergen_key
@@ -136,7 +133,7 @@ remy/
 | Package             | Role                                                      | Depends on             |
 |---------------------|-----------------------------------------------------------|------------------------|
 | `domain`            | Shared Kernel: pure arithmetic + shared vocabulary        | (nothing)              |
-| `workflows`         | Rules + LangGraph agents; policy that returns `CheckState`| `domain`               |
+| `workflows`         | Rule checks (allergen, dietary, nutrition, budget) that return `CheckState` | `domain`               |
 | `api`               | FastAPI delivery layer; HTTP, orchestration, solver       | `domain`, `workflows`  |
 | `app`               | Frontend                                                  | `api` (over HTTP)      |
 | `data-crawler`      | Scheduled data collection                                 | `domain` (if needed)   |

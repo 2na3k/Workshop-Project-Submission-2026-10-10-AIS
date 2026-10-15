@@ -174,3 +174,20 @@ S3 service is SeaweedFS, which needs no login.
 
 **"port is already allocated".** Something else uses the port. Stop it, or
 [change the ports](#change-the-ports).
+
+## Durable plan runs
+
+A meal plan runs as a LangGraph graph (`remy/api/src/api/features/plan/graph.py`):
+retrieve, filter, rank, solve, generate. Each node's output is saved to Postgres
+(schema `langgraph`, in `remy_main`) as soon as the node finishes.
+
+- Each request gets a run id. The stream's first event is `run` with that id.
+- To resume a run after a crash or restart, send the same `run_id` in the request
+  body again. Completed nodes are not repeated; a finished run returns its stored
+  plan.
+- `REMY_CHECKPOINT_DB_URL` is required. The API refuses to start without it, so
+  checkpointing cannot be silently skipped. Compose sets it from
+  `REMY_POSTGRES_PASSWORD`.
+
+Checked against the running stack: a run crashed inside `solve` in one process and
+was resumed in a second process, which made no Neo4j fetch and returned the plan.

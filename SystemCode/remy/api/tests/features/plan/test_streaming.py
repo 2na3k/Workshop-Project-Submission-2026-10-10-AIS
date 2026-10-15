@@ -1,23 +1,27 @@
 import asyncio
 import json
 import time
+from unittest import mock
 
 from fastapi.testclient import TestClient
+from pydantic import BaseModel
+from langgraph.checkpoint.memory import MemorySaver
 
 from api.core.exceptions import AppError
 from api.features.plan.dependencies import get_plan_service
 from api.features.plan.exceptions import PlanInfeasible
+from api.features.plan.graph import build_plan_graph
+from api.features.plan.models import Recipe
 from api.features.plan.service import PlanService
 from api.features.plan.schemas import DayResponse, MealResponse, PlanResponse
 from api.features.plan.streaming import KEEP_ALIVE, stream_plan, word_chunks
 from api.main import app
 
 
-class FakePlan:
-    days = []
-
-    def model_dump(self, mode):
-        return {"plan_id": "plan_test", "status": "complete", "days": []}
+class FakePlan(BaseModel):
+    plan_id: str = "plan_test"
+    status: str = "complete"
+    days: list = []
 
 
 def meal(slot, title, calories):
@@ -39,11 +43,17 @@ class FakeService:
         self.solve_error = solve_error
         self.plan = plan or FakePlan()
 
-    def fetch_candidates(self):
+    def fetch_candidates(self, request=None):
         time.sleep(self.fetch_delay)
-        return ["recipe"]
+        return [Recipe(recipe_id="r_test", title="Test recipe")]
 
     def select_candidates(self, recipes, request):
+        return recipes
+
+    def filter_stage(self, recipes, request):
+        return recipes
+
+    def rank_stage(self, recipes, request):
         return recipes
 
     def solve(self, recipes, request):
@@ -56,13 +66,15 @@ class FakeService:
 
 
 class EmptyRepository:
-    def fetch_candidates(self):
+    def fetch_candidates(self, request=None):
         return []
 
 
-def collect(service, keep_alive_seconds=10.0):
+def collect(service, keep_alive_seconds=10.0, checkpointer=None, run_id="run-test0001"):
+    graph = build_plan_graph(service, checkpointer or MemorySaver())
+
     async def run():
-        return [chunk async for chunk in stream_plan(None, service, keep_alive_seconds)]
+        return [chunk async for chunk in stream_plan(None, service, graph, run_id, keep_alive_seconds)]
     return asyncio.run(run())
 
 
@@ -74,7 +86,16 @@ def events(chunks):
             continue
         lines = dict(line.split(": ", 1) for line in chunk.strip().split("\n"))
         parsed.append((lines["event"], json.loads(lines["data"])))
-    return parsed
+    return [item for item in parsed if item[0] != "run"]
+
+
+def fake_pool():
+    return mock.MagicMock()
+
+
+def test_run_id_is_announced_first():
+    first = json.loads(collect(FakeService(), run_id="run-announce1")[0].split("data: ")[1])
+    assert first == {"run_id": "run-announce1"}
 
 
 def test_progress_events_then_the_plan():
@@ -142,7 +163,8 @@ def test_unexpected_failures_hide_details():
 def test_endpoint_streams_with_event_stream_headers():
     app.dependency_overrides[get_plan_service] = lambda: PlanService(EmptyRepository())
     try:
-        with TestClient(app) as client:
+        with mock.patch("api.core.database.create_checkpointer", return_value=(fake_pool(), MemorySaver())), \
+                TestClient(app) as client:
             response = client.post("/api/v1/plan", json={"horizon_days": 1, "meals_per_day": 1})
     finally:
         app.dependency_overrides.clear()
@@ -152,13 +174,14 @@ def test_endpoint_streams_with_event_stream_headers():
     assert response.headers["connection"] == "keep-alive"
     parsed = events([chunk + "\n\n" for chunk in response.text.strip().split("\n\n")])
     assert [name for name, _ in parsed] == ["progress", "progress", "error"]
-    assert parsed[-1][1]["error"]["code"] == "UNSUPPORTED_UNIT"
+    assert parsed[-1][1]["error"]["code"] == "NO_CANDIDATES"
 
 
 def test_bad_codes_are_rejected_before_the_stream_starts():
     app.dependency_overrides[get_plan_service] = lambda: PlanService(EmptyRepository())
     try:
-        with TestClient(app) as client:
+        with mock.patch("api.core.database.create_checkpointer", return_value=(fake_pool(), MemorySaver())), \
+                TestClient(app) as client:
             allergen = client.post("/api/v1/plan", json={"horizon_days": 1, "meals_per_day": 1, "allergies": [{"code": "tree nut"}]})
             dietary = client.post("/api/v1/plan", json={"horizon_days": 1, "meals_per_day": 1, "dietary": [{"code": "keto"}]})
             invalid = client.post("/api/v1/plan", json={"horizon_days": 30, "meals_per_day": 1})
@@ -174,3 +197,43 @@ def test_app_errors_keep_their_code_and_details():
     error = AppError("Bad thing", [{"field": "nutrients.0", "issue": "nope"}])
     parsed = events(collect(FakeService(solve_error=error)))
     assert parsed[-1][1]["error"]["details"] == [{"field": "nutrients.0", "issue": "nope"}]
+
+
+class CrashOnceService(FakeService):
+    """Fails in solve on its first call, like a worker that dies mid-run."""
+
+    def __init__(self):
+        super().__init__()
+        self.fetches = 0
+        self.solves = 0
+
+    def fetch_candidates(self, request=None):
+        self.fetches += 1
+        return [Recipe(recipe_id="r_test", title="Test recipe")]
+
+    def solve(self, recipes, request):
+        self.solves += 1
+        if self.solves == 1:
+            raise RuntimeError("worker died")
+        return super().solve(recipes, request)
+
+
+def test_a_crashed_run_resumes_from_its_last_checkpoint():
+    checkpointer = MemorySaver()
+    service = CrashOnceService()
+    first = events(collect(service, checkpointer=checkpointer, run_id="run-resume01"))
+    assert first[-1][0] == "error"
+    second = events(collect(service, checkpointer=checkpointer, run_id="run-resume01"))
+    assert second[-1][0] == "plan"
+    assert service.fetches == 1, "retrieve must not run again after its checkpoint"
+    assert service.solves == 2
+
+
+def test_a_finished_run_returns_its_stored_plan_without_recomputing():
+    checkpointer = MemorySaver()
+    service = CrashOnceService()
+    collect(service, checkpointer=checkpointer, run_id="run-done0001")
+    collect(service, checkpointer=checkpointer, run_id="run-done0001")
+    again = events(collect(service, checkpointer=checkpointer, run_id="run-done0001"))
+    assert again[-1][0] == "plan"
+    assert (service.fetches, service.solves) == (1, 2)

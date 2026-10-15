@@ -12,6 +12,7 @@ from .solver_v2 import solve_v2
 from .aggregation import aggregate
 from .schemas import PlanResponse, DayResponse, MealResponse, MealIngredientResponse
 from .exceptions import InvalidNutrientRange, UnknownAllergen, UnknownDietary, UnknownNutrient
+from .state import encode_days, encode_recipes
 
 logger = logging.getLogger(__name__)
 SUPPORTED_DIETARY = {"halal", "vegetarian"}
@@ -35,13 +36,12 @@ def complete_plan(response, request, recipes, span):
         response.evaluation_id = save_evaluation(response.trace_id, response.plan_id, request, recipes)
     except Exception:
         logger.warning("Ranking snapshot storage failed; meal plan remains available")
-    update_observation(span, output={
-        "plan_id": response.plan_id, "status": response.status,
-        "meal_count": sum(len(day.meals) for day in response.days),
-        "relaxation_count": len(response.relaxations),
-        "evaluation_id": response.evaluation_id,
-    })
+    update_observation(span, output=response.model_dump(mode="json"))
     return response
+
+
+def dump(obj):
+    return obj.model_dump(mode="json") if hasattr(obj, "model_dump") else obj
 
 
 class PlanService:
@@ -61,29 +61,42 @@ class PlanService:
             if d.code not in SUPPORTED_DIETARY:
                 raise UnknownDietary(f"Unknown dietary code: {d.code}")
 
-    def fetch_candidates(self):
+    def fetch_candidates(self, request=None):
         with observation("retrieve-candidates") as span:
+            update_observation(span, input={"request": dump(request)})
             recipes = self.repository.fetch_candidates()
-            update_observation(span, output={"candidate_count": len(recipes), "empty_results": not recipes})
+            update_observation(span, output=encode_recipes(recipes))
             return recipes
 
-    def select_candidates(self, recipes, request):
+    def filter_stage(self, recipes, request):
         with observation("filter-candidates") as span:
+            update_observation(span, input={"request": dump(request), "recipes": encode_recipes(recipes)})
             filtered = filter_candidates(recipes, request)
-            update_observation(span, output={"candidate_count": len(filtered)})
+            update_observation(span, output=encode_recipes(filtered))
+            return filtered
+
+    def rank_stage(self, filtered, request):
         with observation("rank-candidates") as span:
+            update_observation(span, input={"request": dump(request), "recipes": encode_recipes(filtered)})
             ranked = rank_candidates(filtered, request)
-            update_observation(span, output={"ranked_ids": [recipe.recipe_id for recipe in ranked]})
+            update_observation(span, output=encode_recipes(ranked))
             return ranked
+
+    def select_candidates(self, recipes, request):
+        return self.rank_stage(self.filter_stage(recipes, request), request)
 
     def solve(self, recipes, request):
         with observation("solve-plan") as span:
+            update_observation(span, input={"request": dump(request), "candidates": encode_recipes(recipes)})
             days, relaxations = solve_v2(recipes, request)
-            update_observation(span, output={"day_count": len(days), "relaxation_count": len(relaxations)})
+            update_observation(span, output={"days": encode_days(days), "relaxations": relaxations})
             return days, relaxations
 
     def build_response(self, days, relaxations, request):
-        with observation("generate-response"):
+        with observation("generate-response") as span:
+            update_observation(span, input={
+                "request": dump(request), "days": encode_days(days), "relaxations": relaxations,
+            })
             response_days = []
             for d, meals in enumerate(days, 1):
                 response_days.append(DayResponse(day=d, meals=[
@@ -106,7 +119,7 @@ class PlanService:
                         instructions=r.instructions,
                     ) for i, r in enumerate(meals, 1)
                 ]))
-            return PlanResponse(plan_id="plan_" + secrets.token_hex(5),
+            response = PlanResponse(plan_id="plan_" + secrets.token_hex(5),
                                 status="partial" if relaxations or request.allergies or request.dietary else "complete",
                                 message=f"Successfully generated a {request.horizon_days}-day meal plan.",
                                 validation_summary={
@@ -114,6 +127,8 @@ class PlanService:
                                     "dietary_status": "unverified" if request.dietary else "not_requested"},
                                 relaxations=relaxations, horizon_totals=aggregate(days, request),
                                 days=response_days)
+            update_observation(span, output=response.model_dump(mode="json"))
+            return response
 
     def generate(self, request):
         with trace_plan(request) as span:
