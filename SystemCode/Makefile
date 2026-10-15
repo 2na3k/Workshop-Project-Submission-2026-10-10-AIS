@@ -1,7 +1,7 @@
 SHELL := /bin/sh
 
 UV ?= uv
-COMPOSE ?= docker compose --env-file .env.$(DBT_TARGET) --env-file .env.langfuse
+COMPOSE ?= docker compose --env-file .env.$(DBT_TARGET)
 API_PACKAGE := remy-api
 CRAWLER_PACKAGE := remy-data-crawler
 DBT_PACKAGE := remy-data-preparation
@@ -12,11 +12,15 @@ export DBT_TARGET
 export NEO4J_URI NEO4J_USERNAME NEO4J_PASSWORD NEO4J_DATABASE NEO4J_HTTP NEO4J_USER NEO4J_BATCH_SIZE \
        AURA_INSTANCEID AURA_INSTANCENAME
 
-.PHONY: help install sync lock check build build-all up up-prod up-all down logs langfuse langfuse-init \
-        api crawler dbt dbt-all serve-neo4j serve-neo4j-replace frontend-install clean _neo4j-creds
+.PHONY: help prepare-data up install sync lock check build build-all up-prod up-all down logs langfuse langfuse-init \
+        api crawler dbt dbt-all serve-neo4j serve-neo4j-replace fulfillment frontend-install clean _neo4j-creds \
+        _seeds-check _nonprod-only
 
 help:
 	@printf '%s\n' \
+		'make prepare-data     Full data pipeline (nonprod): deps, seeds check, dbt, local Neo4j, graph, fulfillment' \
+		'make up               Start the whole stack in Docker (nonprod adds local Neo4j) and wait until healthy' \
+		'make fulfillment      Rebuild :BEST_FULFILLMENT edges in Neo4j (run after serve-neo4j)' \
 		'make install          Install all Python workspace dependencies' \
 		'make lock             Resolve and update uv.lock' \
 		'make check            Verify uv.lock is current' \
@@ -57,7 +61,34 @@ dbt:
 		DBT_TARGET=$(DBT_TARGET) $(UV) run --package $(DBT_PACKAGE) dbt build --profiles-dir . --exclude tag:serving
 
 _neo4j-creds:
-	@test -n "$(NEO4J_PASSWORD)" || { echo "Set NEO4J_PASSWORD or add it to .env.$(DBT_TARGET)"; exit 1; }
+	@test -n "$$NEO4J_PASSWORD" || { echo "Set NEO4J_PASSWORD or add it to .env.$(DBT_TARGET)"; exit 1; }
+
+# Seeds that dbt reads (see remy/data-preparation/README.md). Missing ones fail the build.
+SEEDS := remy/data-preparation/seeds
+_seeds-check:
+	@for f in 13k-recipe/13k-recipes.csv central_food/branded_food.csv central_food/food.csv \
+	          central_food/food_component.csv central_food/food_nutrient/data.parquet \
+	          fairprice/price_mapped_nutrients.csv fairprice/retail_search_listing.csv \
+	          fairprice/retail_aisle_listing.csv; do \
+	  test -f "$(SEEDS)/$$f" || { echo "Missing seed file: $(SEEDS)/$$f"; exit 1; }; \
+	done
+
+# prepare-data replaces the Neo4j graph, so it only runs against the local nonprod setup.
+_nonprod-only:
+	@test "$(DBT_TARGET)" = "nonprod" || { echo "prepare-data only runs with DBT_TARGET=nonprod (it replaces the graph)"; exit 1; }
+
+# One command for the whole data pipeline. Rebuilds the nonprod DuckDB and DuckLake
+# state from the seeds, so a previous partial run cannot leave broken files behind.
+prepare-data: _nonprod-only _neo4j-creds install _seeds-check
+	rm -rf remy/data-preparation/target/$(DBT_TARGET) remy/data-preparation/target/$(DBT_TARGET).duckdb
+	$(MAKE) dbt DBT_TARGET=$(DBT_TARGET)
+	$(COMPOSE) --profile neo4j up -d --wait neo4j
+	$(MAKE) serve-neo4j DBT_TARGET=$(DBT_TARGET)
+	$(MAKE) fulfillment DBT_TARGET=$(DBT_TARGET)
+	@echo "Data ready: local Neo4j loaded and :BEST_FULFILLMENT rebuilt. Run 'make up' next."
+
+fulfillment: _neo4j-creds
+	$(UV) run --package $(API_PACKAGE) python remy/data-preparation/scripts/rebuild_best_fulfillment.py
 
 dbt-all: _neo4j-creds
 	$(MAKE) dbt DBT_TARGET=$(DBT_TARGET)
@@ -71,7 +102,7 @@ serve-neo4j-replace: serve-neo4j
 langfuse-init:
 	$(UV) run --frozen --package $(API_PACKAGE) python scripts/init_langfuse.py
 
-build build-all up up-all down logs: langfuse-init
+build build-all up-all down logs: langfuse-init
 
 langfuse: langfuse-init
 	$(COMPOSE) up -d --build --wait langfuse-gateway langfuse-worker
@@ -86,8 +117,17 @@ build:
 build-all:
 	$(COMPOSE) --profile neo4j --profile jobs build
 
-up:
-	$(COMPOSE) --profile neo4j up --build frontend neo4j
+# One command for the app. Nonprod also starts the local Neo4j the API uses.
+NEO4J_PROFILE := $(if $(filter nonprod,$(DBT_TARGET)),--profile neo4j,)
+
+up: langfuse-init
+	$(COMPOSE) $(NEO4J_PROFILE) up -d --build --wait
+	@echo ""
+	@echo "Remy is up:"
+	@echo "  Web app    http://localhost:$${FRONTEND_PORT:-3100}"
+	@echo "  API docs   http://localhost:$${API_PORT:-8000}/docs"
+	@echo "  Langfuse   http://localhost:$${LANGFUSE_PORT:-3031}"
+	@echo "  Demo login demo / remy-demo-account"
 
 up-all:
 	$(COMPOSE) --profile neo4j --profile jobs up --build

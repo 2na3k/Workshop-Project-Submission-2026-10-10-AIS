@@ -2,67 +2,37 @@
 
 ## Docker: one command
 
-From `SystemCode/`, with production Neo4j credentials already in `.env.prod`:
+From `SystemCode/`, with the settings in `.env.nonprod` (see
+[docs/docker_compose.md](../docs/docker_compose.md) for the file):
 
 ```sh
-make up-prod API_PORT=8003 FRONTEND_PORT=3100 BACKEND_PORT=8010
+docker compose --env-file .env.nonprod up -d --build --wait
 ```
 
-This generates private backend credentials once, starts **Langfuse web + worker,
-passwordless gateway, PostgreSQL, ClickHouse, Redis, and MinIO**, waits for dashboard health, then builds
-and starts the real frontend, auth/preferences backend, and API against production Neo4j. It does not start a local Neo4j or
-change your production credentials. Subsequent runs reuse the credentials and data.
+This starts the frontend, auth backend, Remy API, and the Langfuse stack
+(web, worker, gateway, PostgreSQL, ClickHouse, Redis, and the S3-compatible store
+SeaweedFS). Add `--profile neo4j` to also run a local Neo4j. The API uses the
+`NEO4J_*` values from the same file.
 
-- **Application: `http://localhost:3100`** (the merged Next.js frontend, not a placeholder)
-- API: `http://localhost:8003/docs`
-- Dashboard: `http://localhost:<LANGFUSE_PORT>` from `.env.langfuse`
-- **No login/password prompt**: the localhost gateway establishes the operator session internally.
-- On the current machine the dashboard is **http://localhost:3032**; default port
-  3031 was occupied. Change `LANGFUSE_PORT` in the private file if needed, then rerun.
+- **Application: `http://localhost:3100`**
+- API: `http://localhost:8000/docs`
+- Langfuse dashboard: `http://localhost:<LANGFUSE_PORT>` (default 3031)
 
-`.env.langfuse` is gitignored, mode **0600**, and contains generated passwords, API
-keys, and the reviewer token. No known/default passwords are committed. The official
-headless initialization creates the Remy organization, project, and admin account.
-Signup is disabled; dashboard access is bound to localhost only. The gateway blocks
-foreign Host/Origin headers, cross-site API requests, and framing. All local users
-can use the operator dashboard: **never expose this gateway publicly**. The native
-web service, backend databases, Redis, and MinIO are not published to host ports.
-Backend credentials remain private; removing the human login prompt does not remove
-server authentication. The gateway supports HTTP/streamed responses (not WebSockets)
-and caps request bodies at 16 MiB. Do not remove/rotate this private
-file while retaining database volumes; headless initialization does not overwrite
-existing accounts, project keys, or infrastructure passwords.
+The Langfuse admin login is `LANGFUSE_INIT_USER_EMAIL` and
+`LANGFUSE_INIT_USER_PASSWORD` in the settings file. The API gets its Langfuse keys
+and `REMY_EVALUATION_TOKEN` from the same file. Keep the settings file private
+(git-ignored, mode 0600). The Langfuse dashboard and gateway are bound to localhost
+only; never expose them publicly.
 
-The API automatically uses `http://langfuse-web:3000`, enables tracing and local
-ranking snapshots, and gets matching project keys. It needs **no manual Langfuse
-settings in `.env.prod`**. Selected Neo4j/runtime settings still come from `.env.prod`.
-The shared local monitoring stack survives switching API environment; trace
-`environment` identifies `prod` versus `nonprod`.
+Named volumes keep Langfuse data and the local evaluation snapshots.
+`docker compose --env-file .env.nonprod down -v` **deletes that data**.
 
 Other commands:
 
 ```sh
-make up                         # .env.nonprod + local Neo4j + Langfuse + API
-make langfuse DBT_TARGET=prod    # dashboard/worker only
-make logs DBT_TARGET=prod
-make down DBT_TARGET=prod        # stop; retain volumes
+docker compose --env-file .env.nonprod down        # stop; keep volumes
+docker compose --env-file .env.nonprod logs -f api
 ```
-
-Raw Compose equivalent after initialization (local secrets loaded last):
-
-```sh
-uv run --frozen --package remy-api python scripts/init_langfuse.py
-DBT_TARGET=prod API_PORT=8003 docker compose \
-  --env-file .env.prod --env-file .env.langfuse up -d --build --wait langfuse-gateway langfuse-worker
-DBT_TARGET=prod API_PORT=8003 docker compose \
-  --env-file .env.prod --env-file .env.langfuse up -d --build --wait frontend
-```
-
-Named volumes retain Langfuse databases/event storage and local evaluation snapshots.
-`docker compose down -v` **deletes that data**. This is a localhost deployment using
-production food data, not a public production monitoring deployment. Public hosting
-requires HTTPS/reverse proxy, access restrictions, backups, and a retention policy.
-JSON traces/scores are supported; browser media uploads/downloads are not exposed.
 
 ## Workflow and the three metrics (slides 18–19)
 
@@ -99,14 +69,14 @@ round-trip time are outside that measurement.
 Create a plan, then copy its `evaluation_id`:
 
 ```sh
-curl -fS http://localhost:8003/api/v1/plan \
+curl -fS http://localhost:8000/api/v1/plan \
   -H 'Content-Type: application/json' \
   -d '{"horizon_days":1,"meals_per_day":3}'
 
-# Copy REMY_EVALUATION_TOKEN from private .env.langfuse; do not put it in a browser app.
+# Copy REMY_EVALUATION_TOKEN from private .env.nonprod; do not put it in a browser app.
 export REVIEWER_TOKEN='your-local-reviewer-token'
 export EVALUATION_ID='evaluation_id-from-plan-response'
-curl -fS "http://localhost:8003/api/v1/evaluations/$EVALUATION_ID" \
+curl -fS "http://localhost:8000/api/v1/evaluations/$EVALUATION_ID" \
   -H "Authorization: Bearer $REVIEWER_TOKEN" > candidates.json
 ```
 
@@ -123,7 +93,7 @@ recipes. Missing/unknown IDs, floats, booleans, grades outside 0–3, and duplic
 ranking IDs are rejected.
 
 ```sh
-curl -fS "http://localhost:8003/api/v1/evaluations/$EVALUATION_ID/grades" \
+curl -fS "http://localhost:8000/api/v1/evaluations/$EVALUATION_ID/grades" \
   -H "Authorization: Bearer $REVIEWER_TOKEN" \
   -H 'Content-Type: application/json' --data-binary @human-grades.json
 ```
@@ -187,5 +157,5 @@ For non-Docker API use, tracing still defaults off. Configure the optional Cloud
 self-hosted settings from `.env.example`, then run:
 
 ```sh
-uv run --env-file .env.prod --package remy-api uvicorn api.main:app --reload
+uv run --env-file .env.nonprod --package remy-api uvicorn api.main:app --reload
 ```

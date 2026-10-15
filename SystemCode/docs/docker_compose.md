@@ -1,204 +1,176 @@
 # Running Remy with Docker Compose
 
-This guide starts the whole app (database, auth backend, Remy API and web
-frontend) in Docker with one command. All commands run from `SystemCode/`.
+This guide starts Remy in Docker: the database, the auth backend, the Remy API,
+the web frontend, and the local Langfuse tracing stack. All commands run from
+`SystemCode/`.
+
+## One settings file
+
+Every setting lives in one file per target:
+
+| File           | Use                                                        |
+|----------------|------------------------------------------------------------|
+| `.env.nonprod` | Local development (the default)                            |
+| `.env.prod`    | Production (Aura Neo4j); the same keys as nonprod          |
+
+Both are git-ignored. `SystemCode/.env.example` lists every key. Copy it to the
+file you need and fill it in, or let `scripts/init_langfuse.py` generate the
+secrets:
+
+```bash
+cp .env.example .env.nonprod
+uv run --package remy-api python scripts/init_langfuse.py --path .env.nonprod
+```
+
+The script only fills keys that are empty and never overwrites a value you set.
+
+Compose needs the file passed explicitly, so every command below starts with
+`docker compose --env-file .env.nonprod` (use `.env.prod` for production). The
+scripts in this guide already do that.
+
+For local development, `.env.nonprod` needs:
+
+```dotenv
+# Neo4j: the local container (make up / docker compose --profile neo4j)
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=<choose one>
+NEO4J_DATABASE=neo4j
+# The API container reaches the host's Neo4j through this
+NEO4J_DOCKER_URI=bolt://host.docker.internal:7687
+
+# Sign-in and database
+REMY_JWT_SECRET=<openssl rand -base64 48>
+REMY_POSTGRES_PASSWORD=<openssl rand -hex 24>
+POSTGRES_PASSWORD=<same value as REMY_POSTGRES_PASSWORD>
+
+# Langfuse and evaluation (filled by init_langfuse.py)
+LANGFUSE_PORT=3031
+REMY_EVALUATION_TOKEN=...
+```
+
+Without `REMY_JWT_SECRET` the backend invents a new secret on every start, so
+everyone is signed out whenever it restarts.
+
+Production uses Aura. Its `.env.prod` has the Aura `NEO4J_*` values and no
+`NEO4J_DOCKER_URI`; the API then uses `NEO4J_URI` directly.
 
 ## What runs
 
-| Service    | What it is                     | Open on your machine            | Health check   |
-|------------|--------------------------------|---------------------------------|----------------|
-| `postgres` | PostgreSQL 17, user accounts   | not exposed                     | `pg_isready`   |
-| `backend`  | Auth backend (FastAPI)         | http://localhost:8010/docs      | `GET /health`  |
-| `api`      | Remy API: plans and calculator | http://localhost:8081/docs      | `GET /health`  |
-| `frontend` | Next.js web app                | http://localhost:3000           | `GET /signin`  |
+| Service          | What it is                          | Open on your machine             |
+|------------------|-------------------------------------|----------------------------------|
+| `frontend`       | Next.js web app                     | http://localhost:3100            |
+| `backend`        | Auth backend (FastAPI)              | http://localhost:8010/docs       |
+| `api`            | Remy API: plans and calculator      | http://localhost:8000/docs       |
+| `langfuse-web`   | Langfuse dashboard (via gateway)    | http://localhost:3031            |
+| `postgres`       | PostgreSQL 17, user accounts        | not exposed                      |
+| `langfuse-*`     | Langfuse storage: Postgres, ClickHouse, Redis, S3-compatible store (SeaweedFS) | not exposed |
+| `neo4j`          | Local Neo4j (profile `neo4j` only)  | http://localhost:7474            |
 
-They start in order: `postgres` → `backend` and `api` → `frontend`. Each one
-waits until the services it needs are healthy.
-
-The API uses the Neo4j database set in `remy/api/.env` (for example Neo4j
-Aura). The local `neo4j` container and the data jobs are not started; see
-[Local Neo4j and data jobs](#local-neo4j-and-data-jobs).
+`api` waits for the Langfuse services, so starting the API starts all of them.
+`neo4j` is off by default: the API uses whatever `NEO4J_URI` points at.
 
 ## Before you start
 
-1. **Docker Desktop** (or Docker Engine with Compose v2) is installed and
-   running. Check with `docker compose version`.
-2. **`remy/api/.env`** exists with the Neo4j connection:
+1. Docker Desktop (or Docker Engine with Compose v2) is running:
+   `docker compose version` works.
+2. `.env.nonprod` exists and has the keys above.
+3. The ports 8010, 8000, 3100 and 3031 are free. Otherwise see
+   [Change the ports](#change-the-ports).
 
-   ```dotenv
-   NEO4J_URI=neo4j+s://<id>.databases.neo4j.io
-   NEO4J_USERNAME=<username>
-   NEO4J_PASSWORD=<password>
-   NEO4J_DATABASE=<database>
-   ```
-
-3. **`remy/backend/.env`** exists with a signing secret for sign-in sessions
-   and the database password, which the database and the backend share:
-
-   ```dotenv
-   REMY_JWT_SECRET=<output of: openssl rand -base64 48>
-   POSTGRES_PASSWORD=<output of: openssl rand -hex 24>
-   ```
-
-   Without it the backend invents a new secret on every start, so everyone is
-   signed out whenever it restarts. Compose sets the backend's database URL and
-   CORS origins itself, so values for those in this file are ignored.
-
-4. **Ports 8010, 8081 and 3000 are free.** Stop any copy of the servers you
-   started outside Docker, or [use other ports](#change-the-ports).
-
-Both `.env` files are git-ignored and are never copied into the images.
-
-## Build and start it
-
-### With Docker Compose
+## Start it: two commands
 
 ```bash
-docker compose build         # build the images
-docker compose up -d --wait  # start everything, return once all are healthy
+make prepare-data   # once, or after the seed data changes: builds the graph
+make up             # starts the whole stack in Docker and waits until healthy
 ```
 
-The first build takes a few minutes; later builds reuse the cache and only
-redo what changed. `docker compose up --build -d --wait` does both steps in
-one command. Leave out `-d` to keep the logs in the terminal, where **Ctrl+C**
-stops everything. Stop a background start with `docker compose down`.
+`make prepare-data` installs the Python dependencies, checks that the seed files
+are present, rebuilds the dbt models (PASS=104), starts the local Neo4j
+container, loads the recipe graph into it, and rebuilds the `:BEST_FULFILLMENT`
+edges the planner needs. It only runs for `nonprod`, because it replaces the
+graph. It deletes the generated `remy/data-preparation/target/nonprod*` files
+and rebuilds them from the seeds.
 
-### With the script
+`make up` creates the Langfuse keys if they are missing, starts every service
+(for `nonprod` also the local Neo4j), and prints the URLs when they are healthy.
+Use `DBT_TARGET=prod make up` for production (Aura, no local Neo4j).
 
-```bash
-./remy/start-all.sh            # opens the browser when everything is ready
-./remy/start-all.sh --no-open  # same, without opening the browser
-```
+Both commands read `.env.nonprod`. The raw Compose commands are still there if
+you need them: `docker compose --env-file .env.nonprod up -d --wait`.
 
-The script checks that Docker is running and the ports are free, runs the
-build and start above, prints the URLs, then streams the logs of all services.
-**Ctrl+C** stops and removes the containers.
+The script alternative, `./remy/start-all.sh`, does the same start with a browser
+pop-up and a live log stream (Ctrl+C stops and removes the containers).
 
 ## Check that it works
 
+Open http://localhost:3100, sign in with the demo account (`demo` /
+`remy-demo-account`, or **Try the demo**), and build a plan.
+
+Or run the project's end-to-end test (signup, preferences, a streamed plan, and
+the six Langfuse trace stages):
+
 ```bash
-docker compose ps
+cd remy/frontend
+E2E_API_URL=http://localhost:8000 E2E_FRONTEND_URL=http://localhost:3100 npm run test:e2e
 ```
 
-Every service should show `(healthy)` in its STATUS. `(health: starting)`
-means it is still booting; give it a minute.
-
-Then, in a browser, open http://localhost:3000, sign up and build a plan. Or
-check from the terminal:
+From the terminal:
 
 ```bash
-curl http://localhost:8010/health    # auth backend: {"status":"ok",...}
-curl http://localhost:8081/health    # Remy API
-
-# Calculator, through the frontend's /api/v1 proxy (needs Neo4j)
-curl -X POST http://localhost:3000/api/v1/calculate/cost-and-nutrition \
-  -H 'Content-Type: application/json' \
-  -d '{"servings":1,"ingredients":[{"name":"Tomatoes","quantity":100,"unit":"g"}]}'
-
-# Plan stream: progress events, then text, then the plan
-curl -N -X POST http://localhost:3000/api/v1/plan \
-  -H 'Content-Type: application/json' -H 'Accept: text/event-stream' \
-  -d '{"horizon_days":3,"meals_per_day":3}'
+curl http://localhost:8010/health    # auth backend
+curl http://localhost:8000/health    # Remy API
 ```
 
 ## Everyday commands
 
-| Task                                   | Command                                          |
-|----------------------------------------|--------------------------------------------------|
-| See status                             | `docker compose ps`                              |
-| Follow all logs                        | `docker compose logs -f`                         |
-| Follow one service                     | `docker compose logs -f api`                     |
-| Restart one service                    | `docker compose restart api`                     |
-| Rebuild and restart one service        | `docker compose up --build -d api`               |
-| Open a shell in the database (asks for `POSTGRES_PASSWORD`) | `docker compose exec postgres psql -U remy -d remy_main` |
-| Stop and remove containers (keep data) | `docker compose down`                            |
-| Stop and also delete the database      | `docker compose down -v`                         |
+| Task                              | Command                                                              |
+|-----------------------------------|----------------------------------------------------------------------|
+| Status                            | `docker compose --env-file .env.nonprod ps`                          |
+| Logs (all / one service)          | `docker compose --env-file .env.nonprod logs -f` / `... logs -f api` |
+| Restart one service               | `docker compose --env-file .env.nonprod restart api`                 |
+| Rebuild one service after changes | `docker compose --env-file .env.nonprod up -d --build api`           |
+| Stop, keep data                   | `docker compose --env-file .env.nonprod down`                        |
+| Stop and delete all data          | `docker compose --env-file .env.nonprod down -v`                     |
 
-The containers run the code that was in the images when they were built, so
-there is no hot reload. After changing code, run the start command again (it
-rebuilds) or use `docker compose up --build -d <service>`. For hot reload while
-developing one service, run that service outside Docker as described in its
-own README.
+Containers run the code from their images, so there is no hot reload. After a
+change, rebuild the service with `up -d --build <service>`.
 
 ## Change the ports
 
-Set any of these when starting:
-
 ```bash
-BACKEND_PORT=18010 API_PORT=18081 FRONTEND_PORT=13000 ./remy/start-all.sh
+BACKEND_PORT=18010 API_PORT=18000 FRONTEND_PORT=13100 ./remy/start-all.sh
 ```
 
-The same works in front of `docker compose up --build -d --wait`. Keep
-`--build` whenever you change `BACKEND_PORT`: the frontend image has the
-backend's address built in.
-
-## Settings
-
-Compose reads these from your shell or from `SystemCode/.env`:
-
-| Variable                 | Default        | Used for                                         |
-|--------------------------|----------------|--------------------------------------------------|
-| `BACKEND_PORT`           | `8010`         | Auth backend port on your machine                |
-| `API_PORT`               | `8081`         | Remy API port on your machine                    |
-| `FRONTEND_PORT`          | `3000`         | Web app port on your machine                     |
-| `REMY_API_ENV_FILE`      | `remy/api/.env` | File with the API's Neo4j settings (the Makefile uses `.env.nonprod`) |
+The same variables work in front of `docker compose up`. Keep `--build` when
+you change `BACKEND_PORT`, because the frontend image has the backend's address
+built in.
 
 ## The database
 
-User accounts and preferences are stored in the `remy_postgres_data` Docker
-volume, so they survive `docker compose down` and restarts.
-
-`remy/backend/db.sql` creates the schema the **first** time, when the volume is
-empty. Later edits to `db.sql` are not applied to an existing volume. To start
-over with the new schema (this deletes all accounts):
-
-```bash
-docker compose down -v
-```
-
-Accounts from a PostgreSQL running outside Docker are not copied in.
+Accounts and preferences live in the `remy_postgres_data` volume and survive
+`down`. `remy/backend/db.sql` only runs when the volume is empty, so schema edits
+need `down -v` (this deletes all accounts).
 
 ## Troubleshooting
 
-**`postgres` exits with "superuser password is not specified".**
-Set `POSTGRES_PASSWORD` in `remy/backend/.env`.
-See [Before you start](#before-you-start).
+**`postgres` exits with "superuser password is not specified".** Set
+`REMY_POSTGRES_PASSWORD` in `.env.nonprod`.
 
-**`backend` is unhealthy with "password authentication failed".** The password
-in `remy/backend/.env` differs from the one the database was created with; the
-database keeps its first password. Put the old password back, or recreate the
-database (this deletes all accounts) with `docker compose down -v`.
+**`backend` is unhealthy with "password authentication failed".**
+`POSTGRES_PASSWORD` no longer matches the password the volume was created
+with. Put the old value back, or delete the volume with `down -v`.
 
-**"port is already allocated" or the script says a port is in use.**
-Something else is listening there, often the servers started without Docker.
-Stop it, or [change the ports](#change-the-ports).
+**`api` is unhealthy, or plans and the calculator fail.** Check the
+`NEO4J_*` values and `NEO4J_DOCKER_URI`, then `docker compose ... logs api`.
+If plans say "No recipes with complete nutrition data", the
+`rebuild_best_fulfillment.py` step has not been run (see above).
 
-**`api` is unhealthy, or plans and the calculator return errors.**
-Check the Neo4j settings in `remy/api/.env`, then read the error with
-`docker compose logs api`.
-
-**`backend` keeps restarting.** Look at `docker compose logs postgres` and
-`docker compose logs backend`. If `db.sql` changed recently, see
-[The database](#the-database).
-
-**The web app cannot sign in after changing `BACKEND_PORT`.** The frontend
-still points at the old port. Start again with `--build`.
+**Langfuse containers fail to pull.** The MinIO image is no longer pulled; the
+S3 service is SeaweedFS, which needs no login.
 
 **Everyone is signed out after a restart.** Set `REMY_JWT_SECRET` in
-`remy/backend/.env`.
+`.env.nonprod`.
 
-**The script says Remy is already running in Docker.** Another copy is still
-running. Press Ctrl+C in its terminal, or run `docker compose down`.
-
-## Local Neo4j and data jobs
-
-These are for the data pipeline and are only started on request, through
-Compose profiles:
-
-```bash
-make up       # API with a local Neo4j, settings from .env.nonprod
-make up-all   # everything, including the local Neo4j and the data jobs
-```
-
-The local Neo4j needs `NEO4J_PASSWORD` set in `.env.nonprod`. See the
-`SystemCode` README and `remy/data-preparation/README.md` for the pipeline.
+**"port is already allocated".** Something else uses the port. Stop it, or
+[change the ports](#change-the-ports).

@@ -40,7 +40,7 @@ def initialize(path: Path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--path", type=Path, default=Path(".env.langfuse"))
+    parser.add_argument("--path", type=Path, default=Path(".env.nonprod"))
     args = parser.parse_args()
     initialize(args.path)
     print(f"Local Langfuse credentials ready in {args.path}; values hidden.")

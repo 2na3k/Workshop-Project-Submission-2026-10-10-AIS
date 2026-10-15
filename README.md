@@ -42,50 +42,49 @@ git clone https://github.com/2na3k/Workshop-Project-Submission-2026-10-10-AIS.gi
 cd Workshop-Project-Submission-2026-10-10-AIS/SystemCode
 ```
 
-**2. Create the settings files**
+**2. Create the settings file**
 
 ```bash
-cp remy/api/.env.example remy/api/.env
-cp remy/backend/.env.example remy/backend/.env
+cp .env.example .env.nonprod
+uv run --package remy-api python scripts/init_langfuse.py --path .env.nonprod
 ```
 
-Then fill them in:
-
-- `remy/api/.env`: `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD` and `NEO4J_DATABASE`.
-- `remy/backend/.env`: set `REMY_JWT_SECRET` to the output of `openssl rand -base64 48`,
-  and `POSTGRES_PASSWORD` (the database password) to the output of `openssl rand -hex 24`.
-
-Git ignores both files, so the passwords stay on your machine.
+Then fill in `NEO4J_*` (and `NEO4J_DOCKER_URI=bolt://host.docker.internal:7687` for a
+local Neo4j) and `REMY_JWT_SECRET` (`openssl rand -base64 48`). The
+`init_langfuse.py` step generates the Langfuse and database secrets. The file is
+git-ignored. `.env.prod` has the same keys for production. Full list:
+[SystemCode/docs/docker_compose.md](SystemCode/docs/docker_compose.md).
 
 **3. Build and start with Docker Compose**
 
 Run these from `SystemCode/`:
 
 ```bash
-docker compose build        # build the images (a few minutes the first time)
-docker compose up -d --wait # start everything and wait until it is ready
+docker compose --env-file .env.nonprod build
+docker compose --env-file .env.nonprod up -d --wait   # start everything and wait until healthy
 ```
 
-`docker compose up` starts four containers: PostgreSQL, the sign-in service, the
-Remy API and the web app. With `--wait` it returns once all of them pass their
-health checks. Check them any time with `docker compose ps`; each should show
-`(healthy)`.
+`--wait` returns once every service passes its health check. Check them with
+`docker compose --env-file .env.nonprod ps`; each should show `(healthy)`.
 
 Then open the web app:
 
 | What                 | Address                    |
 |:---------------------|:---------------------------|
-| Web app              | http://localhost:3000      |
-| Remy API docs        | http://localhost:8081/docs |
+| Web app              | http://localhost:3100      |
+| Remy API docs        | http://localhost:8000/docs |
 | Sign-in service docs | http://localhost:8010/docs |
+| Langfuse dashboard   | http://localhost:3031      |
 
 ```bash
-docker compose logs -f      # follow the logs of all services
-docker compose down         # stop Remy; accounts are kept for the next start
+docker compose --env-file .env.nonprod logs -f   # follow the logs of all services
+docker compose --env-file .env.nonprod down      # stop Remy; accounts are kept for the next start
 ```
 
 Shortcut: `./remy/start-all.sh` does the build and start, opens the browser when
 everything is ready, and shows the logs. Press Ctrl+C to stop it.
+
+The demo account is `demo` / `remy-demo-account`, or click **Try the demo**.
 
 **4. Use it**
 
@@ -97,9 +96,11 @@ nutrition of an ingredient.
 **If something goes wrong**
 
 - *A port is already in use*: close whatever uses it, or pick other ports, for example
-  `FRONTEND_PORT=3001 docker compose up -d --wait`.
-- *Plans or the calculator show an error*: check the Neo4j details in `remy/api/.env`,
-  then read `docker compose logs api`.
+  `FRONTEND_PORT=3101 docker compose --env-file .env.nonprod up -d --wait`.
+- *Plans or the calculator show an error*: check the `NEO4J_*` values in `.env.nonprod`,
+  then read `docker compose --env-file .env.nonprod logs api`. If plans say
+  "No recipes with complete nutrition data", run the fulfillment rebuild in the
+  guide above.
 - *Docker is not running*: open Docker Desktop and run the command again.
 
 More detail, including everyday commands, settings and troubleshooting:

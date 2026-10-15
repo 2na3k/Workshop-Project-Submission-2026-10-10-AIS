@@ -3,8 +3,8 @@
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd -P)"
 SYSTEM_ROOT="$(dirname "$ROOT")"
 BACKEND_PORT="${BACKEND_PORT:-8010}"
-API_PORT="${API_PORT:-8081}"
-FRONTEND_PORT="${FRONTEND_PORT:-3000}"
+API_PORT="${API_PORT:-8000}"
+FRONTEND_PORT="${FRONTEND_PORT:-3100}"
 OPEN_BROWSER=1
 
 usage() {
@@ -16,14 +16,14 @@ Remy API and the Next.js frontend. Opens the frontend in your browser once
 everything answers. Press Ctrl+C to stop and remove the containers; the
 PostgreSQL data is kept in a Docker volume for the next run.
 
-Needs POSTGRES_PASSWORD in backend/.env, which the database and the auth
-backend share. The API reads its Neo4j settings from api/.env. The backend's
-database URL and CORS origins are set by Compose.
+Reads every setting from .env.nonprod (or .env.prod when DBT_TARGET=prod) in
+SystemCode/. It needs REMY_POSTGRES_PASSWORD there. Compose sets the database
+URL and CORS origins.
 
 Ports can be changed with environment variables:
   BACKEND_PORT   auth backend   (default 8010)
-  API_PORT       Remy API       (default 8081)
-  FRONTEND_PORT  frontend       (default 3000)
+  API_PORT       Remy API       (default 8000)
+  FRONTEND_PORT  frontend       (default 3100)
 
 A port that is already in use is replaced by the next free one.
 
@@ -52,10 +52,10 @@ fail() { printf '%s ✗%s %s\n' "$RED" "$RESET" "$*" >&2; }
 
 # Read by docker-compose.yml.
 export BACKEND_PORT API_PORT FRONTEND_PORT
-export REMY_API_ENV_FILE="$ROOT/api/.env"
 
 compose() {
-  docker compose --project-directory "$SYSTEM_ROOT" -f "$SYSTEM_ROOT/docker-compose.yml" "$@"
+  docker compose --project-directory "$SYSTEM_ROOT" -f "$SYSTEM_ROOT/docker-compose.yml" \
+    --env-file "$SYSTEM_ROOT/.env.${DBT_TARGET:-nonprod}" "$@"
 }
 
 problems=0
@@ -78,8 +78,9 @@ if [ "$problems" -ne 0 ]; then
   exit 1
 fi
 
-if ! grep -Eq '^POSTGRES_PASSWORD=.+' "$ROOT/backend/.env" 2>/dev/null; then
-  fail "Set POSTGRES_PASSWORD in backend/.env. The database will not start without it."
+ENV_FILE="$SYSTEM_ROOT/.env.${DBT_TARGET:-nonprod}"
+if ! grep -Eq '^REMY_POSTGRES_PASSWORD=.+' "$ENV_FILE" 2>/dev/null; then
+  fail "Set REMY_POSTGRES_PASSWORD in $ENV_FILE. The database will not start without it."
   printf '   To make one: openssl rand -hex 24\n' >&2
   exit 1
 fi
@@ -120,9 +121,8 @@ pick_port BACKEND_PORT "auth backend"
 pick_port API_PORT "Remy API"
 pick_port FRONTEND_PORT "frontend"
 
-[ -f "$ROOT/api/.env" ] || warn "api/.env not found. The API needs NEO4J_URI, NEO4J_USERNAME and NEO4J_PASSWORD."
-grep -Eq '^REMY_JWT_SECRET=.+' "$ROOT/backend/.env" 2>/dev/null ||
-  warn "REMY_JWT_SECRET is not set in backend/.env, so everyone is signed out whenever the backend restarts."
+grep -Eq '^REMY_JWT_SECRET=.+' "$ENV_FILE" 2>/dev/null ||
+  warn "REMY_JWT_SECRET is not set in $ENV_FILE, so everyone is signed out whenever the backend restarts."
 
 banner() {
   echo
