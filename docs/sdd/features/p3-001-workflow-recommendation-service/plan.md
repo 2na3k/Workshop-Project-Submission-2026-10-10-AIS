@@ -541,7 +541,7 @@ is not work this feature performs, but it is on the critical path.
     - AC-21 (user-payload portion): the user-displayable portion of the outcome excludes `confidence`, `normalization_version`, `source_*`, `*_id`. The workflow-side R-17 assertion (three levels, distinct causes) passes.
     - AC-21 (trace-side R-16): the trace-side assertion is expected to **xfail** with a reason referencing F-P3-1 (PlanTrace carries no provenance). The test exists, is marked `xfail`, and documents the gap.
 
-- [ ] **T-10** Assemble the graph and the trace envelope
+- [x] **T-10** Assemble the graph and the trace envelope
   - Type: impl
   - Covers: AC-1, AC-10, AC-21
   - Files: `SystemCode/remy/workflows/src/workflows/graph.py`, `trace.py`
