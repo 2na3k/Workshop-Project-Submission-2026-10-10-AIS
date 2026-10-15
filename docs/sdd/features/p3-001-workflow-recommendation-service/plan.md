@@ -513,7 +513,7 @@ is not work this feature performs, but it is on the critical path.
 
 ### Group 3 — Generate Response (LLM + deterministic check)
 
-- [ ] **T-7** Write failing tests: Generate Response's structured check and evidence-absent preservation
+- [x] **T-7** Write failing tests: Generate Response's structured check and evidence-absent preservation
   - Type: test
   - Covers: AC-8, AC-9, AC-11, AC-12
   - Files: `SystemCode/remy/workflows/tests/test_generate.py`, `tests/conftest.py` (extend the fake LLM to return structured output)
