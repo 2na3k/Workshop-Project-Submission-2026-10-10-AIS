@@ -57,7 +57,8 @@ def observation(name, **metadata):
             logger.warning("Langfuse observation close failed")
 
 
-def enqueue_scores(evaluation_id, trace_id, metrics):
+def enqueue_trace_scores(trace_id, metrics, *, source, comment, metadata=None):
+    """Attach numeric scores to a trace. Score ids are deterministic, so a re-push updates in place."""
     client = get_client()
     if client is None or trace_id is None:
         return False
@@ -65,14 +66,13 @@ def enqueue_scores(evaluation_id, trace_id, metrics):
         for name, value in metrics.items():
             if value is not None:
                 client.create_score(
-                    trace_id=trace_id, name=name, value=value, data_type="NUMERIC",
-                    score_id=str(uuid5(NAMESPACE_URL, f"remy/{evaluation_id}/{name}")),
-                    comment="Blind human grades 0–3; same bounded candidate pool; metrics v1",
-                    metadata={"evaluation_id": evaluation_id, "judge": "human", "metric_version": "v1"},
+                    trace_id=trace_id, name=name, value=float(value), data_type="NUMERIC",
+                    score_id=str(uuid5(NAMESPACE_URL, f"remy/{trace_id}/{source}/{name}")),
+                    comment=comment, metadata={"source": source, **(metadata or {})},
                 )
-        return True  # Queued, not confirmation of remote delivery. Same grades can be retried.
+        return True  # Queued, not confirmation of remote delivery.
     except Exception:
-        logger.warning("Langfuse score enqueue failed; grades remain stored locally")
+        logger.warning("Langfuse score enqueue failed")
         return False
 
 

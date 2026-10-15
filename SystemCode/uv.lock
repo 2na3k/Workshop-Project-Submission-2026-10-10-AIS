@@ -1577,6 +1577,7 @@ version = "0.1.0"
 source = { editable = "remy/api" }
 dependencies = [
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "inflect" },
     { name = "langfuse" },
     { name = "langgraph" },
@@ -1593,6 +1594,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115,<1" },
+    { name = "httpx", specifier = "==0.28.1" },
     { name = "inflect", specifier = ">=7.5.0" },
     { name = "langfuse", specifier = ">=3,<4" },
     { name = "langgraph", specifier = ">=0.6,<0.7" },

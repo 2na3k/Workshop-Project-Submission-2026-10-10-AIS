@@ -1,20 +1,13 @@
 from api.features.plan.models import Recipe
 
 
-def rank_candidates(recipes, request) -> list[Recipe]:
+def order_candidates(recipes, request) -> list[Recipe]:
     """Rank recipes by how well they fit the request's nutrient targets.
 
     Each recipe is scored against a per-meal target derived from the request's
     nutrient goals (or limit midpoints when no goal is given). The score is a
     negative sum of normalised deviations, so higher is better. The list is
-    returned sorted by descending score, then ascending ``recipe_id``, and
-    truncated to a bounded pool size suitable for the CP-SAT solver.
-
-    Returns
-    -------
-    list
-        Up to ``min(50 * meals_per_day, 300)`` recipes with a ``.score``
-        attribute attached.
+    returned sorted by descending score, then ascending ``recipe_id``.
     """
 
     # ------------------------------------------------------------------
@@ -95,6 +88,14 @@ def rank_candidates(recipes, request) -> list[Recipe]:
     for r in recipes:
         r.score = score(r)
 
-    return sorted(recipes, key=lambda r: (-r.score, r.recipe_id))[
-        : min(50 * request.meals_per_day, 300)
-    ]
+    return sorted(recipes, key=lambda r: (-r.score, r.recipe_id))
+
+
+def pool_size(request) -> int:
+    """Bounded pool for the CP-SAT solver: min(50 * meals_per_day, 300)."""
+    return min(50 * request.meals_per_day, 300)
+
+
+def rank_candidates(recipes, request) -> list[Recipe]:
+    """Top-K of the nutrient ranking, the pool the solver sees."""
+    return order_candidates(recipes, request)[: pool_size(request)]

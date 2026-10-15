@@ -6,7 +6,7 @@ from workflows.rules.allergen import resolve_allergen_key
 from api.core.monitoring import observation, update_observation
 from .evaluation import save_evaluation
 from .filtering import filter_candidates, SUPPORTED_NUTRIENTS
-from .ranking import rank_candidates
+from .jev_ranking import rank_with_mode, ranking_version
 from .repository import PlanRepository
 from .solver_v2 import solve_v2
 from .aggregation import aggregate
@@ -25,7 +25,7 @@ def trace_plan(request):
         servings=getattr(request, "servings", None),
         constraint_counts={name: len(getattr(request, name, None) or [])
                            for name in ("allergies", "dietary", "nutrients")},
-        ranking_version="nutrient-deviation-v1",
+        ranking_version=ranking_version(),
         data_version=os.getenv("REMY_DATA_VERSION", "unspecified"),
     )
 
@@ -78,7 +78,7 @@ class PlanService:
     def rank_stage(self, filtered, request):
         with observation("rank-candidates") as span:
             update_observation(span, input={"request": dump(request), "recipes": encode_recipes(filtered)})
-            ranked = rank_candidates(filtered, request)
+            ranked = rank_with_mode(filtered, request)
             update_observation(span, output=encode_recipes(ranked))
             return ranked
 

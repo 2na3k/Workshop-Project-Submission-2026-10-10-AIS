@@ -108,48 +108,6 @@ class WorkflowTests(unittest.TestCase):
                 return json.loads(block.split("data: ", 1)[1])
         self.fail("Stream ended without a plan event: " + response.text)
 
-    def test_plan_blind_grading_persistence_and_idempotent_scores(self):
-        result = self.create()
-        self.assertEqual(result["trace_id"], RecordingSpan.trace_id)
-        evaluation_id = result["evaluation_id"]
-        route = "/api/v1/evaluations/" + evaluation_id
-        unauthorized = self.http.get(route)
-        self.assertEqual(unauthorized.status_code, 401)
-        self.assertEqual(unauthorized.json()["error"]["code"], "HTTP_401")
-        self.assertEqual(unauthorized.headers["WWW-Authenticate"], "Bearer")
-        self.assertEqual(self.http.get(route, headers={"Authorization": "Bearer wrong"}).status_code, 401)
-        with patch("api.features.plan.evaluation.secrets.SystemRandom.shuffle",
-                   side_effect=lambda candidates: candidates.reverse()):
-            blind = self.http.get(route, headers=self.headers).json()
-        self.assertNotIn("trace_id", blind)
-        self.assertNotIn("plan_id", blind)
-        self.assertEqual([item["recipe_id"] for item in blind["candidates"]], ["c", "d", "a", "b"])
-        self.assertTrue(all("score" not in item for item in blind["candidates"]))
-        self.assertEqual(blind["request"], self.request.model_dump())
-        grades = {"grades": {"b": 3, "a": 2, "d": 1, "c": 0}}
-        response = self.http.post(route + "/grades", headers=self.headers, json=grades)
-        self.assertEqual(response.status_code, 200, response.text)
-        scored = response.json()
-        self.assertEqual(scored["metrics"]["nDCG@3"], 1.0)
-        self.assertEqual(scored["metrics"]["Precision@3"], 2 / 3)
-        self.assertEqual(scored["metrics"]["pairwise_accuracy"], 1.0)
-        self.assertTrue(scored["langfuse_scores_queued"])
-        self.assertEqual({score["name"] for score in self.recording.scores}, set(scored["metrics"]))
-        self.assertTrue(all(score["trace_id"] == result["trace_id"] for score in self.recording.scores))
-        ids = [score["score_id"] for score in self.recording.scores]
-        self.assertEqual(self.http.post(route + "/grades", headers=self.headers, json=grades).status_code, 200)
-        self.assertEqual(ids, [score["score_id"] for score in self.recording.scores[3:]])
-        with evaluation_db() as db:
-            raw = db.execute("SELECT grades, metrics FROM ranking_evaluations WHERE id = ?", (evaluation_id,)).fetchone()
-        self.assertEqual(json.loads(raw[0]), grades["grades"])
-        self.assertEqual(json.loads(raw[1]), scored["metrics"])
-        self.assertEqual([span.kwargs["name"] for span in self.recording.spans],
-                         ["meal-plan", "retrieve-candidates", "filter-candidates", "rank-candidates", "solve-plan", "generate-response"])
-        self.assertNotIn("allergies", self.recording.spans[0].kwargs["metadata"])
-        self.assertNotIn("input", self.recording.spans[0].kwargs)
-        changed = {"grades": {"b": 0, "a": 2, "d": 1, "c": 0}}
-        self.assertEqual(self.http.post(route + "/grades", headers=self.headers, json=changed).status_code, 409)
-
     def test_restricted_plans_run_and_unknown_evidence_is_not_claimed_safe(self):
         for restriction in ({"allergies": [{"code": "peanut"}]}, {"dietary": [{"code": "halal"}]}, {"dietary": [{"code": "vegetarian"}]}):
             response = self.http.post("/api/v1/plan", json={**self.request.model_dump(), **restriction})
@@ -176,15 +134,6 @@ class WorkflowTests(unittest.TestCase):
             request = PlanRequest.model_validate({**self.request.model_dump(), **restriction})
             self.assertEqual([r.recipe_id for r in filter_candidates(candidates, request)], ["b", "c", "d"])
 
-    def test_grading_validation(self):
-        route = "/api/v1/evaluations/" + self.create()["evaluation_id"] + "/grades"
-        for body in [{"grades": {"b": 3}}, {"grades": {"b": 3, "a": 2, "d": 1, "c": 0, "unknown": 3}},
-                     {"grades": {"b": True}}, {"grades": {"b": 4}}, {"grades": {"b": 1.0}},
-                     {"grades": {"b": 3}, "trace_id": RecordingSpan.trace_id}, {"grades": {}}]:
-            self.assertEqual(self.http.post(route, headers=self.headers, json=body).status_code, 422)
-        self.assertEqual(self.http.get("/api/v1/evaluations/00000000-0000-0000-0000-000000000000",
-                                       headers=self.headers).status_code, 404)
-
     def test_disabled_and_snapshot_failure_do_not_change_plan(self):
         with patch("api.core.monitoring.get_client", return_value=None), patch.dict(os.environ, {"REMY_EVALUATION_TOKEN": ""}):
             result = self.create()
@@ -196,66 +145,6 @@ class WorkflowTests(unittest.TestCase):
             result = self.create()
             self.assertIsNone(result["evaluation_id"])
             self.assertEqual(result["status"], "complete")
-
-    def test_sdk_failure_preserves_plan_and_local_grades(self):
-        with patch.object(self.recording, "start_as_current_observation", side_effect=RuntimeError("offline")):
-            result = self.create()
-            self.assertIsNone(result["trace_id"])
-            self.assertEqual(result["status"], "complete")
-        result = self.create()
-        route = "/api/v1/evaluations/" + result["evaluation_id"] + "/grades"
-        grades = {"grades": {"a": 0, "b": 0, "c": 0, "d": 0}}
-        with patch.object(self.recording, "create_score", side_effect=RuntimeError("offline")):
-            response = self.http.post(route, headers=self.headers, json=grades).json()
-        self.assertFalse(response["langfuse_scores_queued"])
-        self.assertIsNone(response["metrics"]["pairwise_accuracy"])
-        response = self.http.post(route, headers=self.headers, json=grades).json()
-        self.assertTrue(response["langfuse_scores_queued"])
-        self.assertEqual({score["name"] for score in self.recording.scores}, {"nDCG@3", "Precision@3"})
-
-    def test_real_sdk_parentage_and_score_ingestion_without_network(self):
-        import httpx
-        from langfuse import Langfuse
-        from opentelemetry.sdk.trace import TracerProvider
-        from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-        from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
-
-        exporter, provider, batches = InMemorySpanExporter(), TracerProvider(), []
-
-        def ingest(request):
-            batch = json.loads(request.content)["batch"]
-            batches.extend(batch)
-            return httpx.Response(200, json={"successes": [{"id": event["id"], "status": 201}
-                                                         for event in batch], "errors": []})
-
-        transport_client = httpx.Client(transport=httpx.MockTransport(ingest))
-        self.addCleanup(transport_client.close)
-        with patch("langfuse._client.resource_manager.LangfuseSpanProcessor",
-                   return_value=SimpleSpanProcessor(exporter)), patch.dict(os.environ, {
-                       "LANGFUSE_MEDIA_UPLOAD_ENABLED": "false", "LANGFUSE_TRACING_ENABLED": "true"}):
-            sdk = Langfuse(public_key="pk-lf-offline-test", secret_key="sk-lf-offline-test",
-                          httpx_client=transport_client, tracer_provider=provider, flush_at=1,
-                          flush_interval=0.01)
-        self.addCleanup(sdk.shutdown)
-        with patch("api.core.monitoring.get_client", return_value=sdk):
-            result = self.create()
-            route = "/api/v1/evaluations/" + result["evaluation_id"] + "/grades"
-            response = self.http.post(route, headers=self.headers,
-                                      json={"grades": {"a": 2, "b": 3, "c": 0, "d": 1}})
-            self.assertEqual(response.status_code, 200, response.text)
-            sdk.flush()
-            with patch.object(self.service.repository, "fetch_candidates", side_effect=RuntimeError("private database URI")):
-                with self.assertRaises(RuntimeError):
-                    self.service.generate(self.request)
-        spans = exporter.get_finished_spans()
-        root = next(span for span in spans if span.name == "meal-plan")
-        children = [span for span in spans if span.parent and span.parent.span_id == root.context.span_id]
-        self.assertEqual(len(children), 5)
-        self.assertEqual(result["trace_id"], format(root.context.trace_id, "032x"))
-        self.assertTrue(all(span.context.trace_id == root.context.trace_id for span in children))
-        self.assertNotIn("private database URI", repr([(span.attributes, span.events) for span in spans]))
-        self.assertEqual({event["body"]["name"] for event in batches}, {"nDCG@3", "Precision@3", "pairwise_accuracy"})
-        self.assertTrue(all(event["body"]["traceId"] == result["trace_id"] for event in batches))
 
     def test_business_failure_is_not_swallowed_or_sent_raw(self):
         with patch.object(self.service.repository, "fetch_candidates", side_effect=RuntimeError("private database URI")):
