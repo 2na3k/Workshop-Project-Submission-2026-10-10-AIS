@@ -523,7 +523,7 @@ is not work this feature performs, but it is on the critical path.
     - AC-9: the node's input excludes `confidence`, `normalization_version`, `source_*`, `*_id`; the user-displayable payload excludes them too.
     - AC-12: the fake LLM raising or timing out yields `failure(GenerateResponse, ...)`; no trace claims a recommendation.
 
-- [ ] **T-8** Implement the Generate Response node
+- [x] **T-8** Implement the Generate Response node
   - Type: impl
   - Covers: AC-8, AC-9, AC-11, AC-12
   - Files: `SystemCode/remy/workflows/src/workflows/nodes.py`, `graph.py` (Generate Response node + its early-exit edge)

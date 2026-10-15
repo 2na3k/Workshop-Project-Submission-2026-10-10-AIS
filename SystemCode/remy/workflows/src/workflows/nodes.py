@@ -11,6 +11,7 @@ from domain.types import REQUEST_TO_CANONICAL
 from workflows.models import (
     AllergyConstraint,
     ConstraintSet,
+    GenerationOutput,
     DietaryConstraint,
     LLMInvocation,
     Outcome,
@@ -131,4 +132,49 @@ def plan(state: dict[str, Any], *, port: Any) -> dict[str, Any]:
             node_runs=tuple(state.get("node_runs", [])),
             llm_invocations=tuple(state.get("llm_invocations", [])),
         )
+        return updated
+
+
+def generate_response(state: dict[str, Any], *, llm: Any) -> dict[str, Any]:
+    """Generate user text and verify its structured references deterministically."""
+    raw_message = state.get("raw_message", "")
+    result = state.get("plan_result")
+    invocations = list(state.get("llm_invocations", []))
+    try:
+        if result is None:
+            raise ValueError("plan result is required")
+        allowed_recipes = {item.recipe_id for item in result.recipe_outcomes}
+        allowed_requirements = {item.requirement_id for item in result.constraint_outcomes}
+        allowed_causes = {cause for item in result.recipe_outcomes for cause in ((item.cause,) if item.cause else ()) + item.causes}
+        prompt = (
+            "Write a concise recommendation using only the following opaque recipe and requirement identifiers. "
+            f"Allowed recipes: {sorted(allowed_recipes)}; allowed requirements: {sorted(allowed_requirements)}; "
+            f"allowed drop causes: {sorted(allowed_causes)}. Do not expose audit provenance."
+        )
+        response = llm.invoke(prompt)
+        parsed = _content(response)
+        if not isinstance(parsed, dict):
+            raise ValueError("generation response must be an object")
+        recipe_ids = tuple(parsed.get("recipe_ids", ()))
+        requirement_ids = tuple(parsed.get("requirement_ids", ()))
+        drop_causes = tuple(parsed.get("drop_causes", ()))
+        if not set(recipe_ids) <= allowed_recipes or not set(requirement_ids) <= allowed_requirements:
+            raise ValueError("generation references an unknown identifier")
+        if not set(drop_causes) <= allowed_causes:
+            raise ValueError("generation references an unknown drop cause")
+        if set(parsed.get("selected_recipe_ids", ())) & set(recipe_ids) & {
+            item.recipe_id for item in result.recipe_outcomes if "evidence-absent" in ((item.cause,) if item.cause else ()) + item.causes
+        }:
+            raise ValueError("evidence-absent recipes cannot be selected")
+        text = parsed.get("text", "")
+        output = GenerationOutput(recipe_ids, requirement_ids, drop_causes, text)
+        invocations.append(LLMInvocation("Generate Response", getattr(llm, "provider", "unknown"), getattr(llm, "model", "unknown"), prompt, response, parsed, 0.0))
+        outcome = Outcome(state.get("outcome", Outcome("plan")).kind, plan=result, text=text, unapplied_constraints=tuple(state.get("unapplied_constraints", [])))
+        updated = {**state, "generation_output": output, "generation_text": text, "outcome": outcome, "llm_invocations": invocations}
+        updated["trace"] = assemble_trace(raw_message=raw_message, parsed_constraints=state.get("parsed_constraints"), unapplied_constraints=outcome.unapplied_constraints, outcome=outcome, node_runs=tuple(state.get("node_runs", [])), llm_invocations=tuple(invocations), plan_trace=state.get("plan_trace"))
+        return updated
+    except Exception as exc:
+        outcome = Outcome("failure", node="Generate Response", reason=str(exc), unapplied_constraints=tuple(state.get("unapplied_constraints", [])))
+        updated = {**state, "outcome": outcome, "llm_invocations": invocations}
+        updated["trace"] = assemble_trace(raw_message=raw_message, parsed_constraints=state.get("parsed_constraints"), unapplied_constraints=outcome.unapplied_constraints, outcome=outcome, node_runs=tuple(state.get("node_runs", [])), llm_invocations=tuple(invocations), plan_trace=state.get("plan_trace"))
         return updated
