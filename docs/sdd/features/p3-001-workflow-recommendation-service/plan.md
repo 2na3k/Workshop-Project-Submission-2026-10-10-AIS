@@ -547,7 +547,7 @@ is not work this feature performs, but it is on the critical path.
   - Files: `SystemCode/remy/workflows/src/workflows/graph.py`, `trace.py`
   - Done when: T-9 passes; the `StateGraph` is assembled with the three nodes, the early-exit edges, and the entry/terminal; the trace envelope assembles at every exit.
 
-- [ ] **T-11** Write failing tests: integration edges inside the workflow
+- [x] **T-11** Write failing tests: integration edges inside the workflow
   - Type: integration
   - Covers: four edges — Extract→Plan, Generate→outcome, workflow→caller
   - Files: `SystemCode/remy/workflows/tests/test_integration_extract_to_plan.py`, `tests/test_integration_generate_to_outcome.py`
