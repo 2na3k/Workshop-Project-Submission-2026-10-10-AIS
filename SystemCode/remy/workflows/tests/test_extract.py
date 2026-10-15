@@ -2,7 +2,7 @@ from workflows.models import AllergyConstraint, ConstraintSet, DietaryConstraint
 from workflows.nodes import extract_constraints
 
 
-def _state(message="plan meals for three days"):
+def _state(message="plan meals for three days with a severe peanut allergy"):
     return {"raw_message": message, "unapplied_constraints": []}
 
 

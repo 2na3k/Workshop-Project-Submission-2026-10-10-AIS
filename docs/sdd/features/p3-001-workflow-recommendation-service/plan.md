@@ -484,7 +484,7 @@ is not work this feature performs, but it is on the critical path.
     - AC-17: a stated allergen or dietary flag appears in the set; a stated cost/dislike/cuisine is listed as `unapplied` in both the outcome and the trace.
     - AC-18: an ambiguous severity phrase does not produce `mild`; `nutrient_tolerance_pct` is 0 unless explicitly requested; a stated severity is never downgraded.
 
-- [ ] **T-4** Implement the LLM client wrapper and the Extract Constraints node
+- [x] **T-4** Implement the LLM client wrapper and the Extract Constraints node
   - Type: impl
   - Covers: AC-2, AC-3, AC-14, AC-17, AC-18
   - Files: `SystemCode/remy/workflows/src/workflows/llm.py`, `nodes.py`, `graph.py` (partially — the extract node and its early-exit edge)
