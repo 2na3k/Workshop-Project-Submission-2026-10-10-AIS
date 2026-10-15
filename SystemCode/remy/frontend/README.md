@@ -18,16 +18,16 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Integrated Docker + real browser E2E
 
-From `SystemCode/` (uses `.env.prod` for the production food graph):
+From `SystemCode/`, with the settings in `.env.nonprod`:
 
 ```sh
-make up-prod API_PORT=8003 FRONTEND_PORT=3100 BACKEND_PORT=8010
+docker compose --env-file .env.nonprod up -d --build --wait
 ```
 
-This repo's actual webapp is **http://localhost:3100**. Sign up to create a local
-account. The separate auth/preferences backend is on 8010; food API is on 8003;
-passwordless Langfuse is on the `LANGFUSE_PORT` in private `.env.langfuse` (currently
-3032). Existing unrelated services on ports 3000/8000 are left untouched.
+This repo's webapp is **http://localhost:3100**. The auth/preferences backend is on
+8010, the Remy API on 8000, and the Langfuse dashboard on `LANGFUSE_PORT` (default
+3031). Sign up to create a local account, or use the demo account `demo` /
+`remy-demo-account`.
 
 From `SystemCode/remy/frontend/`:
 

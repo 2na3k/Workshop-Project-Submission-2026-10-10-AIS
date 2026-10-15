@@ -6,7 +6,7 @@ import test from "node:test";
 import { chromium } from "playwright";
 
 // Real Docker services + real food graph. Never send synthetic grades as human judgments.
-process.loadEnvFile(fileURLToPath(new URL("../../../.env.langfuse", import.meta.url)));
+process.loadEnvFile(fileURLToPath(new URL("../../../.env.nonprod", import.meta.url)));
 const base = process.env.E2E_FRONTEND_URL ?? "http://localhost:3100";
 const api = process.env.E2E_API_URL ?? "http://localhost:8003";
 const langfuse = `http://localhost:${process.env.LANGFUSE_PORT}`;

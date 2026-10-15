@@ -11,7 +11,7 @@ from api.features.plan.metrics import ranking_metrics
 
 
 def main():
-    config = dotenv_values(Path(__file__).resolve().parents[1] / ".env.langfuse")
+    config = dotenv_values(Path(__file__).resolve().parents[1] / ".env.nonprod")
     base_url = "http://localhost:" + config["LANGFUSE_PORT"]
     auth = (config["LANGFUSE_PUBLIC_KEY"], config["LANGFUSE_SECRET_KEY"])
     with httpx.Client(base_url=base_url, timeout=30, follow_redirects=True) as dashboard:

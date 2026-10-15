@@ -18,13 +18,11 @@ stops and removes the containers. PostgreSQL data stays in the
 time. Ports can be changed with `BACKEND_PORT`, `API_PORT` and `FRONTEND_PORT`,
 for example `BACKEND_PORT=8000 ./start-all.sh`.
 
-You need Docker with Compose v2 running, and:
-
-- `api/.env` with `NEO4J_URI`, `NEO4J_USERNAME` and `NEO4J_PASSWORD` (the API
-  uses that Neo4j; the local Neo4j container is not started).
-- `backend/.env`, mainly for `REMY_JWT_SECRET`. Compose sets the database URL
-  and CORS origins itself. Without it, sign-ins end whenever the backend
-  restarts.
+You need Docker with Compose v2 running, and a settings file `SystemCode/.env.nonprod`
+(copy `SystemCode/.env.example` and fill it in; see [docs/docker_compose.md](../docs/docker_compose.md)).
+It holds the Neo4j connection, `REMY_JWT_SECRET` (without it, sign-ins end whenever
+the backend restarts), and the database and Langfuse keys. The local Neo4j container
+is not started unless you ask for it.
 
 Code changes need a restart of the script, which rebuilds the changed images.
 For hot reload, run a service on its own instead (see its README).
