@@ -473,7 +473,7 @@ is not work this feature performs, but it is on the critical path.
 
 ### Group 1 — Extract Constraints (LLM node)
 
-- [ ] **T-3** Write failing tests: Extract Constraints behavior
+- [x] **T-3** Write failing tests: Extract Constraints behavior
   - Type: test
   - Covers: AC-2, AC-3, AC-14, AC-17, AC-18
   - Files: `SystemCode/remy/workflows/tests/__init__.py`, `tests/conftest.py` (fake LLM fixture), `tests/test_extract.py`
