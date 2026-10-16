@@ -1,6 +1,5 @@
 from workflows.models import (
     ConstraintSet,
-    IngredientWarningView,
     NamedConstraintView,
     PlanResult,
     PlanTraceView,
@@ -79,7 +78,7 @@ def test_empty_pool_and_no_assignment_remain_distinct():
 
 
 def test_mild_allergen_warning_is_preserved():
-    warning = IngredientWarningView("mild-allergen", "ingredient-1", "contains peanut")
+    warning = "contains peanut"
     requirement = RequirementOutcomeView("r1", "q1", "allergen", "warn", "peanut", warnings=(warning,))
     result = PlanResult("p1", "complete", "ok", constraint_outcomes=(requirement,))
     updated = plan(_state(), port=FakePort(result, _trace()))

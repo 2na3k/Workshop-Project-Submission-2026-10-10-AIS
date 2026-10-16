@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any
+from typing import Any, Literal
 
 from domain.types import REQUEST_TO_CANONICAL
 
@@ -113,7 +113,7 @@ def plan(state: dict[str, Any], *, port: Any) -> dict[str, Any]:
             nutrient_tolerance_pct=constraints.nutrient_tolerance_pct,
         )
         result, trace_view = port.generate(request)
-        kind = "infeasible" if result.feasibility_outcome == "infeasible" else "plan"
+        kind: Literal["plan", "infeasible"] = "infeasible" if result.feasibility_outcome == "infeasible" else "plan"
         outcome = Outcome(kind, plan=result, reason=trace_view.reason, unapplied_constraints=tuple(state.get("unapplied_constraints", [])))
         updated = {**state, "plan_result": result, "plan_trace": trace_view, "outcome": outcome}
         updated["trace"] = assemble_trace(

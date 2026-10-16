@@ -591,7 +591,7 @@ is not work this feature performs, but it is on the critical path.
   - Files: `docs/sdd/features/p3-001-workflow-recommendation-service/decisions.md`
   - Done when: the decisions file records (a) F-P3-1 as a tracked finding owned by p2-003 (R-16 trace-side retention + R-13 confidence-in-trace are not satisfiable through p3-001); (b) F-2's deferral of AC-21's trace-side assertion; (c) the Q2 resolution (already in codebase); (d) P-1 as a landed prerequisite; (e) P-2 (langchain deps); (f) F-1's spec-sync to-do (port returns workflow models; the adapter returns the real tuple — spec's C-1 wording to be corrected at next spec touch).
 
-- [ ] **T-17** Run the full suite and CI
+- [x] **T-17** Run the full suite and CI
   - Type: verification
   - Covers: all ACs and interfaces
   - Files: (all above)
