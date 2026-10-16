@@ -10,7 +10,7 @@ flowchart LR
         DP["Data Preprocessing"]
         DuckDB[("DuckDB")]
         Neo4j[("Neo4j")]
-  end
+  end   
  subgraph ServiceLayer["Recommend Service Layer"]
     direction LR
         WA["Web<br>Application"]

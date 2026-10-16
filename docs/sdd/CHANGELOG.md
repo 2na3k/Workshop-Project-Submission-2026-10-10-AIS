@@ -103,6 +103,10 @@
   - Extended repository candidate hydration in `repository.py` to project freshness, package unit compatibility, and dietary/allergen evidence from canonical `FULFILLS` edges.
   - Updated `PlanService.generate` in `service.py` to propagate filtered outcomes.
   - Added comprehensive test suites: dietary domain rules (`tests/features/dietary/test_domain_rules.py`), calculator domain extensions for nutrition, cost, and conversion (`tests/features/calculator/`), filtering contract and edge cases (`tests/features/plan/test_filtering.py`), and repository-to-service integration tests (`tests/features/plan/test_service_integration.py`).
+  - **Reopen (2026-10-15):** `workflows/rules/` (`allergen.py`, `dietary.py`,
+    `budget.py`, `nutrition.py`) and their data files moved to `domain/`
+    (flat) and `domain/data/`. Satisfies the new `.importlinter` contract
+    `api does not depend on workflows`. Prerequisite for p3-001's plan stage.
 - Acceptance criteria: AC-1 .. AC-16
 - Decisions: docs/sdd/features/p2-001-constraint-evidence-filtering/decisions.md
 - Breaking: none
@@ -147,6 +151,37 @@
     `constraint_outcomes`; the three-level reasoning is now in both the
     response and the trace. The router unpacks and serializes only the
     response. Prerequisite for p3-001's workflow adapter.
+  - **Reopen (2026-10-16):** `ConstraintOutcomeResponse` now carries
+    `requirement_id` (the `REQUIRES` edge's `occurrence_id`), projected from
+    the internal `RequirementOutcome`. Prerequisite for p3-001's workflow
+    adapter, which maps the constraint-level reasoning losslessly into its
+    workflow-owned models (AC-16).
+  - **Reopen (2026-10-16):** `PlanService.generate` returns
+    `(PlanResponse, PlanTrace)` on infeasibility instead of raising
+    `PlanInfeasible`. `PlanResponse.feasibility_outcome` is widened to
+    `["plan-produced", "infeasible"]`; the infeasible response carries
+    `binding_constraints`, `recipe_outcomes`, and `constraint_outcomes`.
+    `solver_v2` continues to raise internally. Prerequisite for p3-001's
+    workflow Plan node producing an infeasible outcome with its reasoning
+    trace.
 - Acceptance criteria: AC-1 .. AC-15
 - Decisions: docs/sdd/features/p2-003-feasible-meal-plan-solving/decisions.md
+- Breaking: none
+
+### p3-001-workflow-recommendation-service - Workflow recommendation service (2026-10-16)
+
+- Added/Changed/Fixed:
+  - Added LangGraph recommendation workflow in `SystemCode/remy/workflows` orchestrating three nodes: `extract_constraints` (LLM-driven constraint extraction and validation), `plan` (deterministic meal-planning delegation via workflow-owned port), and `generate_response` (structured-verified human-readable response generation) (AC-1).
+  - Added workflow-owned typed models in `workflows/models.py` (`ConstraintSet`, `PlanInput`, `PlanResult`, `PlanTraceView`, `Outcome`, `TraceEnvelope`) ensuring `remy-workflows` maintains inward dependency direction and never imports `remy-api` (R-2, AC-2, AC-5, AC-6, AC-10).
+  - Added workflow-owned port protocol `PlanPort` in `workflows/plan_port.py` and implemented `PlanServiceAdapter` in `SystemCode/remy/app/src/app/plan_adapter.py` mapping between API schemas (`PlanRequest`, `PlanResponse`, `PlanTrace`) and workflow models losslessly (AC-4, AC-16).
+  - Added LangChain client wrapper in `workflows/llm.py` supporting `init_chat_model` defaulting to local Ollama runtime and configurable for hosted providers (R-3, AC-2, AC-12).
+  - Implemented faithful constraint extraction preserving stated allergens, dietary flags, and conservative defaults (unspecified severity never downgraded to mild, tolerance 0 unless requested), while capturing unapplied constraints (budget, dislike, cuisine) in outcome and trace (AC-3, AC-14, AC-17, AC-18, AC-20).
+  - Implemented Plan node delegating to `PlanPort`, preserving feasible plans, infeasible outcomes with named binding constraints, relaxed labels, applied tolerance, and ingredient-scoped mild-allergen warnings (AC-5, AC-6, AC-7, AC-13, AC-15, AC-19).
+  - Implemented Generate Response node with deterministic structured verification ensuring referenced recipe and requirement IDs form a subset of plan results, drop-cause wording matches plan causes, and evidence-absent drops are never restated as permissive (R-5, AC-8, AC-11).
+  - Excluded audit-only provenance (`confidence`, `normalization_version`, `source_*`, `*_id`, `food_key`) from user-displayable payloads and LLM prompt inputs (R-16, AC-9).
+  - Assembled versioned, self-contained `TraceEnvelope` capturing raw message, parsed constraints, unapplied constraints, node execution records, LLM invocation metadata, and embedded `PlanTraceView` (AC-10).
+  - Added workflow-side conformance test fixtures for R-16 and R-17 verifying user payload allowlists and distinct three-level drop causes, while deferring trace-side provenance retention under tracked finding F-P3-1 (AC-21).
+  - Added comprehensive unit, contract, and integration test suites in `remy/workflows/tests/` and `remy/app/tests/`.
+- Acceptance criteria: AC-1 .. AC-21
+- Decisions: docs/sdd/features/p3-001-workflow-recommendation-service/decisions.md
 - Breaking: none

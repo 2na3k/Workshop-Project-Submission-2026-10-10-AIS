@@ -340,20 +340,26 @@ p2-003, with consequences for G-6 and p3-002.
   plan path decides feasibility on horizon coverage alone.
 
 - **AC-21** Given conformance evidence for this feature, then:
-  - Workflow output passes the user-payload portion of
-    `tests/api/test_response_schema.py` (R-16): the user-displayable portion
-    carries no `confidence`, no `normalization_version`, and no `source_*` /
-    `*_id` field.
-  - Workflow output passes `tests/api/test_explanation_shape.py` (R-17): the
-    three levels of outcome are present, and `evidence-absent` drops are
-    distinct from `present-evidence-excludes` and `unmapped`.
-  - All workflow tests run with a fake LLM and a fake plan interface; no test
-    requires a live model.
+  - Workflow output passes the **workflow-side equivalent** of R-16's
+    user-payload assertion: the user-displayable portion carries no
+    `confidence`, no `normalization_version`, and no `source_*` / `*_id`
+    field. The workflow test imports the same exclusion list as the
+    calculator's `tests/features/calculator/test_response_schema.py`
+    (which is R-16's actual location — the constitution names
+    `tests/api/test_response_schema.py`; the divergence is p2-002's F-D,
+    tracked for phase review).
+  - Workflow output passes the **workflow-side equivalent** of R-17's
+    contract: the three levels of outcome are present, and `evidence-absent`
+    drops are distinct from `present-evidence-excludes` and `unmapped`.
+    The constitution names `tests/api/test_explanation_shape.py`, which does
+    not exist; R-17's named fixture is absent and its owner is assigned at
+    phase review (likely p3-002).
+  - All workflow tests run with a fake LLM and a fake plan interface; no
+    test requires a live model.
   - **The trace-side portion of R-16's check is not satisfiable by p3-001** —
-    `PlanTrace` does not carry the provenance fields. This is recorded as
-    Finding F-P3-1, owned by p2-003. If F-P3-1 resolves before p3-001's
-    implementation, the trace-side assertion is enabled; otherwise the
-    trace-side assertion is expected to fail and the finding records the gap.
+    `PlanTrace` does not carry the provenance fields. Recorded as Finding
+    F-P3-1, owned by p2-003. The trace-side assertion is `xfail` with a
+    reason referencing F-P3-1.
 
 ## Edge cases & errors
 
@@ -616,3 +622,11 @@ C-1..C-7.
   the correct fix (the alternative — the adapter reading `last_trace` — is
   stateful and non-reentrant). The p2-003 reopen carries a follow-up finding in
   p2-003's decisions file.
+- **C-8 (AC-21 conformance paths, 2026-10-16, spec review):** AC-21's named
+  fixtures were corrected. R-16's assertion exists at
+  `tests/features/calculator/test_response_schema.py` (the constitution names
+  `tests/api/test_response_schema.py` — the divergence is p2-002's F-D).
+  R-17's named fixture `tests/api/test_explanation_shape.py` does not exist;
+  its owner is a phase-review decision. AC-21 now asserts the workflow-side
+  equivalents and records both path findings. (Consequential — flag for
+  decisions.md at close.)

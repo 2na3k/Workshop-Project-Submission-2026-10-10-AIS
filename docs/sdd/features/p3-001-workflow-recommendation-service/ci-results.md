@@ -1,6 +1,6 @@
 # CI results - p3-001-workflow-recommendation-service
 
-Run at: 2026-10-16T11:32:02+08:00
+Run at: 2026-10-16T12:39:53+08:00
 
 | Check | Command | Result |
 |---|---|---|
@@ -22,7 +22,7 @@ OVERALL: PASS
     _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-38 passed, 1 warning in 9.88s
+38 passed, 1 warning in 11.32s
 ........................x.x                                              [100%]
 =============================== warnings summary ===============================
 .venv/lib/python3.12/site-packages/langgraph/cache/base/__init__.py:8
@@ -30,9 +30,9 @@ OVERALL: PASS
     from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-25 passed, 2 xfailed, 1 warning in 7.70s
+25 passed, 2 xfailed, 1 warning in 8.68s
 ....                                                                     [100%]
-4 passed in 6.85s
+4 passed in 7.88s
 ```
 
 ### lint

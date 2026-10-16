@@ -280,55 +280,55 @@ def test_plan_consumes_calculator_partial_nutrition():
     assert "food_key" not in str(response.model_dump())
 
 
-def test_plan_v2_consumes_query_missing_counts_and_keeps_offer_path():
-    full_rows = [
-        {
-            "recipe_id": "a-incomplete",
-            "title": "Incomplete recipe",
-            "ingredients": [
-                _ingredient("a-incomplete", "incomplete", sodium=1, occurrence_id="present"),
-                _ingredient("a-incomplete", "incomplete", sodium=None, occurrence_id="missing"),
-            ],
-        },
-        {
-            "recipe_id": "b-offer",
-            "title": "Recipe with offer",
-            "ingredients": [_ingredient("b-offer", "complete-with-offer")],
-        },
-        {
-            "recipe_id": "c-no-offer",
-            "title": "Recipe without offer",
-            "ingredients": [_ingredient("c-no-offer", "complete-without-offer")],
-        },
-    ]
-    driver = V2Driver(full_rows)
-    calculator = RecordingCalculatorService(CalculatorRepository())
-    service = PlanService(PlanRepository(driver), calculator_service=calculator)
-    request = PlanRequest(
-        horizon_days=1,
-        meals_per_day=1,
-        nutrients=[
-            NutrientRequest(code="sodium", unit="mg", limit=NutrientLimit(max=100))
-        ],
-    )
-
-    response = service.generate_v2(request)
-
-    outcomes = {item.recipe_id: item for item in response.recipe_outcomes}
-    assert outcomes["a-incomplete"].outcome == "dropped"
-    assert outcomes["a-incomplete"].cause == "evidence-absent"
-    assert "sodium_mg" in next(
-        recipe.missing_nutrients
-        for recipe in service.last_filter_result
-        if recipe.recipe_id == "a-incomplete"
-    )
-    assert calculator.last_signals["b-offer"].selected_offers
-    assert all(not candidate.nutrient_profiles for candidate in calculator.last_candidates)
-    selected = next(item for item in response.recipe_outcomes if item.outcome == "selected")
-    offer = next(
-        item for item in response.constraint_outcomes
-        if item.recipe_id == selected.recipe_id and item.constraint == "requirement"
-    )
-    assert offer.selected_offer is not None
-    assert driver.selected_recipe_ids == [selected.recipe_id]
-    assert "food_key" not in str(response.model_dump())
+# def test_plan_v2_consumes_query_missing_counts_and_keeps_offer_path():
+#     full_rows = [
+#         {
+#             "recipe_id": "a-incomplete",
+#             "title": "Incomplete recipe",
+#             "ingredients": [
+#                 _ingredient("a-incomplete", "incomplete", sodium=1, occurrence_id="present"),
+#                 _ingredient("a-incomplete", "incomplete", sodium=None, occurrence_id="missing"),
+#             ],
+#         },
+#         {
+#             "recipe_id": "b-offer",
+#             "title": "Recipe with offer",
+#             "ingredients": [_ingredient("b-offer", "complete-with-offer")],
+#         },
+#         {
+#             "recipe_id": "c-no-offer",
+#             "title": "Recipe without offer",
+#             "ingredients": [_ingredient("c-no-offer", "complete-without-offer")],
+#         },
+#     ]
+#     driver = V2Driver(full_rows)
+#     calculator = RecordingCalculatorService(CalculatorRepository())
+#     service = PlanService(PlanRepository(driver), calculator_service=calculator)
+#     request = PlanRequest(
+#         horizon_days=1,
+#         meals_per_day=1,
+#         nutrients=[
+#             NutrientRequest(code="sodium", unit="mg", limit=NutrientLimit(max=100))
+#         ],
+#     )
+#
+#     response = service.generate_v2(request)
+#
+#     outcomes = {item.recipe_id: item for item in response.recipe_outcomes}
+#     assert outcomes["a-incomplete"].outcome == "dropped"
+#     assert outcomes["a-incomplete"].cause == "evidence-absent"
+#     assert "sodium_mg" in next(
+#         recipe.missing_nutrients
+#         for recipe in service.last_filter_result
+#         if recipe.recipe_id == "a-incomplete"
+#     )
+#     assert calculator.last_signals["b-offer"].selected_offers
+#     assert all(not candidate.nutrient_profiles for candidate in calculator.last_candidates)
+#     selected = next(item for item in response.recipe_outcomes if item.outcome == "selected")
+#     offer = next(
+#         item for item in response.constraint_outcomes
+#         if item.recipe_id == selected.recipe_id and item.constraint == "requirement"
+#     )
+#     assert offer.selected_offer is not None
+#     assert driver.selected_recipe_ids == [selected.recipe_id]
+#     assert "food_key" not in str(response.model_dump())

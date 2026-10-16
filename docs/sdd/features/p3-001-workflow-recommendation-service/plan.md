@@ -403,6 +403,60 @@ is not work this feature performs, but it is on the critical path.
 ## Revision notes
 <!-- F-n -> what changed -->
 
+- **BD-3 (2026-10-16, discovered after T-17) — resolved by p2-003 reopen.**
+  - **Original claim:** the workflow's Plan node could classify the plan
+    path's outcome as `plan | infeasible` by reading
+    `result.feasibility_outcome` on the returned `PlanResponse`.
+  - **Actual state:** `PlanService.generate` raised `PlanInfeasible` on
+    infeasibility and stored the trace on `self.last_trace`. The workflow
+    cannot read the side channel; every infeasible plan surfaced as
+    `failure(Plan, ...)`, collapsing AC-6/AC-15 with AC-13.
+  - **Resolution:** a third C-7-shaped p2-003 reopen returns the shaped
+    response (with `feasibility_outcome="infeasible"`, `binding_constraints`,
+    and the three-level reasoning) and the trace instead of raising. The
+    workflow's Plan node needs no code change — its existing
+    `feasibility_outcome` branch handles the new shape; the `except` clause
+    now handles only real failures (AC-13).
+  - **Route:** p2-003 reopen, tracked in its `decisions.md` (D-n) and
+    `CHANGELOG.md`.
+- **BD-2 (2026-10-16, discovered during T-15) — resolved by scoping; two
+  constitution-path findings routed to phase review.**
+  - **R-16:** the assertion exists at
+    `tests/features/calculator/test_response_schema.py`
+    (`test_user_payload_field_set`). The constitution names
+    `tests/api/test_response_schema.py`. Same divergence p2-002 recorded as
+    F-D.
+  - **R-17:** no fixture named `test_explanation_shape.py` (or equivalent)
+    exists. R-17's response-shape contract is unmet.
+  - **Resolution:** T-15 asserts the **workflow-side equivalents** of R-16 and
+    R-17. For R-16, it uses the same exclusion list as the calculator test
+    (comment names it as the authority). For R-17, it defines the
+    workflow-side assertion itself. The constitution-path gaps are
+    phase-review inputs, not p3-001 work.
+  - **Route:** phase-review items — (a) R-16 path divergence (F-D precedent:
+    correct the constitution's path or move the test); (b) R-17 named fixture
+    absent — owner p3-002, landing date TBD.
+- **BD-1 (2026-10-16, discovered during T-13) — resolved by p2-003 reopen.**
+  - **Original claim:** the real `PlanResponse`/`PlanTrace` tuple can be
+    mapped losslessly into the workflow-owned `RequirementOutcomeView`,
+    including requirement IDs (plan AC-16, R-7).
+  - **Actual state:** `ConstraintOutcomeResponse` in the p2 API has no
+    `requirement_id` field, while `RequirementOutcome` (the internal
+    dataclass in `plan/models.py`) does carry `requirement_id`. The adapter
+    cannot map the field losslessly because the DTO never projects it. No
+    fallback or inferred identifier was introduced.
+  - **Resolution:** a small additive p2-003 reopen (same shape as C-7) adds
+    `requirement_id: str | None` to `ConstraintOutcomeResponse` and populates
+    it from `RequirementOutcome.requirement_id` in the service. The p2-003
+    response tests assert the field. The reopen is committed before T-13
+    resumes.
+  - **Route:** p2-003 reopen (closed feature, small additive change),
+    tracked in p2-003's `decisions.md` as D-n and in its `CHANGELOG.md`.
+    Recorded here as the downstream consumer's dependency.
+  - **Rejected:** dropping `requirement_id` from the workflow contract —
+    weakens the R-17 per-requirement identity and AC-11's check; a
+    `plan → spec` finding would be required and the spec's "carry the
+    three-level reasoning unchanged" wording would be amended.
 - **F-1 (C-7 reopen is a prerequisite, not a deferral).** Baseline reading of
   `PlanService.generate` and `PlanResponse` confirmed the trace is on
   `self.last_trace` and `recipe_outcomes`/`constraint_outcomes` are commented
@@ -444,6 +498,11 @@ is not work this feature performs, but it is on the critical path.
   workflow-side tests stay aligned with the constitution's named api fixtures:
   same allowed-key set, same distinct-cause contract, drift surfaces as a test
   failure.
+- **F-9 (AC-21 conformance paths resolved, 2026-10-16).** AC-21 amended per
+  BD-2. R-16's check is at the calculator test path (F-D's divergence, not
+  p3-001's); R-17's named fixture is absent (phase-review item, likely
+  p3-002). T-15 asserts the workflow-side equivalents. Spec C-8 records the
+  amendment.
 
 ## Tasks
 
@@ -580,8 +639,19 @@ is not work this feature performs, but it is on the critical path.
 - [x] **T-15** Add workflow-side R-16/R-17 conformance tests
   - Type: test
   - Covers: AC-21
-  - Files: `SystemCode/remy/workflows/tests/test_response_schema_workflow.py`, `tests/test_explanation_shape_workflow.py`
-  - Done when: the workflow-side tests import the same allowed-key set and the same distinct-cause contract as the constitution's named api fixtures (`tests/api/test_response_schema.py`, `tests/api/test_explanation_shape.py`); the user-payload portion passes; the trace-side R-16 assertion is `xfail` with a reason referencing F-P3-1. A comment in each file points to the api test as the authority so drift surfaces.
+  - Files: `SystemCode/remy/workflows/tests/test_response_schema_workflow.py`,
+    `tests/test_explanation_shape_workflow.py`
+  - Done when:
+    - R-16 (workflow-side): the user-payload portion of the workflow's outcome
+      excludes the same keys the calculator's
+      `test_response_schema.py::test_user_payload_field_set` excludes. Duplicate
+      the exclusion list with a comment naming that test as the authority.
+    - R-17 (workflow-side): the workflow outcome exposes plan / recipe /
+      constraint outcomes; `evidence-absent` drops are distinct from
+      `present-evidence-excludes` and `unmapped`.
+    - Trace-side R-16: `xfail` with reason F-P3-1.
+    - A comment at the top of each file names the constitution's intended
+      paths and BD-2's phase-review routing.
 
 ### Group 7 — closing admin
 

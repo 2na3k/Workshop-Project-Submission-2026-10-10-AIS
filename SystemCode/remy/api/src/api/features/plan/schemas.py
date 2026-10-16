@@ -1,6 +1,8 @@
 import math
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from pydantic import (BaseModel, ConfigDict, Field, field_validator,
+                      model_validator)
 
 
 def _code(value: str) -> str:
@@ -145,6 +147,7 @@ class SelectedOfferResponse(BaseModel):
 
 class ConstraintOutcomeResponse(BaseModel):
     recipe_id: str
+    requirement_id: str | None = Field(default=None, exclude=True)
     requirement_text: str | None = None
     constraint: str
     state: str
@@ -158,7 +161,7 @@ class PlanResponse(BaseModel):
     status: Literal["complete", "partial"]
     message: str
     validation_summary: dict
-    feasibility_outcome: Literal["plan-produced"] = "plan-produced"
+    feasibility_outcome: Literal["plan-produced", "infeasible"] = "plan-produced"
     relaxed: bool = False
     applied_tolerance_pct: int = 0
     binding_constraints: list[NamedConstraintResponse] | None = None

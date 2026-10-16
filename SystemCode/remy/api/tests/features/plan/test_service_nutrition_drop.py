@@ -1,10 +1,10 @@
 import pytest
-
 from api.features.calculator.models import RecipeNutritionSignal
 from api.features.plan.exceptions import PlanInfeasible
 from api.features.plan.models import NamedConstraint
 from api.features.plan.repository import PlanRepository
-from api.features.plan.schemas import Goal, NutrientLimit, NutrientRequest, PlanRequest
+from api.features.plan.schemas import (Goal, NutrientLimit, NutrientRequest,
+                                       PlanRequest)
 from api.features.plan.service import PlanService
 
 
@@ -161,9 +161,9 @@ def test_unmapped_cause_and_binding():
         unmapped,
     )
 
-    with pytest.raises(PlanInfeasible) as caught:
-        service.generate(PlanRequest(horizon_days=1, meals_per_day=1))
+    response, trace = service.generate(PlanRequest(horizon_days=1, meals_per_day=1))
 
+    assert response.feasibility_outcome == "infeasible"
     assert NamedConstraint(
         scope="requirement", code="rare spice", kind="unmapped"
-    ) in caught.value.binding_constraints
+    ) in trace.binding_constraints

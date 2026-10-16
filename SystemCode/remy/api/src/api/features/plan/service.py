@@ -1,34 +1,24 @@
 import secrets
 
-from domain.types import NutrientProfile, REQUEST_TO_CANONICAL
-
-from api.features.calculator import (
-    CandidateRequirement,
-    CandidateRecipe as CalculatorCandidateRecipe,
-    CostNutritionRepository,
-    CostNutritionService,
-)
+from api.features.calculator import \
+    CandidateRecipe as CalculatorCandidateRecipe
+from api.features.calculator import (CandidateRequirement,
+                                     CostNutritionRepository,
+                                     CostNutritionService)
 from api.features.calculator.models import RecipeNutritionSignal
 from domain.exceptions import DomainError
+from domain.types import REQUEST_TO_CANONICAL, NutrientProfile
 from domain.units import to_grams
+
 from .aggregation import aggregate
 from .exceptions import InvalidNutrientRange, PlanInfeasible, UnknownNutrient
 from .filtering import filter_candidates
-from .models import (
-    NamedConstraint,
-    RecipeOutcome,
-    RequirementOutcome
-)
+from .models import NamedConstraint, RecipeOutcome, RequirementOutcome
 from .ranking import rank_candidates
-from .schemas import (
-    ConstraintOutcomeResponse,
-    DayResponse,
-    MealIngredientResponse,
-    MealResponse,
-    PlanResponse,
-    RecipeOutcomeResponse,
-    SelectedOfferResponse,
-)
+from .schemas import (ConstraintOutcomeResponse, DayResponse,
+                      MealIngredientResponse, MealResponse,
+                      NamedConstraintResponse, PlanResponse,
+                      RecipeOutcomeResponse, SelectedOfferResponse)
 from .solver_v2 import solve_v2
 from .trace import PlanTrace
 
@@ -148,6 +138,12 @@ def _recipe_outcome_records(recipes: list, causes: dict[str, list[str]], selecte
             ))
     return result
 
+def _named_constraint_response(constraint: NamedConstraint) -> NamedConstraintResponse:
+    return NamedConstraintResponse(
+        scope=constraint.scope,
+        code=constraint.code,
+        kind=constraint.kind,
+    )
 
 def _named_drop_constraints(
         recipes: list,
@@ -276,7 +272,7 @@ class PlanService:
                 binding = _named_drop_constraints(candidates, causes, constraint_records)
                 if binding:
                     exc = PlanInfeasible(str(exc), binding, reason=exc.reason)
-            self.last_trace = PlanTrace(
+            trace = PlanTrace(
                 feasibility_outcome="infeasible",
                 reason=exc.reason,
                 binding_constraints=exc.binding_constraints,
@@ -284,7 +280,51 @@ class PlanService:
                 recipes=_recipe_outcome_records(candidates, causes, set()),
                 requirements=constraint_records,
             )
-            raise exc
+            self.last_trace = trace
+            response = PlanResponse(
+                plan_id="plan_" + secrets.token_hex(5),
+                status="partial",
+                message=f"No feasible plan for a {request.horizon_days}-day horizon.",
+                validation_summary={
+                    "allergen_status": "passed" if request.allergies else "not_requested",
+                    "dietary_status": "passed" if request.dietary else "not_requested",
+                },
+                feasibility_outcome="infeasible",
+                relaxed=False,
+                applied_tolerance_pct=0,
+                binding_constraints=[_named_constraint_response(c) for c in exc.binding_constraints],
+                recipe_outcomes=[
+                    RecipeOutcomeResponse(
+                        recipe_id=record.recipe_id,
+                        outcome=record.outcome,
+                        cause=record.cause,
+                        causes=list(record.causes),
+                    )
+                    for record in trace.recipes
+                ],
+                constraint_outcomes=[
+                    ConstraintOutcomeResponse(
+                        recipe_id=record.recipe_id,
+                        requirement_id=record.requirement_id,
+                        requirement_text=record.requirement_text,
+                        constraint=record.constraint,
+                        state=record.state,
+                        resolved_concept=record.resolved_concept,
+                        selected_offer=(
+                            SelectedOfferResponse(
+                                listing_name=record.selected_offer.listing_name,
+                                retailer=record.selected_offer.retailer,
+                            ) if record.selected_offer is not None else None
+                        ),
+                        warnings=list(record.warnings),
+                    )
+                    for record in trace.requirements
+                ],
+                relaxations=[],
+                horizon_totals={},
+                days=[],
+            )
+            return response, trace
 
         selected = _selected_ids(days)
         recipe_records = _recipe_outcome_records(candidates, causes, selected)
@@ -356,6 +396,7 @@ class PlanService:
         response_constraints = [
             ConstraintOutcomeResponse(
                 recipe_id=record.recipe_id,
+                requirement_id=record.requirement_id,
                 requirement_text=record.requirement_text,
                 constraint=record.constraint,
                 state=record.state,
@@ -380,8 +421,8 @@ class PlanService:
             },
             relaxed=bool(relaxations),
             applied_tolerance_pct=applied_tolerance,
-            # recipe_outcomes=response_recipes,
-            # constraint_outcomes=response_constraints,
+            recipe_outcomes=response_recipes,
+            constraint_outcomes=response_constraints,
             relaxations=relaxations,
             horizon_totals=aggregate(days, request),
             days=response_days,
@@ -559,6 +600,7 @@ class PlanService:
         response_constraints = [
             ConstraintOutcomeResponse(
                 recipe_id=record.recipe_id,
+                requirement_id=record.requirement_id,
                 requirement_text=record.requirement_text,
                 constraint=record.constraint,
                 state=record.state,

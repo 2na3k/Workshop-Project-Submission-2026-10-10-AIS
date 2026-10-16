@@ -1,25 +1,25 @@
 # Prompt — Implement
 
-Implement for feature **p2-003-feasible-meal-plan-solving**
+Implement for feature **p3-001-workflow-recommendation-service**
 
-`<id>`: `p2-003-feasible-meal-plan-solving`
+`<id>`: `p3-001-workflow-recommendation-service`
 
 ## Input
 - MUST read: [AGENTS.md](../../../AGENTS.md)
 - [constitution.md](../../../docs/sdd/constitution.md)
-- [spec.md](../../../docs/sdd/features/p2-003-feasible-meal-plan-solving/spec.md)
-- [plan.md](../../../docs/sdd/features/p2-003-feasible-meal-plan-solving/plan.md)
-- [neo4j_db_design.md](../../../SystemCode/docs/neo4j_db_design.md)
+    - This spec is written against constitution v1.6 (amendments A-001..A-006 applied). If you encounter an archived copy that cites R-14's relaxation set as unclassified, R-8/R-10's recipe-level cost drop as p3-001's obligation, or a `nutrient_tolerance_pct` default other than 0, treat those as superseded.
+- [spec.md](../../../docs/sdd/features/p3-001-workflow-recommendation-service/spec.md)
+- [plan.md](../../../docs/sdd/features/p3-001-workflow-recommendation-service/plan.md)
 - [system_design_v3.md](../../../SystemCode/docs/system_design_v3.md)
+- [neo4j_db_design.md](../../../SystemCode/docs/neo4j_db_design.md)
+- [workflow_diagram.md](../../../SystemCode/remy/workflows/docs/workflow_diagram.md) — the five-stage LangGraph flow that this feature implements.
 - Findings: 
   - [data-prep-price-path.md](../../../docs/findings/data-prep-price-path.md)
 - current codebase: [SystemCode](../../../SystemCode)
-    - Backend:  [api](../../../SystemCode/remy/api)
-        - [fastapi_project_structure.md](../../../SystemCode/remy/api/docs/fastapi_project_structure.md)
-        - calculate feature: [calculator](../../../SystemCode/remy/api/src/api/features/calculator)
-        - plan feature: [plan](../../../SystemCode/remy/api/src/api/features/plan)
-    - Domain: [domain](../../../SystemCode/remy/domain)
-    - Workflow (LangGraph,...): [workflows](../../../SystemCode/remy/workflows)
+    - Meal plan API: [plan](../../../SystemCode/remy/api/src/api/features/plan)
+    - Calculator API: [calculator](../../../SystemCode/remy/api/src/api/features/calculator)
+    - Workflows (to be created): [workflows](../../../SystemCode/remy/workflows)
+    - p3 is greenfield. No workflow, response-contract, web, or chat implementation exists in the codebase. The spec describes what p3-001 builds, not what it fixes. The input list's codebase reference is for p2's existing interfaces (which p3-001 consumes), not for a pre-existing p3 layer.
 - on a loop-back: archived review.rN.md (highest N) with findings routed to `implement`
 
 ## Output
@@ -36,6 +36,7 @@ Implement for feature **p2-003-feasible-meal-plan-solving**
 4. If you hit ambiguity, missing information, or a plan that cannot work — or if the code has changed since the plan's Design §0 baseline inventory was written — stop and report it. Record baseline drift as a `BD-n` entry in the plan's `## Revision notes` (original claim, actual state, date, commit). If the plan's design still holds, record only; if the design or spec contract must change, route a finding (`→ plan` or `→ spec`) and let the loop-back handle it. Do not edit spec, plan, or constitution beyond the `## Revision notes` entry, and do not guess.
 5. When all tasks are checked: run `sdd.py ci <id>`. If it fails, fix and rerun.
    Never edit ci-results.md.
+   - xfail handling. The trace-side R-16 assertion is xfail-marked with a reason referencing F-P3-1. Do not remove, weaken, or convert it to xpass. The CI output must show xfail for that test; if the CI treats xpass as failure (strict mode), leave the xfail and note the F-P3-1 dependency in the commit message.
 6. Run `sdd.py gate implement <id> --advance`, then hand the diff to review.
 
 ## On a loop-back

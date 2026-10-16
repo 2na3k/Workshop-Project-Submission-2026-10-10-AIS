@@ -65,6 +65,61 @@
   workflow-owned port returns the tuple).
 - Source: p3-001's spec C-7; the plan's Prerequisite P-1.
 
+### D-7 — `ConstraintOutcomeResponse` carries `requirement_id`
+
+- Date: 2026-10-16
+- Status: adopted (reopen; prerequisite for p3-001's T-13)
+- Context: p3-001's workflow adapter maps `RequirementOutcome` to a
+  workflow-owned `RequirementOutcomeView` and requires the per-requirement
+  identity (`requirement_id`, the `REQUIRES` edge's `occurrence_id`). The
+  internal `RequirementOutcome` carries `requirement_id`, but the API-facing
+  `ConstraintOutcomeResponse` DTO does not project it. The adapter cannot map
+  the field losslessly without an API contract change.
+- Decision: `ConstraintOutcomeResponse` gains
+  `requirement_id: str | None = None`. `PlanService.generate` populates it
+  from `RequirementOutcome.requirement_id` when building the response DTO.
+  p2-003's response tests assert the field is present and populated for a
+  representative plan.
+- Alternatives: drop `requirement_id` from the workflow contract (rejected:
+  weakens R-17's per-requirement identity and AC-11's check, and requires a
+  spec amendment); use `requirement_text` as the identity (rejected: text is
+  not guaranteed unique within a recipe and may be null).
+- Affects: `plan/schemas.py`, `plan/service.py`, `plan/tests/features/plan/`;
+  p3-001's workflow adapter (its `RequirementOutcomeView` mapping).
+- Source: p3-001's plan BD-1 (2026-10-16); the adapter's AC-16 contract test.
+
+### D-8 — `generate` returns infeasible as a response, not an exception
+
+- Date: 2026-10-16
+- Status: adopted (reopen; prerequisite for p3-001's infeasible-outcome path)
+- Context: p3-001's workflow Plan node delegates to `PlanService.generate`
+  through a workflow-owned port and reads `result.feasibility_outcome` to
+  classify the outcome. Before the reopen, `generate` raised `PlanInfeasible`
+  on infeasibility and stored the trace on `self.last_trace`. The workflow
+  cannot read `last_trace` (the plan rules it out as a stateful side
+  channel), so the real plan path could not produce an `infeasible` outcome
+  with its reasoning trace. AC-6 and AC-15 were unsatisfiable through the
+  workflow.
+- Decision: `PlanService.generate` returns `(PlanResponse, PlanTrace)` on
+  both feasible and infeasible outcomes; it never raises `PlanInfeasible`.
+  `PlanResponse.feasibility_outcome`'s `Literal` is widened to
+  `["plan-produced", "infeasible"]`. The infeasible response carries
+  `binding_constraints`, `recipe_outcomes`, and `constraint_outcomes`; the
+  trace carries the full reasoning. `solver_v2` still raises `PlanInfeasible`
+  internally; the service catches it. `generate_v2` is updated consistently
+  (with its existing commented-out response fields kept commented).
+- Alternatives: have the workflow read `self.last_trace` after catching
+  `PlanInfeasible` (rejected: stateful, non-reentrant, and the p3-001 plan
+  forbids it); revise the p3-001 spec to drop the three-level reasoning from
+  infeasible outcomes (rejected: R-17 requires three levels for feasible and
+  infeasible outcomes; the spec amendment would be larger than the reopen).
+- Affects: `plan/schemas.py` (Literal), `plan/service.py` (both catch sites
+  return), the p2-003 response tests (new infeasible-return assertion), the
+  p3-001 workflow Plan node (no change — it already branches on
+  `feasibility_outcome`).
+- Source: p3-001's plan BD-3 (2026-10-16); the workflow adapter's
+  infeasible-outcome path.
+
 ## Consequential clarifications
 
 - **C-1 — Cost and budget remain non-gating in p2-003.** The plan does not
