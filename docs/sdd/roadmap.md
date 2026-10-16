@@ -35,7 +35,7 @@ test"; where nothing exists, it is "new".
 | p2-001-constraint-evidence-filtering       | done    | p1-002-provenance-graph-model                                                                                   | p2-002-cost-nutrition-calculation, p2-003-feasible-meal-plan-solving                                              | Candidate evaluation outcome and distinct evidence-absent/present-exclusion causes                                                   |
 | p2-002-cost-nutrition-calculation          | done    | p1-002-provenance-graph-model, p2-001-constraint-evidence-filtering                                             | p2-001-constraint-evidence-filtering, p2-003-feasible-meal-plan-solving                                           | Portion nutrient and consumed/package cost result contract; item-level evidence-absent signals (`MISSING_PACKAGE_DATA`, `PARTIAL_NUTRITION_DATA`) consumed by p2-003 as the recipe-level drop trigger (per-nutrient for partial nutrition) |
 | p2-003-feasible-meal-plan-solving          | partial — impl complete | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                         | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                           | Plan feasibility result with named binding constraints (deterministic individually-binding set), reasoning structure sufficient for downstream explanation, and the recipe-level nutrition drop behavior consuming p2-002's item-level `PARTIAL_NUTRITION_DATA` signal (per-nutrient for tracked nutrients). Cost/budget out of scope; recipe-level cost drop deferred to p3-004. |
-| p3-001-workflow-recommendation-service     | new     | p2-003-feasible-meal-plan-solving                                                                               | p3-002-explainable-response-contract, p3-003-web-planner-experience, p3-004-conversational-constraint-interface   | Recommendation execution result and trace boundary                                                                                   |
+| p3-001-workflow-recommendation-service     | done    | p2-003-feasible-meal-plan-solving                                                                               | p3-002-explainable-response-contract, p3-003-web-planner-experience, p3-004-conversational-constraint-interface   | Recommendation execution result and trace boundary                                                                                   |
 | p3-002-explainable-response-contract       | new     | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation, p3-001-workflow-recommendation-service | p3-001-workflow-recommendation-service, p3-003-web-planner-experience, p3-004-conversational-constraint-interface | Three-level user explanation and audit-provenance separation                                                                         |
 | p3-003-web-planner-experience              | out of scope | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                    | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                      | Web request/response contract for meal-plan recommendations. **Owned by a separate frontend effort, not this SDD effort.** |
 | p3-004-conversational-constraint-interface | new     | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                    | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract, p3-003-web-planner-experience       | Conversational constraint extraction, turn-level recommendation delivery, safe re-expression of deterministic explanation causes, **and the recipe-level cost drop inherited from R-8/R-10 per A-006** |
@@ -498,12 +498,36 @@ The backend recommendation surface is built end-to-end: a LangGraph workflow orc
 
 ### Features
 
-- **p3-001-workflow-recommendation-service** *(new)* — A LangGraph-based
-  workflow that orchestrates recommendation generation: receives a user
-  request, invokes the plan solver (p2-003), attaches the reasoning trace, and
-  returns the recommendation result plus a workflow-level trace. The workflow
-  defines the trace boundary that p3-002 consumes for explanation assembly.
-  (serves G-2, G-6)
+- **p3-001-workflow-recommendation-service** *(done, 2026-10-16)* — LangGraph
+  recommendation workflow orchestrating three nodes: Extract Constraints
+  (LLM-driven constraint extraction and validation), Plan (deterministic
+  delegation to p2-003 via a workflow-owned port), Generate Response
+  (structured-verified text generation). The workflow depends only on a
+  workflow-owned port; the adapter in `remy/app` calls
+  `PlanService.generate` and maps the real `(PlanResponse, PlanTrace)` tuple
+  to workflow-owned models (`PlanInput`, `PlanResult`, `PlanTraceView`),
+  preserving R-2's inward dependency direction (`lint-imports` 4 kept, 0
+  broken). The versioned `TraceEnvelope` captures the raw message, parsed
+  constraints, unapplied constraints, one entry per node run, one entry per
+  LLM invocation, and the embedded `PlanTraceView`; it is never part of the
+  user-displayable payload. Generate Response runs a deterministic check on
+  its structured output (referenced IDs/causes are a subset of the plan's;
+  evidence-absent drops never restated as permissive). Extraction is
+  faithful: stated allergens/dietary flags preserved, severity never
+  downgraded, tolerance 0 unless explicitly requested, unapplied constraints
+  reported. All workflow tests use a fake LLM and fake port. Zero loops
+  beyond the planned reopens. **Three p2-003 reopens were required and
+  landed** (tuple return; `requirement_id` on `ConstraintOutcomeResponse`;
+  infeasibility returned as a shaped response rather than raised) — each
+  recorded in p2-003's `decisions.md` and `CHANGELOG.md`. **One p2-001
+  reopen** moved `workflows/rules/` to `domain/` to satisfy the new
+  `api does not depend on workflows` `.importlinter` contract. Two
+  workflow-side R-16/R-17 conformance tests pass; the trace-side R-16
+  assertion is `xfail` under tracked **Finding F-P3-1** (p2-003: `PlanTrace`
+  carries no R-16 audit provenance). Two constitution-path findings route to
+  phase review: **BD-2a** (R-16's named path divergence — same as p2-002's
+  F-D) and **BD-2b** (R-17's named fixture `tests/api/test_explanation_shape.py`
+  is absent; owner likely p3-002). (serves G-2, G-6)
 - **p3-002-explainable-response-contract** *(new)* — The user-facing response
   contract exposing three-level explanations (plan, recipe, constraint) with
   the drop causes p2 established (`evidence-absent`, `present-evidence-excludes`,
@@ -573,7 +597,16 @@ The backend recommendation surface is built end-to-end: a LangGraph workflow orc
 
 ### Phase p3 progress
 
-- p3-001: not started.
+- p3-001: closed 2026-10-16, 0 loops. CI PASS on
+  `remy/api/tests/features/plan`, `remy/workflows/tests`,
+  `remy/app/tests`, and `lint-imports` (4 kept, 0 broken). Two workflow-side
+  R-16/R-17 conformance tests pass; the trace-side R-16 assertion is `xfail`
+  under F-P3-1 (owned by p2-003). Three p2-003 reopens and one p2-001 reopen
+  landed as prerequisites (each recorded in their own features' decisions
+  files). Carry-forward items for phase review: F-P3-1 (trace provenance),
+  BD-2a (R-16 path divergence, same as p2-002's F-D), BD-2b (R-17 fixture
+  absent; owner likely p3-002), and the langgraph pending-deprecation warning
+  introduced by the new LangGraph dependency.
 - p3-002: not started.
 - p3-003: not started.
 - p3-004: not started.
@@ -758,3 +791,20 @@ The backend recommendation surface is built end-to-end: a LangGraph workflow orc
   implementation exists — the workflow, response contract, web planner, and
   chat interface are all to be built. The roadmap's `partial` status assumed
   pre-existing code; the brownfield posture does not apply to phase p3.
+
+- 2026-10-16 — Marked `p3-001-workflow-recommendation-service` as done, 0
+  loops. Recorded what shipped (three-node LangGraph workflow: Extract
+  Constraints, Plan, Generate Response; workflow-owned plan port with the
+  adapter in `app`; versioned `TraceEnvelope`; LLM client over
+  `init_chat_model` defaulting to Ollama; deterministic structured-output
+  check on Generate Response; faithful extraction with unapplied-constraint
+  reporting) and the three p2-003 reopens plus one p2-001 reopen that landed
+  as prerequisites. Flagged the phase-review carry-forwards: F-P3-1
+  (`PlanTrace` carries no R-16 audit provenance; owner p2-003), BD-2a
+  (R-16 named path divergence — same as p2-002's F-D), BD-2b (R-17 named
+  fixture absent; owner likely p3-002), and the langgraph pending-deprecation
+  warning. Reason: the first p3 feature closed with no blocking findings and
+  three nits; the phase review needs the trace-provenance gap and the two
+  constitution-path findings in view before p3-002 begins. Two prerequisites
+  for p3-002 are recorded: it consumes p3-001's trace boundary, and it is the
+  likely owner of R-17's named fixture.
