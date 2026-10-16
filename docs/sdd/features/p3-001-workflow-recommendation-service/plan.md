@@ -577,7 +577,7 @@ is not work this feature performs, but it is on the critical path.
   - Files: `sdd.json`
   - Done when: `test` covers `remy/api/tests/features/plan` (regression guard for the C-7 reopen), `remy/workflows/tests`, `remy/app/tests`; `lint` and `typecheck` cover `src/workflows` and `src/app`; a new `lint-imports` check runs `uv run lint-imports` **from `SystemCode/`** (where `.importlinter` lives) so the working-directory is explicit (per the plan review's nit).
 
-- [ ] **T-15** Add a workflow-side R-16/R-17 conformance test
+- [x] **T-15** Add workflow-side R-16/R-17 conformance tests
   - Type: test
   - Covers: AC-21
   - Files: `SystemCode/remy/workflows/tests/test_response_schema_workflow.py`, `tests/test_explanation_shape_workflow.py`
