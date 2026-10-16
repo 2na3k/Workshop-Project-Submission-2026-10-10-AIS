@@ -571,7 +571,7 @@ is not work this feature performs, but it is on the critical path.
 
 ### Group 6 — CI config
 
-- [ ] **T-14** Update `sdd.json` check set
+- [x] **T-14** Update `sdd.json` check set
   - Type: impl
   - Covers: AC-4; CI scope
   - Files: `sdd.json`
