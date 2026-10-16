@@ -23,7 +23,7 @@ class DietaryConstraint:
 class NutrientConstraint:
     code: str
     unit: str
-    goal: str
+    goal: float | None = None
     minimum: float | None = None
     maximum: float | None = None
 
@@ -75,13 +75,13 @@ class RecipeOutcomeView:
 @dataclass(frozen=True)
 class RequirementOutcomeView:
     recipe_id: str
-    requirement_id: str
+    requirement_id: str | None
     constraint: str
     state: str
-    requirement_text: str
+    requirement_text: str | None
     resolved_concept: Any = None
     selected_offer: Any = None
-    warnings: tuple[IngredientWarningView, ...] = ()
+    warnings: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

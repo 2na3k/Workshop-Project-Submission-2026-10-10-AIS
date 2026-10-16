@@ -563,7 +563,7 @@ is not work this feature performs, but it is on the critical path.
     - **AC-16 (contract, F-3):** the adapter maps a real `(PlanResponse, PlanTrace)` — constructed from the real api dataclass, not a hand-built dict — to workflow `PlanResult` + `PlanTraceView` field-for-field. **The test constructs the tuple by calling a real `PlanService.generate` (with the Neo4j driver mocked) so that if P-1 hasn't landed, the failure message reads "generate did not return a tuple; P-1 prerequisite missing" — not a confusing mapping error.** R-7's drift risk is covered because the fixture uses the real api dataclass.
     - **AC-4 (import boundary):** `uv run lint-imports` passes 4 kept / 0 broken when run from `SystemCode/`; `workflows` does not import `api`; `app` may import both.
 
-- [ ] **T-13** Implement the adapter and composition root wiring
+- [x] **T-13** Implement the adapter and composition root wiring
   - Type: impl
   - Covers: AC-4, AC-16
   - Files: `SystemCode/remy/app/src/app/plan_adapter.py`, `composition.py`, `pyproject.toml` (add pytest test-dep if missing)

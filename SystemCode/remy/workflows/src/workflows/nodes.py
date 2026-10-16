@@ -50,7 +50,12 @@ def _constraint_set(value: Any, message: str) -> ConstraintSet:
             raise ValueError("nutrient maximum must be numeric")
         if minimum is not None and maximum is not None and minimum > maximum:
             raise ValueError("nutrient minimum cannot exceed maximum")
-        nutrients.append(NutrientConstraint(code, item.get("unit", ""), item.get("goal", "limit"), minimum, maximum))
+        goal = item.get("goal")
+        if isinstance(goal, dict):
+            goal = goal.get("value")
+        if goal is not None and not isinstance(goal, (int, float)):
+            raise ValueError("nutrient goal must be numeric")
+        nutrients.append(NutrientConstraint(code, item.get("unit", ""), goal, minimum, maximum))
     allergies = []
     explicit_severity = re.compile(r"\b(mild|severe)\b", re.IGNORECASE)
     for item in value.get("allergies", []):
