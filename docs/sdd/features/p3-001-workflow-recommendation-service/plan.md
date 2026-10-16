@@ -585,7 +585,7 @@ is not work this feature performs, but it is on the critical path.
 
 ### Group 7 — closing admin
 
-- [ ] **T-16** Record decisions
+- [x] **T-16** Record decisions
   - Type: admin
   - Covers: F-P3-1, F-2, Q2, P-1, P-2
   - Files: `docs/sdd/features/p3-001-workflow-recommendation-service/decisions.md`
