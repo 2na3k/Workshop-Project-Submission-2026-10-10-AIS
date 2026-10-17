@@ -431,7 +431,7 @@ no live model, no Neo4j, no network. F-P3-1 is tracked, not resolved here.
   - Files: `SystemCode/remy/app/tests/test_chat_contract.py` (append)
   - Done when: `test_events_serialize_to_wire_payloads` fails; wraps the mapped explanation in `MetadataEvent` / `PlanUpdatedEvent` / `DoneEvent` / `ErrorEvent`, calls `model_dump()`, asserts the wire shape and that no `CHAT_FORBIDDEN_FIELDS` field appears.
 
-- [ ] **T-12** Write failing test: failure outcome maps to `ErrorEvent` / envelope error
+- [x] **T-12** Write failing test: failure outcome maps to `ErrorEvent` / envelope error
   - Type: unit
   - Covers: AC-12
   - Files: `SystemCode/remy/app/tests/test_chat_contract.py` (append)

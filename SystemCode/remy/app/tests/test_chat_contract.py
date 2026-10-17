@@ -263,3 +263,34 @@ def test_events_serialize_to_wire_payloads():
                 yield from keys(nested)
 
     assert not set(keys(payloads)).intersection(CHAT_FORBIDDEN_FIELDS)
+
+
+def test_failure_outcome_maps_to_error_event():
+    from app.chat_contract import ErrorEvent, from_trace_envelope
+    from workflows.models import Outcome
+    from workflows.trace import assemble_trace
+
+    trace = assemble_trace(
+        raw_message="Plan a meal",
+        parsed_constraints=None,
+        unapplied_constraints=(),
+        outcome=Outcome(kind="failure", reason="Planner unavailable", node="Plan"),
+    )
+    response = from_trace_envelope(trace, trace_id="trace-failure")
+    assert response.trace_id == "trace-failure"
+    assert response.plan is None
+    assert response.error is not None
+    event = ErrorEvent(
+        event="error",
+        code=response.error.code,
+        message=response.error.message,
+        trace_id=response.trace_id,
+    )
+    assert event.model_dump() == {
+        "event": "error",
+        "code": "WORKFLOW_FAILURE",
+        "message": "Planner unavailable",
+        "trace_id": "trace-failure",
+    }
+    assert "timestamp" not in ErrorEvent.model_fields
+    assert "details" not in ErrorEvent.model_fields
