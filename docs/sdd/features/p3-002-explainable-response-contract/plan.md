@@ -373,7 +373,7 @@ no live model, no Neo4j, no network. F-P3-1 is tracked, not resolved here.
   - Files: `SystemCode/remy/app/tests/test_chat_contract.py` (create)
   - Done when: `test_chat_request_requires_session_and_message` fails because `app.chat_contract` does not exist; the test asserts a conforming request serializes, a request missing `session_id` or `message` is rejected, and a request omitting `user_context` is valid.
 
-- [ ] **T-3** Write failing tests: SSE event discrimination and `plan_updated` shape
+- [x] **T-3** Write failing tests: SSE event discrimination and `plan_updated` shape
   - Type: test
   - Covers: AC-2, AC-2b
   - Files: `SystemCode/remy/app/tests/test_chat_contract.py` (append)
