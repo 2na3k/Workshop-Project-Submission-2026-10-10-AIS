@@ -405,7 +405,7 @@ no live model, no Neo4j, no network. F-P3-1 is tracked, not resolved here.
   - Files: `SystemCode/remy/app/tests/test_chat_contract.py` (append)
   - Done when: `test_maps_real_trace_envelope_to_explanation` fails; the test builds a real `TraceEnvelope` via `workflows.trace.assemble_trace` with a real `PlanTraceView` (feasible, infeasible, relaxed, multi-cause cases), calls the real `from_trace_envelope(env, trace_id="trace-abc")`, and asserts (a) three levels present; (b) drop causes distinct and ordered per p2 precedence; (c) infeasible names binding constraints; (d) relaxed carries label and tolerance; (e) returned `trace_id` equals the accepted input.
 
-- [ ] **T-8** Implement the floor constant and `from_trace_envelope` mapper
+- [x] **T-8** Implement the floor constant and `from_trace_envelope` mapper
   - Type: impl
   - Covers: AC-3, AC-4, AC-5, AC-6, AC-7b, AC-10, AC-13, AC-14
   - Files: `SystemCode/remy/app/src/app/chat_contract.py` (append)
