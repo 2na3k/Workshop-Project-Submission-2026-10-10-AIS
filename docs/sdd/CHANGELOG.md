@@ -103,10 +103,7 @@
   - Extended repository candidate hydration in `repository.py` to project freshness, package unit compatibility, and dietary/allergen evidence from canonical `FULFILLS` edges.
   - Updated `PlanService.generate` in `service.py` to propagate filtered outcomes.
   - Added comprehensive test suites: dietary domain rules (`tests/features/dietary/test_domain_rules.py`), calculator domain extensions for nutrition, cost, and conversion (`tests/features/calculator/`), filtering contract and edge cases (`tests/features/plan/test_filtering.py`), and repository-to-service integration tests (`tests/features/plan/test_service_integration.py`).
-  - **Reopen (2026-10-15):** `workflows/rules/` (`allergen.py`, `dietary.py`,
-    `budget.py`, `nutrition.py`) and their data files moved to `domain/`
-    (flat) and `domain/data/`. Satisfies the new `.importlinter` contract
-    `api does not depend on workflows`. Prerequisite for p3-001's plan stage.
+  - **Reopen (2026-10-15):** `workflows/rules/` (`allergen.py`, `dietary.py`, `budget.py`, `nutrition.py`) and their data files moved to `domain/` (flat) and `domain/data/`. Satisfies the new `.importlinter` contract `api does not depend on workflows`. Prerequisite for p3-001's plan stage.
 - Acceptance criteria: AC-1 .. AC-16
 - Decisions: docs/sdd/features/p2-001-constraint-evidence-filtering/decisions.md
 - Breaking: none
@@ -145,25 +142,9 @@
   - Added hard-failure error handling raising `SolverUnavailable` (503 Service Unavailable) when OR-Tools CP-SAT is unavailable, prohibiting degraded fallback plans (AC-15, C-6).
   - Updated `/plan` endpoint documentation in `API_doc.md` to reflect `nutrient_tolerance_pct`, `relaxed`, `applied_tolerance_pct`, and the three-level outcome response contract (R-1).
   - Added comprehensive unit and integration test coverage across solver, service, repository, calculator candidate inspection, and response contracts (`tests/features/plan/`, `tests/features/calculator/test_inspect_candidates.py`).
-  - **Reopen (2026-10-15):** `PlanService.generate` now returns
-    `(PlanResponse, PlanTrace)`, matching `CostNutritionService.calculate`'s
-    tuple pattern. `PlanResponse` re-enables `recipe_outcomes` and
-    `constraint_outcomes`; the three-level reasoning is now in both the
-    response and the trace. The router unpacks and serializes only the
-    response. Prerequisite for p3-001's workflow adapter.
-  - **Reopen (2026-10-16):** `ConstraintOutcomeResponse` now carries
-    `requirement_id` (the `REQUIRES` edge's `occurrence_id`), projected from
-    the internal `RequirementOutcome`. Prerequisite for p3-001's workflow
-    adapter, which maps the constraint-level reasoning losslessly into its
-    workflow-owned models (AC-16).
-  - **Reopen (2026-10-16):** `PlanService.generate` returns
-    `(PlanResponse, PlanTrace)` on infeasibility instead of raising
-    `PlanInfeasible`. `PlanResponse.feasibility_outcome` is widened to
-    `["plan-produced", "infeasible"]`; the infeasible response carries
-    `binding_constraints`, `recipe_outcomes`, and `constraint_outcomes`.
-    `solver_v2` continues to raise internally. Prerequisite for p3-001's
-    workflow Plan node producing an infeasible outcome with its reasoning
-    trace.
+  - **Reopen (2026-10-15):** `PlanService.generate` now returns `(PlanResponse, PlanTrace)`, matching `CostNutritionService.calculate`'s tuple pattern. `PlanResponse` re-enables `recipe_outcomes` and `constraint_outcomes`; the three-level reasoning is now in both the response and the trace. The router unpacks and serializes only the response. Prerequisite for p3-001's workflow adapter.
+  - **Reopen (2026-10-16):** `ConstraintOutcomeResponse` now carries `requirement_id` (the `REQUIRES` edge's `occurrence_id`), projected from the internal `RequirementOutcome`. Prerequisite for p3-001's workflow adapter, which maps the constraint-level reasoning losslessly into its workflow-owned models (AC-16).
+  - **Reopen (2026-10-16):** `PlanService.generate` returns `(PlanResponse, PlanTrace)` on infeasibility instead of raising `PlanInfeasible`. `PlanResponse.feasibility_outcome` is widened to `["plan-produced", "infeasible"]`; the infeasible response carries `binding_constraints`, `recipe_outcomes`, and `constraint_outcomes`. `solver_v2` continues to raise internally. Prerequisite for p3-001's workflow Plan node producing an infeasible outcome with its reasoning trace.
 - Acceptance criteria: AC-1 .. AC-15
 - Decisions: docs/sdd/features/p2-003-feasible-meal-plan-solving/decisions.md
 - Breaking: none
@@ -184,4 +165,19 @@
   - Added comprehensive unit, contract, and integration test suites in `remy/workflows/tests/` and `remy/app/tests/`.
 - Acceptance criteria: AC-1 .. AC-21
 - Decisions: docs/sdd/features/p3-001-workflow-recommendation-service/decisions.md
+- Breaking: none
+
+### p3-002-explainable-response-contract - Explainable response contract (2026-10-17)
+
+- Added/Changed/Fixed:
+  - Added user-facing request, explanation, and Server-Sent Events (SSE) contract models in `SystemCode/remy/app/src/app/chat_contract.py` (`ChatRequest`, `OfferView`, `ConstraintExplanation`, `RecipeExplanation`, `PlanExplanation`, `DropCause` closed enum, `MealDelta`, `MealScopedExplanation`, `MetadataEvent`, `TokenEvent`, `PlanUpdatedEvent`, `ErrorEvent`, `DoneEvent`, `ChatResponseEnvelope`) (AC-1, AC-2, AC-2b, AC-9, AC-10).
+  - Defined explicit R-16 audit-only provenance exclusion floor `CHAT_FORBIDDEN_FIELDS` (`confidence`, `normalization_version`, `source`, `source_snapshot_id`, `source_id`, `mapping_version`, `food_key`, `fdc_id`) excluding audit metadata from user payloads while allowing structural IDs and prices (R-16, AC-7, AC-7b).
+  - Implemented pure response mapper `from_trace_envelope` projecting p3-001 `TraceEnvelope` into three-level user explanation models, preserving p2 drop cause precedence (`present-evidence-excludes` -> `evidence-absent` -> `unmapped`), failure error event mappings, and infeasible binding constraints (AC-3, AC-4, AC-5, AC-6, AC-12, AC-13, AC-14).
+  - Defined `plan_updated` SSE event contract carrying meal delta and meal-scoped three-level explanation (AC-2b, C-2).
+  - Defined stable out-of-band `trace_id` correlation across streaming events and non-streaming envelopes without embedding trace payloads (AC-10, C-1).
+  - Landed Amendment A-007 updating Constitution R-16 and R-17 named check paths to `SystemCode/remy/app/tests/api/<name>` (v1.6 -> v1.7).
+  - Added constitution-named test fixtures at `SystemCode/remy/app/tests/api/test_response_schema.py` (R-16) and `SystemCode/remy/app/tests/api/test_explanation_shape.py` (R-17), with trace-side provenance retention tracked under F-P3-1 with strict xfail (AC-8, AC-11a, AC-11b).
+  - Added comprehensive unit and workflow integration tests in `SystemCode/remy/app/tests/test_chat_contract.py`.
+- Acceptance criteria: AC-1 .. AC-14
+- Decisions: docs/sdd/features/p3-002-explainable-response-contract/decisions.md
 - Breaking: none

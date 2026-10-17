@@ -1,6 +1,8 @@
 {
-  "stage": "ci-passed",
+  "stage": "closed",
   "loops": 0,
+  "plan_review_verdict": "APPROVE",
+  "review_verdict": "APPROVE",
   "spec_hash": "sha256:2cc7462cd77f0b98",
   "plan_hash": "sha256:1cbf52db537b83f1",
   "tasks_hash": "sha256:e94152a6853f36e4",
@@ -24,8 +26,16 @@
     {
       "at": "2026-10-17T12:21:26+08:00",
       "event": "ci PASS"
+    },
+    {
+      "at": "2026-10-17T12:43:20+08:00",
+      "event": "ci-passed -> reviewed"
+    },
+    {
+      "at": "2026-10-17T12:53:03+08:00",
+      "event": "reviewed -> closed"
     }
   ],
   "ci_overall": "PASS",
-  "updated_at": "2026-10-17T12:21:26+08:00"
+  "updated_at": "2026-10-17T12:53:03+08:00"
 }
