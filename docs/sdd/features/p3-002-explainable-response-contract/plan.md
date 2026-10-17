@@ -419,7 +419,7 @@ no live model, no Neo4j, no network. F-P3-1 is tracked, not resolved here.
   - Files: `SystemCode/remy/app/tests/api/__init__.py` (create), `SystemCode/remy/app/tests/api/test_response_schema.py` (create)
   - Done when: two test functions exist: (a) `test_user_payload_excludes_audit_provenance` builds a representative `ChatResponseEnvelope` via `from_trace_envelope`, dumps it, and asserts no key / substring matches `CHAT_FORBIDDEN_FIELDS` (passes); (b) `test_trace_retains_audit_provenance` asserts the trace object carries provenance and is marked `@pytest.mark.xfail(strict=True, reason="F-P3-1: ...")`; both run at `remy/app/tests/api/test_response_schema.py`.
 
-- [ ] **T-10** Write R-17 fixture: three levels + distinct drop causes + multi-cause precedence
+- [x] **T-10** Write R-17 fixture: three levels + distinct drop causes + multi-cause precedence
   - Type: conformance
   - Covers: AC-3, AC-4, AC-5, AC-6, AC-11a
   - Files: `SystemCode/remy/app/tests/api/test_explanation_shape.py` (create)
