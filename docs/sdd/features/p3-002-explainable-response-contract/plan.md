@@ -413,7 +413,7 @@ no live model, no Neo4j, no network. F-P3-1 is tracked, not resolved here.
 
 ### Group 3 — R-16 and R-17 named fixtures
 
-- [ ] **T-9** Write failing R-16 fixture: user-payload exclusion (passing) and trace retention (`xfail`)
+- [x] **T-9** Write failing R-16 fixture: user-payload exclusion (passing) and trace retention (`xfail`)
   - Type: conformance
   - Covers: AC-7, AC-8, AC-11a, AC-11b
   - Files: `SystemCode/remy/app/tests/api/__init__.py` (create), `SystemCode/remy/app/tests/api/test_response_schema.py` (create)
