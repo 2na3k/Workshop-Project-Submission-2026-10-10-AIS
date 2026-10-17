@@ -437,7 +437,7 @@ no live model, no Neo4j, no network. F-P3-1 is tracked, not resolved here.
   - Files: `SystemCode/remy/app/tests/test_chat_contract.py` (append)
   - Done when: `test_failure_outcome_maps_to_error_event` fails; asserts a `TraceEnvelope` with `outcome.kind == "failure"` maps to a `ChatResponseEnvelope` with `error` populated, `plan` null, `trace_id` still correlating, and that `ErrorEvent` carries `code` and `message` only (not `timestamp` / `details`).
 
-- [ ] **T-13** Write integration test: compiled workflow → contract mapper end-to-end
+- [x] **T-13** Write integration test: compiled workflow → contract mapper end-to-end
   - Type: integration
   - Covers: p3-001's workflow as producer, contract as consumer
   - Files: `SystemCode/remy/app/tests/test_chat_contract.py` (append)

@@ -294,3 +294,64 @@ def test_failure_outcome_maps_to_error_event():
     }
     assert "timestamp" not in ErrorEvent.model_fields
     assert "details" not in ErrorEvent.model_fields
+
+
+def test_compiled_workflow_outcome_maps_through_contract():
+    from app.chat_contract import from_trace_envelope
+    from workflows.graph import build
+    from workflows.models import (
+        PlanResult,
+        PlanTraceView,
+        RecipeOutcomeView,
+        RequirementOutcomeView,
+    )
+
+    class FakeLLM:
+        def __init__(self, responses):
+            self.responses = iter(responses)
+
+        def invoke(self, prompt):
+            return next(self.responses)
+
+    class FakePlanPort:
+        def generate(self, request):
+            requirement = RequirementOutcomeView(
+                recipe_id="recipe-1",
+                requirement_id="requirement-1",
+                constraint="vegan",
+                state="satisfied",
+                requirement_text="tofu",
+                resolved_concept="tofu",
+                selected_offer={"listing_name": "Firm tofu", "retailer": "Market"},
+                warnings=(),
+            )
+            recipe = RecipeOutcomeView("recipe-1", "selected")
+            trace = PlanTraceView(
+                feasibility_outcome="feasible",
+                reason=None,
+                binding_constraints=(),
+                applied_tolerance_pct=0,
+                recipes=(recipe,),
+                requirements=(requirement,),
+            )
+            result = PlanResult(
+                plan_id="plan-1",
+                status="complete",
+                message=None,
+                recipe_outcomes=(recipe,),
+                constraint_outcomes=(requirement,),
+            )
+            return result, trace
+
+    workflow = build(
+        extract_llm=FakeLLM([{"horizon_days": 1, "meals_per_day": 1, "dietary": [{"code": "vegan"}]}]),
+        plan_port=FakePlanPort(),
+        response_llm=FakeLLM([{"recipe_ids": ["recipe-1"], "requirement_ids": ["requirement-1"], "text": "A vegan meal."}]),
+    )
+    result = workflow.invoke({"raw_message": "Plan a vegan meal"})
+    trace_envelope = result["trace"]
+    mapped = from_trace_envelope(trace_envelope, trace_id="trace-e2e")
+    assert mapped.trace_id == "trace-e2e"
+    assert mapped.plan is not None
+    assert mapped.plan.recipes[0].recipe_id == "recipe-1"
+    assert mapped.plan.recipes[0].constraints[0].resolved_concept == "tofu"
