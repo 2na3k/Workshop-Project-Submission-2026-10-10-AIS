@@ -385,7 +385,7 @@ no live model, no Neo4j, no network. F-P3-1 is tracked, not resolved here.
   - Files: `SystemCode/remy/app/tests/test_chat_contract.py` (append)
   - Done when: `test_constraint_explanation_fields` and `test_drop_cause_enum_is_closed` fail; the tests assert (a) `ConstraintExplanation` carries `requirement_id`, `constraint`, `state`, `resolved_concept`, `selected_offer`, `warnings`; `selected_offer` may be null; (b) `DropCause` accepts only `"evidence-absent"`, `"present-evidence-excludes"`, `"unmapped"` and rejects an unknown cause string (review nit 2).
 
-- [ ] **T-5** Create `app/chat_contract.py` with the request, event, and explanation models
+- [x] **T-5** Create `app/chat_contract.py` with the request, event, and explanation models
   - Type: impl
   - Covers: AC-1, AC-2, AC-2b, AC-4, AC-5, AC-6, AC-9
   - Files: `SystemCode/remy/app/src/app/chat_contract.py` (create)

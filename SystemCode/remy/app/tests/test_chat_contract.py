@@ -91,5 +91,5 @@ def test_drop_cause_enum_is_closed():
         "present-evidence-excludes",
         "unmapped",
     }
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValueError):
         DropCause("unknown-cause")
