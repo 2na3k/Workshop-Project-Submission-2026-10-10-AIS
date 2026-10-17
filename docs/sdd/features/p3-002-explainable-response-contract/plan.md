@@ -379,7 +379,7 @@ no live model, no Neo4j, no network. F-P3-1 is tracked, not resolved here.
   - Files: `SystemCode/remy/app/tests/test_chat_contract.py` (append)
   - Done when: `test_sse_event_type_is_one_of_five` and `test_plan_updated_carries_delta_and_scoped_explanation` fail because the event models do not exist; the tests assert (a) each of the five events validates, an unknown `event` value is rejected, missing a required field per type is rejected; (b) `plan_updated` with delta+scoped-explanation is valid, delta-only and full-plan-explanation variants are rejected.
 
-- [ ] **T-4** Write failing tests: constraint, recipe, and plan explanation models; `DropCause` closed enum
+- [x] **T-4** Write failing tests: constraint, recipe, and plan explanation models; `DropCause` closed enum
   - Type: test
   - Covers: AC-9, AC-4/AC-5/AC-6 vocabulary (via the `DropCause` enum)
   - Files: `SystemCode/remy/app/tests/test_chat_contract.py` (append)

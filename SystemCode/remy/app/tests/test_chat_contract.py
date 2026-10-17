@@ -60,3 +60,36 @@ def test_plan_updated_carries_delta_and_scoped_explanation():
             delta={"day": 1, "slot": "dinner", "recipe_id": "r1"},
             explanation={"plan": {"feasibility_outcome": "feasible"}},
         )
+
+
+def test_constraint_explanation_fields():
+    from app.chat_contract import ConstraintExplanation
+
+    explanation = ConstraintExplanation(
+        requirement_id="req-1",
+        constraint="vegan",
+        state="satisfied",
+        resolved_concept="tofu",
+        selected_offer=None,
+        warnings=["price unavailable"],
+    )
+    assert explanation.model_dump() == {
+        "requirement_id": "req-1",
+        "constraint": "vegan",
+        "state": "satisfied",
+        "resolved_concept": "tofu",
+        "selected_offer": None,
+        "warnings": ["price unavailable"],
+    }
+
+
+def test_drop_cause_enum_is_closed():
+    from app.chat_contract import DropCause
+
+    assert {cause.value for cause in DropCause} == {
+        "evidence-absent",
+        "present-evidence-excludes",
+        "unmapped",
+    }
+    with pytest.raises(ValidationError):
+        DropCause("unknown-cause")
