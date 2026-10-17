@@ -199,3 +199,67 @@ def test_maps_real_trace_envelope_to_explanation():
     assert relaxed.plan is not None
     assert relaxed.plan.relaxed is True
     assert relaxed.plan.applied_tolerance_pct == 15
+
+
+def test_events_serialize_to_wire_payloads():
+    from app.chat_contract import (
+        CHAT_FORBIDDEN_FIELDS,
+        DoneEvent,
+        ErrorEvent,
+        MetadataEvent,
+        PlanUpdatedEvent,
+        from_trace_envelope,
+    )
+    from workflows.models import Outcome, PlanTraceView, RecipeOutcomeView, RequirementOutcomeView
+    from workflows.trace import assemble_trace
+
+    trace = assemble_trace(
+        raw_message="Plan a meal",
+        parsed_constraints=None,
+        unapplied_constraints=(),
+        outcome=Outcome(kind="plan"),
+        plan_trace=PlanTraceView(
+            feasibility_outcome="feasible",
+            reason=None,
+            recipes=(RecipeOutcomeView("r1", "selected"),),
+            requirements=(
+                RequirementOutcomeView(
+                    recipe_id="r1",
+                    requirement_id="req-1",
+                    constraint="vegan",
+                    state="satisfied",
+                    requirement_text="tofu",
+                    resolved_concept="tofu",
+                    selected_offer=None,
+                    warnings=(),
+                ),
+            ),
+        ),
+    )
+    mapped = from_trace_envelope(trace, trace_id="trace-wire")
+    recipe = mapped.plan.recipes[0]
+    constraint = recipe.constraints[0]
+    events = (
+        MetadataEvent(event="metadata", session_id="s1", workflow_node="Plan", trace_id=mapped.trace_id),
+        PlanUpdatedEvent(
+            event="plan_updated",
+            delta={"day": 1, "slot": "dinner", "recipe_id": recipe.recipe_id},
+            explanation={"recipe": recipe, "constraints": [constraint]},
+        ),
+        DoneEvent(event="done", status="complete", trace_id=mapped.trace_id),
+        ErrorEvent(event="error", code="WORKFLOW_FAILURE", message="failed", trace_id=mapped.trace_id),
+    )
+    payloads = [event.model_dump() for event in events]
+    assert [payload["event"] for payload in payloads] == ["metadata", "plan_updated", "done", "error"]
+    assert all("trace" not in payload for payload in payloads)
+
+    def keys(value):
+        if isinstance(value, dict):
+            for key, nested in value.items():
+                yield key
+                yield from keys(nested)
+        elif isinstance(value, list):
+            for nested in value:
+                yield from keys(nested)
+
+    assert not set(keys(payloads)).intersection(CHAT_FORBIDDEN_FIELDS)

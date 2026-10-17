@@ -425,7 +425,7 @@ no live model, no Neo4j, no network. F-P3-1 is tracked, not resolved here.
   - Files: `SystemCode/remy/app/tests/api/test_explanation_shape.py` (create)
   - Done when: the fixture builds two `TraceEnvelope`s (one dropped `evidence-absent`, one dropped `present-evidence-excludes`), maps each, and asserts (a) all three levels present; (b) the two drop causes are distinct and each distinct from `unmapped`; (c) a third multi-cause case preserves order and no collapse.
 
-- [ ] **T-11** Write failing test: events serialize to wire payloads with no floor field
+- [x] **T-11** Write failing test: events serialize to wire payloads with no floor field
   - Type: integration
   - Covers: AC-10 (no trace embedded); AC-7 (no floor field in payloads)
   - Files: `SystemCode/remy/app/tests/test_chat_contract.py` (append)
