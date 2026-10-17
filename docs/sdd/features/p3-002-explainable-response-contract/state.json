@@ -1,0 +1,13 @@
+{
+  "stage": "tasks-approved",
+  "loops": 0,
+  "spec_hash": "sha256:2cc7462cd77f0b98",
+  "plan_hash": "sha256:1cbf52db537b83f1",
+  "tasks_hash": "sha256:e70878ed3c1f412e",
+  "history": [
+    {
+      "at": "2026-10-17T02:45:06+08:00",
+      "event": "feature created (proposed)"
+    }
+  ]
+}

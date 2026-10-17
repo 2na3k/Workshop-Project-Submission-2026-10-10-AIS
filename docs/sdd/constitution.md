@@ -1,6 +1,6 @@
 # Project Constitution
 
-Version: 1.6
+Version: 1.7
 Status: approved
 
 Long-lived, project-level. Changes only via `amendments/`. This file has no
@@ -263,7 +263,7 @@ layers must comply or the constitution must be amended.
   Mapping confidence, normalization version, and source IDs must not be returned
   to the user and must be retained only in the execution trace.
 - Why: Q8 (scopes G-6).
-- Check: Named test fixture — `tests/api/test_response_schema.py` serializes a
+- Check: Named test fixture — `SystemCode/remy/app/tests/api/test_response_schema.py` serializes a
   representative response and asserts the allowed key set, failing if
   `confidence`, `normalization_version`, or any `source_*` / `*_id` provenance
   field appears in the user-facing payload. A companion assertion confirms those
@@ -275,7 +275,7 @@ layers must comply or the constitution must be amended.
   evidence-absent must be reported distinctly from a drop caused by present
   evidence that rules the recipe out.
 - Why: Proposal G-2, G-6; Explainability Stance.
-- Check: Named test fixture — `tests/api/test_explanation_shape.py` builds two
+- Check: Named test fixture — `SystemCode/remy/app/tests/api/test_explanation_shape.py` builds two
   responses, one where a recipe is dropped for absent evidence and one where it
   is dropped for present-but-excluding evidence, and asserts each carries the
   distinct cause code and that all three levels of outcome are present in both.
