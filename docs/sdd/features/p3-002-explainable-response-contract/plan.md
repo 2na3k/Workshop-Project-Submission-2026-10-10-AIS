@@ -367,7 +367,7 @@ no live model, no Neo4j, no network. F-P3-1 is tracked, not resolved here.
 
 ### Group 1 — contract types
 
-- [ ] **T-2** Write failing tests: `ChatRequest` validation
+- [x] **T-2** Write failing tests: `ChatRequest` validation
   - Type: test
   - Covers: AC-1
   - Files: `SystemCode/remy/app/tests/test_chat_contract.py` (create)
