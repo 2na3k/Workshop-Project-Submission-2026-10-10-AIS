@@ -445,7 +445,7 @@ no live model, no Neo4j, no network. F-P3-1 is tracked, not resolved here.
 
 ### Group 4 — CI config
 
-- [ ] **T-14** Update `sdd.json` check set to name the fixture directory
+- [x] **T-14** Update `sdd.json` check set to name the fixture directory
   - Type: impl
   - Covers: check-set coverage of the feature's paths
   - Files: `sdd.json`
