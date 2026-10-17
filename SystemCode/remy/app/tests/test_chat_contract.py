@@ -112,3 +112,90 @@ def test_r16_floor_is_the_named_field_list():
     assert not {"recipe_id", "requirement_id", "trace_id", "plan_id", "session_id"}.intersection(
         CHAT_FORBIDDEN_FIELDS
     )
+
+
+def test_maps_real_trace_envelope_to_explanation():
+    from app.chat_contract import from_trace_envelope
+    from workflows.models import (
+        NamedConstraintView,
+        Outcome,
+        PlanResult,
+        PlanTraceView,
+        RecipeOutcomeView,
+        RequirementOutcomeView,
+    )
+    from workflows.trace import assemble_trace
+
+    def make_envelope(*, kind, feasibility, recipes, requirements=(), bindings=(), plan=None, tolerance=0):
+        plan_trace = PlanTraceView(
+            feasibility_outcome=feasibility,
+            reason="No assignment" if feasibility == "infeasible" else None,
+            binding_constraints=bindings,
+            applied_tolerance_pct=tolerance,
+            recipes=recipes,
+            requirements=requirements,
+        )
+        return assemble_trace(
+            raw_message="Plan a meal",
+            parsed_constraints=None,
+            unapplied_constraints=(),
+            outcome=Outcome(kind=kind, plan=plan),
+            plan_trace=plan_trace,
+        )
+
+    requirements = (
+        RequirementOutcomeView(
+            recipe_id="r1",
+            requirement_id="req-1",
+            constraint="vegan",
+            state="satisfied",
+            requirement_text="tofu",
+            resolved_concept="tofu",
+            selected_offer={"listing_name": "Firm tofu", "retailer": "Market"},
+            warnings=("price unavailable",),
+        ),
+    )
+    feasible_env = make_envelope(
+        kind="plan",
+        feasibility="feasible",
+        recipes=(RecipeOutcomeView("r1", "selected"),),
+        requirements=requirements,
+        plan=PlanResult(plan_id="p1", status="complete", message=None),
+    )
+    feasible = from_trace_envelope(feasible_env, trace_id="trace-abc")
+    assert feasible.trace_id == "trace-abc"
+    assert feasible.plan is not None
+    assert feasible.plan.recipes[0].constraints[0].selected_offer.listing_name == "Firm tofu"
+    assert feasible.plan.recipes[0].constraints[0].warnings == ["price unavailable"]
+
+    causes = ("present-evidence-excludes", "evidence-absent", "unmapped")
+    dropped = RecipeOutcomeView("r2", "dropped", cause=causes[0], causes=causes)
+    infeasible_env = make_envelope(
+        kind="infeasible",
+        feasibility="infeasible",
+        recipes=(dropped,),
+        bindings=(NamedConstraintView("plan", "nutrition.protein", "minimum"),),
+    )
+    infeasible = from_trace_envelope(infeasible_env, trace_id="trace-infeasible")
+    assert infeasible.plan is not None
+    assert infeasible.plan.binding_constraints[0].code == "nutrition.protein"
+    assert [cause.value for cause in infeasible.plan.recipes[0].drop_causes] == list(causes)
+
+    relaxed_env = make_envelope(
+        kind="plan",
+        feasibility="relaxed",
+        recipes=(RecipeOutcomeView("r3", "selected"),),
+        plan=PlanResult(
+            plan_id="p3",
+            status="complete",
+            message=None,
+            feasibility_outcome="relaxed",
+            relaxed=True,
+            applied_tolerance_pct=15,
+        ),
+        tolerance=15,
+    )
+    relaxed = from_trace_envelope(relaxed_env, trace_id="trace-relaxed")
+    assert relaxed.plan is not None
+    assert relaxed.plan.relaxed is True
+    assert relaxed.plan.applied_tolerance_pct == 15

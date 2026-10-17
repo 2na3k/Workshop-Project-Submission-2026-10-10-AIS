@@ -399,7 +399,7 @@ no live model, no Neo4j, no network. F-P3-1 is tracked, not resolved here.
   - Files: `SystemCode/remy/app/tests/test_chat_contract.py` (append)
   - Done when: `test_r16_floor_is_the_named_field_list` fails; the test asserts the floor constant (name per F-2 resolution below) is exactly the eight named fields (`confidence`, `normalization_version`, `source`, `source_snapshot_id`, `source_id`, `mapping_version`, `food_key`, `fdc_id`), no `*_id` glob, and that the permitted structural ids (`recipe_id`, `requirement_id`, `trace_id`, `plan_id`, `session_id`) are not in the floor.
 
-- [ ] **T-7** Write failing tests: `from_trace_envelope` maps a real `TraceEnvelope` to the explanation
+- [x] **T-7** Write failing tests: `from_trace_envelope` maps a real `TraceEnvelope` to the explanation
   - Type: integration
   - Covers: AC-3, AC-4, AC-5, AC-6, AC-13, AC-14 (mapper behavior); AC-10 (trace_id accept-signature)
   - Files: `SystemCode/remy/app/tests/test_chat_contract.py` (append)
