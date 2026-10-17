@@ -355,7 +355,7 @@ no live model, no Neo4j, no network. F-P3-1 is tracked, not resolved here.
 
 ### Group 0 — pre-task admin
 
-- [ ] **T-1** Confirm the contract module and amendment prerequisites
+- [x] **T-1** Confirm the contract module and amendment prerequisites
   - Type: admin
   - Covers: plan §0; A-007 prerequisite (already landed at constitution v1.7)
   - Files: none (verification only)
