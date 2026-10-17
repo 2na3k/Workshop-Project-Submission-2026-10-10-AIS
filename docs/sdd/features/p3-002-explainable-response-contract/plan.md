@@ -393,7 +393,7 @@ no live model, no Neo4j, no network. F-P3-1 is tracked, not resolved here.
 
 ### Group 2 — audit floor and mapper
 
-- [ ] **T-6** Write failing tests: floor constant definition and R-16 floor exactly-as-named
+- [x] **T-6** Write failing tests: floor constant definition and R-16 floor exactly-as-named
   - Type: test
   - Covers: AC-7b
   - Files: `SystemCode/remy/app/tests/test_chat_contract.py` (append)

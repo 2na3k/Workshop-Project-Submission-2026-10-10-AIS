@@ -93,3 +93,22 @@ def test_drop_cause_enum_is_closed():
     }
     with pytest.raises(ValueError):
         DropCause("unknown-cause")
+
+
+def test_r16_floor_is_the_named_field_list():
+    from app.chat_contract import CHAT_FORBIDDEN_FIELDS
+
+    assert CHAT_FORBIDDEN_FIELDS == (
+        "confidence",
+        "normalization_version",
+        "source",
+        "source_snapshot_id",
+        "source_id",
+        "mapping_version",
+        "food_key",
+        "fdc_id",
+    )
+    assert not any(field.endswith("*_id") for field in CHAT_FORBIDDEN_FIELDS)
+    assert not {"recipe_id", "requirement_id", "trace_id", "plan_id", "session_id"}.intersection(
+        CHAT_FORBIDDEN_FIELDS
+    )
