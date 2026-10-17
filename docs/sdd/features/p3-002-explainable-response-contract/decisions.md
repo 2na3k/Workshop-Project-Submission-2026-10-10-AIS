@@ -42,6 +42,25 @@
 - Affects: AC-8, AC-11b, R-16.
 - Source: Plan §4, Task T-9, Finding F-P3-1.
 
+### D-6 — F-P3-1 resolved; trace-side R-16 `xfail`s removed
+
+- Date: 2026-10-17
+- Status: adopted (reopen; closes F-P3-1)
+- Context: p3-002's R-16 conformance fixture had a trace-side clause that was
+  `xfail(strict=True)` pending F-P3-1 (`PlanTraceView` carried no audit
+  provenance). The three upstream reopens (p2-002, p2-003, p3-001) landed the
+  fields on `OfferRef`, `RequirementOutcome`, and `RequirementOutcomeView`.
+- Decision: the `xfail` markers on the trace-side clause are removed; the
+  assertions become active and pass. F-P3-1 is marked resolved.
+- Alternatives: keep the `xfail` until a later feature confirms the fields
+  propagate (rejected: the propagation is verified by the reopens' own tests
+  and by the trace-side assertion now passing).
+- Affects: `app/tests/api/test_response_schema.py`,
+  `app/tests/api/test_explanation_shape.py` (if `xfail`-marked),
+  `workflows/tests/test_response_schema_workflow.py` (the two workflow-side
+  `xfail`s removed by p3-001's reopen).
+- Source: F-P3-1; the three upstream reopens.
+
 ## Consequential clarifications
 
 - **C-1 (trace: referenced, not embedded, 2026-10-17, human):** The trace does not travel in the SSE stream. Every response carries a stable `trace_id` correlating the user-visible response with its trace; the trace itself is retrievable out-of-band by identifier.

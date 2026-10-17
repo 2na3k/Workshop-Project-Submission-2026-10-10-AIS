@@ -30,8 +30,8 @@ def test_trace_envelope_reaches_plan_reasoning_and_records_llm_calls():
     assert len(trace.llm_invocations) == 2
 
 
-def test_trace_side_provenance_gap_is_deferred():
-    import pytest
-
-    pytest.xfail("F-P3-1: PlanTrace does not carry R-16 provenance fields")
-    assert False
+# def test_trace_side_provenance_gap_is_deferred():
+#     import pytest
+#
+#     pytest.xfail("F-P3-1: PlanTrace does not carry R-16 provenance fields")
+#     assert False

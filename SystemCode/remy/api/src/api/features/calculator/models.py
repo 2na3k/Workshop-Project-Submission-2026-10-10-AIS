@@ -23,6 +23,9 @@ class OfferRef:
     food_key: str
     listing_name: str
     retailer: str
+    confidence: float | None = None
+    source_snapshot_id: str | None = None
+    mapping_version: str | None = None
 
 
 @dataclass(frozen=True)
@@ -68,6 +71,8 @@ class RetailSKU:
     nutrition_rank: int | None = None
     selection_priority: int | None = None
     approval_status: str | None = None
+    source_snapshot_id: str | None = None
+    mapping_version: str | None = None
 
     # def __post_init__(self) -> None:
     #     if self.confidence is not None and (

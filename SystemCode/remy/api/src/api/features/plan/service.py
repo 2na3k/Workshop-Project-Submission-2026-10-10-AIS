@@ -138,12 +138,14 @@ def _recipe_outcome_records(recipes: list, causes: dict[str, list[str]], selecte
             ))
     return result
 
+
 def _named_constraint_response(constraint: NamedConstraint) -> NamedConstraintResponse:
     return NamedConstraintResponse(
         scope=constraint.scope,
         code=constraint.code,
         kind=constraint.kind,
     )
+
 
 def _named_drop_constraints(
         recipes: list,
@@ -292,7 +294,8 @@ class PlanService:
                 feasibility_outcome="infeasible",
                 relaxed=False,
                 applied_tolerance_pct=0,
-                binding_constraints=[_named_constraint_response(c) for c in exc.binding_constraints],
+                binding_constraints=[_named_constraint_response(c) for c in
+                                     exc.binding_constraints],
                 recipe_outcomes=[
                     RecipeOutcomeResponse(
                         recipe_id=record.recipe_id,
@@ -337,6 +340,7 @@ class PlanService:
                         filtered.outcomes.get(recipe.recipe_id), "warnings", []
                     ) if warning.ingredient_id == ingredient.occurrence_id
                 )
+                offer = selected_offers.get((recipe.recipe_id, ingredient.occurrence_id))
                 constraint_records.append(RequirementOutcome(
                     recipe_id=recipe.recipe_id,
                     requirement_id=ingredient.occurrence_id,
@@ -345,15 +349,17 @@ class PlanService:
                     requirement_text=(ingredient.cleaned_text or ingredient.raw_text
                                       or ingredient.description or ingredient.canonical_key),
                     resolved_concept=ingredient.concept_name or ingredient.canonical_key,
-                    selected_offer=selected_offers.get(
-                        (recipe.recipe_id, ingredient.occurrence_id)),
+                    selected_offer=offer,
                     warnings=warning_codes,
+                    confidence=offer.confidence if offer else None,
+                    source_snapshot_id=offer.source_snapshot_id if offer else None,
+                    mapping_version=offer.mapping_version if offer else None,
                 ))
 
         applied_tolerance = request.nutrient_tolerance_pct if relaxations else 0
         trace = PlanTrace(feasibility_outcome="plan-produced",
-                               applied_tolerance_pct=applied_tolerance, recipes=recipe_records,
-                               requirements=constraint_records, )
+                          applied_tolerance_pct=applied_tolerance, recipes=recipe_records,
+                          requirements=constraint_records, )
         self.last_trace = trace
 
         response_days = []

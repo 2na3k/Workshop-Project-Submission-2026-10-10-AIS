@@ -82,6 +82,9 @@ class RequirementOutcomeView:
     resolved_concept: Any = None
     selected_offer: Any = None
     warnings: tuple[str, ...] = ()
+    confidence: float | None = None
+    source_snapshot_id: str | None = None
+    mapping_version: str | None = None
 
 
 @dataclass(frozen=True)

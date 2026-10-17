@@ -21,6 +21,10 @@ def _representative_trace():
                 requirement_text="tofu",
                 resolved_concept="tofu",
                 selected_offer={"listing_name": "Firm tofu", "retailer": "Market"},
+                confidence=0.95,
+                source_snapshot_id="snapshot-1",
+                mapping_version="v1.0",
+                warnings=()
             ),
         ),
     )
@@ -49,8 +53,8 @@ def test_user_payload_excludes_audit_provenance():
     assert not [key for key in keys if any(field in key for field in CHAT_FORBIDDEN_FIELDS)]
 
 
-@pytest.mark.xfail(strict=True, reason="F-P3-1: PlanTraceView carries no R-16 audit provenance; owned by p2-003")
+# @pytest.mark.xfail(strict=True, reason="F-P3-1: PlanTraceView carries no R-16 audit provenance; owned by p2-003")
 def test_trace_retains_audit_provenance():
     trace = _representative_trace()
     trace_fields = list(_keys(asdict(trace.plan_trace)))
-    assert {"confidence", "normalization_version", "source_id"}.issubset(trace_fields)
+    assert {"confidence", "mapping_version", "source_snapshot_id"}.issubset(trace_fields)

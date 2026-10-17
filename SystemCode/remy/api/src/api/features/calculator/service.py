@@ -86,6 +86,9 @@ class CostNutritionService:
                             food_key=package.food_key,
                             listing_name=package.listing_name,
                             retailer=package.retailer,
+                            confidence=package.confidence,
+                            source_snapshot_id=package.source_snapshot_id,
+                            mapping_version=package.mapping_version,
                         )
                 selected_offers.append(RequirementOffer(
                     occurrence_id=requirement.occurrence_id,

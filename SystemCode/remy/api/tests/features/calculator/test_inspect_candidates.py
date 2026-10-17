@@ -85,7 +85,10 @@ def test_inspect_candidates_returns_missing_nutrients_per_recipe():
 
     assert signals["partial"].missing_nutrients == ["fiber_g", "sodium_mg"]
     assert signals["partial"].selected_offers[0].selected_offer == OfferRef(
-        food_key="food-best", listing_name="Best value", retailer="retailer-a"
+        food_key="food-best",
+        listing_name="Best value",
+        retailer="retailer-a",
+        confidence=0.9,
     )
     assert signals["complete"].missing_nutrients == []
     assert signals["complete"].selected_offers[0].selected_offer is None

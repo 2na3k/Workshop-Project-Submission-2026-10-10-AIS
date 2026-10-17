@@ -120,6 +120,28 @@
 - Source: p3-001's plan BD-3 (2026-10-16); the workflow adapter's
   infeasible-outcome path.
 
+### D-9 — `RequirementOutcome` carries the offer's provenance fields
+
+- Date: 2026-10-17
+- Status: adopted (reopen; resolves F-P3-1's middle half)
+- Context: p3-002's trace-side R-16 conformance check requires the trace to
+  carry `confidence`, `source_snapshot_id`, and `mapping_version`. p2-002's
+  `OfferRef` now carries them, but `RequirementOutcome` (the trace record)
+  did not project them — the trace could only reach them through
+  `selected_offer.confidence` etc., which is awkward for the workflow's
+  view model and the p3-002 mapper.
+- Decision: `RequirementOutcome` gains `confidence: float | None = None`,
+  `source_snapshot_id: str | None = None`,
+  `mapping_version: str | None = None`. `PlanService.generate` populates
+  them from the offer when the requirement is selected.
+- Alternatives: reach through `selected_offer` in the workflow view and the
+  p3-002 mapper (rejected: inconsistent flat/nested access; the workflow's
+  `RequirementOutcomeView` would need a nested view model).
+- Affects: `plan/models.py` (`RequirementOutcome`), `plan/service.py` (the
+  selected-requirement construction). Response DTO
+  (`ConstraintOutcomeResponse`) unchanged — R-16 keeps provenance trace-side.
+- Source: p3-002 F-P3-1 resolution; p3-001's plan Revision notes.
+
 ## Consequential clarifications
 
 - **C-1 — Cost and budget remain non-gating in p2-003.** The plan does not

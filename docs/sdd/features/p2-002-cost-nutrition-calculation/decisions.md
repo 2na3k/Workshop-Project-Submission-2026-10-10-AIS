@@ -26,6 +26,30 @@
 - Affects: AC-18, service/router interface.
 - Source: p2-002 plan, Design §2 (tasks T-20, T-23).
 
+### D-4 — `OfferRef` carries `confidence`, `source_snapshot_id`, `mapping_version`
+
+- Date: 2026-10-17
+- Status: adopted (reopen; resolves F-P3-1's upstream half)
+- Context: p3-002's trace-side R-16 conformance check requires
+  `confidence`, `source_snapshot_id`, and `mapping_version` on the trace.
+  The calculator's `OfferRef` carried only `food_key`, `listing_name`,
+  `retailer`, so the fields were unreachable downstream. All three live on
+  the deployed `FULFILLS` edge and were already projected by the calculator's
+  query.
+- Decision: `OfferRef` gains `confidence: float | None`,
+  `source_snapshot_id: str | None`, `mapping_version: str | None`.
+  `CostNutritionService.inspect_candidates` populates them from the winning
+  `FULFILLS` edge's `confidence`, `source_snapshot_id`, and `mapping_version`.
+  `RetailSKU` carries them (with projection unchanged if already present).
+- Alternatives: read `FoodConcept.normalization_version` instead of
+  `FULFILLS.mapping_version` (rejected: the design doc's `FULFILLS` edge
+  carries `mapping_version` for the offer's mapping; `FoodConcept` carries the
+  vocabulary's normalization version, which is a different concept).
+- Affects: `calculator/models.py` (`OfferRef`, `RetailSKU` if needed),
+  `calculator/service.py` (`inspect_candidates`), `calculator/repository.py`
+  (projection, if not already present).
+- Source: p3-002 F-P3-1 resolution; p3-001's plan Revision notes.
+
 ### C-1 Freshness at both consuming layers
 - Date: 2026-10-07
 - Decision: The calculator selects a price package only when

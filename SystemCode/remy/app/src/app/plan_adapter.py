@@ -59,12 +59,42 @@ class PlanServiceAdapter(PlanPort):
         return RecipeOutcomeView(value.recipe_id, value.outcome, value.cause, tuple(value.causes))
 
     @staticmethod
-    def _requirement(value: Any) -> RequirementOutcomeView:
-        warnings = tuple(value.warnings)
+    def _offer(value: Any) -> Any:
         offer = value.selected_offer
         if hasattr(offer, "model_dump"):
             offer = offer.model_dump(mode="python")
-        return RequirementOutcomeView(value.recipe_id, value.requirement_id, value.constraint, value.state, value.requirement_text, value.resolved_concept, offer, warnings)
+        return offer
+
+    @staticmethod
+    def _requirement(value: Any) -> RequirementOutcomeView:
+        """User-facing requirement outcome. R-16: no audit provenance here."""
+        return RequirementOutcomeView(
+            value.recipe_id,
+            value.requirement_id,
+            value.constraint,
+            value.state,
+            value.requirement_text,
+            value.resolved_concept,
+            PlanServiceAdapter._offer(value),
+            tuple(value.warnings),
+        )
+
+    @staticmethod
+    def _trace_requirement(value: Any) -> RequirementOutcomeView:
+        """Trace requirement outcome, retaining R-16 audit provenance (F-P3-1)."""
+        return RequirementOutcomeView(
+            value.recipe_id,
+            value.requirement_id,
+            value.constraint,
+            value.state,
+            value.requirement_text,
+            value.resolved_concept,
+            PlanServiceAdapter._offer(value),
+            tuple(value.warnings),
+            getattr(value, "confidence", None),
+            getattr(value, "source_snapshot_id", None),
+            getattr(value, "mapping_version", None),
+        )
 
     def _result(self, response: Any) -> PlanResult:
         return PlanResult(
@@ -90,5 +120,5 @@ class PlanServiceAdapter(PlanPort):
             tuple(self._constraint(item) for item in trace.binding_constraints),
             trace.applied_tolerance_pct,
             tuple(self._recipe(item) for item in trace.recipes),
-            tuple(self._requirement(item) for item in trace.requirements),
+            tuple(self._trace_requirement(item) for item in trace.requirements),
         )

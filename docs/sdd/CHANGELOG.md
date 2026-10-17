@@ -124,6 +124,9 @@
   - Updated response examples in `SystemCode/remy/api/docs/API_doc.md` to reflect canonical response shape without `fdc_id` or audit fields (R-1).
   - Repaired stale unit conversion and resolver tests (T-3, T-4, T-5).
   - Added comprehensive test suites including R-13 named fixture (`test_mapping_selection.py`), repository integration (`test_repository_integration.py`), service error rejection (`test_service_errors.py`), response schema verification (`test_response_schema.py`), and end-to-end integration (`test_calculator_integration.py`).
+  - **Reopen (2026-10-17):** `OfferRef` now carries `confidence`, `source_snapshot_id`, and 
+    `mapping_version` from the winning `FULFILLS` edge. Resolves the upstream half of F-P3-1 so 
+    p3-002's trace-side R-16 conformance check can pass.
 - Acceptance criteria: AC-1 .. AC-20
 - Decisions: docs/sdd/features/p2-002-cost-nutrition-calculation/decisions.md
 - Breaking: none
@@ -163,6 +166,11 @@
   - Assembled versioned, self-contained `TraceEnvelope` capturing raw message, parsed constraints, unapplied constraints, node execution records, LLM invocation metadata, and embedded `PlanTraceView` (AC-10).
   - Added workflow-side conformance test fixtures for R-16 and R-17 verifying user payload allowlists and distinct three-level drop causes, while deferring trace-side provenance retention under tracked finding F-P3-1 (AC-21).
   - Added comprehensive unit, contract, and integration test suites in `remy/workflows/tests/` and `remy/app/tests/`.
+  - **Reopen (2026-10-17):** `RequirementOutcomeView` and `OfferView` now
+    carry `confidence`, `source_snapshot_id`, and `mapping_version`, mapped
+    from `RequirementOutcome` / `OfferRef` by the adapter. Resolves the
+    workflow-side half of F-P3-1. The trace-side R-16 workflow test is no
+    longer `xfail`ed.
 - Acceptance criteria: AC-1 .. AC-21
 - Decisions: docs/sdd/features/p3-001-workflow-recommendation-service/decisions.md
 - Breaking: none
@@ -178,6 +186,9 @@
   - Landed Amendment A-007 updating Constitution R-16 and R-17 named check paths to `SystemCode/remy/app/tests/api/<name>` (v1.6 -> v1.7).
   - Added constitution-named test fixtures at `SystemCode/remy/app/tests/api/test_response_schema.py` (R-16) and `SystemCode/remy/app/tests/api/test_explanation_shape.py` (R-17), with trace-side provenance retention tracked under F-P3-1 with strict xfail (AC-8, AC-11a, AC-11b).
   - Added comprehensive unit and workflow integration tests in `SystemCode/remy/app/tests/test_chat_contract.py`.
+  - **Reopen (2026-10-17):** F-P3-1 resolved. The trace-side clause of the R-16 conformance 
+    fixture is no longer `xfail`ed; the assertions pass because the three upstream reopens carry `confidence`,
+    `source_snapshot_id`, and `mapping_version` through the trace.
 - Acceptance criteria: AC-1 .. AC-14
 - Decisions: docs/sdd/features/p3-002-explainable-response-contract/decisions.md
 - Breaking: none

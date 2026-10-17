@@ -38,7 +38,10 @@ RETURN canonical_key, toString(f.fdc_id) AS fdc_id, f.food_key AS food_key,
        f.cholesterol_mg AS cholesterol_mg, ful.candidate_key AS candidate_key,
        f.nutrition_source AS nutrition_source,
        ful.listing_key AS listing_key,
-       ful.confidence AS confidence, ful.approval_status AS approval_status,
+       ful.confidence AS confidence, 
+       ful.source_snapshot_id AS source_snapshot_id,
+       ful.mapping_version AS mapping_version,
+       ful.approval_status AS approval_status,
        ful.price_status AS price_status,
        ful.price_match_status AS price_match_status,
        ful.freshness_status AS freshness_status,
@@ -116,6 +119,8 @@ class CostNutritionRepository:
                         food_key=data.get("food_key"),
                         nutrition_rank=data.get("nutrition_rank"),
                         selection_priority=data.get("selection_priority"),
+                        source_snapshot_id=data.get("source_snapshot_id"),
+                        mapping_version=data.get("mapping_version"),
                         approval_status=data.get("approval_status")))
                     grouped[key].append(facts)
             return dict(grouped)

@@ -667,6 +667,11 @@ The backend recommendation surface is built end-to-end: a LangGraph workflow orc
   defect (Close artifacts in Implement task lists — 4th occurrence; two
   one-line prompt fixes named), and the API_doc §3 `plan_updated` divergence
   (p3-004 owns the doc update).
+- F-P3-1 resolved 2026-10-17 (three small reopens: p2-002 `OfferRef`,
+  p2-003 `RequirementOutcome`, p3-001 `RequirementOutcomeView`; p3-002's
+  trace-side R-16 `xfail` removed). The trace now carries `confidence`,
+  `source_snapshot_id`, and `mapping_version`. The durable alternative
+  (extend `BEST_FULFILLMENT`) is not needed.
 - p3-003: not started.
 - p3-004: not started.
 
@@ -888,3 +893,15 @@ The backend recommendation surface is built end-to-end: a LangGraph workflow orc
   with zero loops and two non-blocking nits; the phase review needs the
   provenance-gap resolution path and the recurring kit defect in view before
   p3-004 begins.
+
+- 2026-10-17 — Resolved F-P3-1 via three additive reopens (p2-002
+  `OfferRef`, p2-003 `RequirementOutcome`, p3-001 `RequirementOutcomeView`)
+  and the removal of p3-002's trace-side R-16 `xfail`. The three fields
+  (`confidence`, `source_snapshot_id`, `mapping_version`) live on the
+  deployed `FULFILLS` edge; the calculator already projected them; the
+  reopens carry them through the plan trace and the workflow view. The
+  durable alternative (extend `BEST_FULFILLMENT` to carry the winning
+  edge's provenance) is not needed. Phase p3 risks: F-P3-1 moved to
+  resolved. Reason: p3-004 is the last p3 feature and is the layer that
+  most needs the trace's provenance for conversational "why this offer?"
+  answers; resolving it now avoids a fourth mid-loop discovery at p3-004.

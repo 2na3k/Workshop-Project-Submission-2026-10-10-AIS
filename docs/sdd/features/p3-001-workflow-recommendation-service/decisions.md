@@ -58,6 +58,26 @@
 - Affects: AC-21, R-16, R-17.
 - Source: Plan BD-2 and spec C-8.
 
+### D-8 — `RequirementOutcomeView` carries the offer's provenance fields
+
+- Date: 2026-10-17
+- Status: adopted (reopen; resolves F-P3-1's workflow-side half)
+- Context: p3-002's trace-side R-16 conformance check runs against the
+  workflow's trace view (as well as the plan's `PlanTrace`). After p2-002
+  and p2-003's reopens, the fields flow to `PlanTraceView` — but the workflow
+  declared its own view model (`RequirementOutcomeView` + `OfferView`) without
+  them.
+- Decision: `OfferView` and `RequirementOutcomeView` gain `confidence`,
+  `source_snapshot_id`, and `mapping_version`. The adapter in `remy/app`
+  maps them one-to-one from `RequirementOutcome` and `OfferRef`.
+- Alternatives: let the workflow view mirror the response DTO (rejected:
+  the response DTO excludes provenance; the view must carry what the trace
+  carries).
+- Affects: `workflows/models.py` (`OfferView`, `RequirementOutcomeView`),
+  `app/plan_adapter.py` (mapping), `workflows/tests/test_response_schema_workflow.py`
+  (remove the `xfail`s).
+- Source: p3-002 F-P3-1 resolution.
+
 ## Consequential clarifications
 
 - **C-1 (plan interface, 2026-10-15, spec review):** The workflow reaches the plan path through a workflow-owned interface (dependency inversion), with the adapter in `app` (composition root) calling `PlanService.generate`.

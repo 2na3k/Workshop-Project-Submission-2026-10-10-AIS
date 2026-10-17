@@ -71,6 +71,6 @@ def test_user_payload_excludes_provenance():
     assert "Plan is ready." == state["outcome"].text
 
 
-def test_trace_side_provenance_is_deferred_to_f_p3_1():
-    pytest.xfail("F-P3-1: PlanTrace does not carry R-16 provenance fields")
-    assert False
+# def test_trace_side_provenance_is_deferred_to_f_p3_1():
+#     pytest.xfail("F-P3-1: PlanTrace does not carry R-16 provenance fields")
+#     assert False

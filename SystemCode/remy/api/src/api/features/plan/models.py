@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Literal
+
+from api.features.calculator import OfferRef
 from domain.types import Nutrition
 
 
@@ -89,8 +91,11 @@ class RequirementOutcome:
     state: str
     requirement_text: str | None = None
     resolved_concept: str | None = None
-    selected_offer: object | None = None
+    selected_offer: OfferRef | None = None
     warnings: tuple[str, ...] = ()
+    confidence: float | None = None
+    source_snapshot_id: str | None = None
+    mapping_version: str | None = None
 
 
 @dataclass(frozen=True)
