@@ -36,7 +36,7 @@ test"; where nothing exists, it is "new".
 | p2-002-cost-nutrition-calculation          | done    | p1-002-provenance-graph-model, p2-001-constraint-evidence-filtering                                             | p2-001-constraint-evidence-filtering, p2-003-feasible-meal-plan-solving                                           | Portion nutrient and consumed/package cost result contract; item-level evidence-absent signals (`MISSING_PACKAGE_DATA`, `PARTIAL_NUTRITION_DATA`) consumed by p2-003 as the recipe-level drop trigger (per-nutrient for partial nutrition) |
 | p2-003-feasible-meal-plan-solving          | partial — impl complete | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                         | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation                                           | Plan feasibility result with named binding constraints (deterministic individually-binding set), reasoning structure sufficient for downstream explanation, and the recipe-level nutrition drop behavior consuming p2-002's item-level `PARTIAL_NUTRITION_DATA` signal (per-nutrient for tracked nutrients). Cost/budget out of scope; recipe-level cost drop deferred to p3-004. |
 | p3-001-workflow-recommendation-service     | done    | p2-003-feasible-meal-plan-solving                                                                               | p3-002-explainable-response-contract, p3-003-web-planner-experience, p3-004-conversational-constraint-interface   | Recommendation execution result and trace boundary                                                                                   |
-| p3-002-explainable-response-contract       | new     | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation, p3-001-workflow-recommendation-service | p3-001-workflow-recommendation-service, p3-003-web-planner-experience, p3-004-conversational-constraint-interface | Three-level user explanation and audit-provenance separation                                                                         |
+| p3-002-explainable-response-contract       | done    | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation, p3-001-workflow-recommendation-service | p3-001-workflow-recommendation-service, p3-003-web-planner-experience, p3-004-conversational-constraint-interface | Three-level user explanation and audit-provenance separation                                                                         |
 | p3-003-web-planner-experience              | out of scope | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                    | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                      | Web request/response contract for meal-plan recommendations. **Owned by a separate frontend effort, not this SDD effort.** |
 | p3-004-conversational-constraint-interface | new     | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                    | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract, p3-003-web-planner-experience       | Conversational constraint extraction, turn-level recommendation delivery, safe re-expression of deterministic explanation causes, **and the recipe-level cost drop inherited from R-8/R-10 per A-006** |
 
@@ -528,13 +528,37 @@ The backend recommendation surface is built end-to-end: a LangGraph workflow orc
   phase review: **BD-2a** (R-16's named path divergence — same as p2-002's
   F-D) and **BD-2b** (R-17's named fixture `tests/api/test_explanation_shape.py`
   is absent; owner likely p3-002). (serves G-2, G-6)
-- **p3-002-explainable-response-contract** *(new)* — The user-facing response
-  contract exposing three-level explanations (plan, recipe, constraint) with
-  the drop causes p2 established (`evidence-absent`, `present-evidence-excludes`,
-  `unmapped`), and strict separation of audit-only provenance (mapping
-  confidence, normalization version, source identifiers) to the execution
-  trace. Consumes p3-001's trace and p2-001/p2-002's outcome contracts.
-  (serves G-2, G-6)
+- **p3-002-explainable-response-contract** *(done, 2026-10-17)* — The
+  user-facing response contract for Remy's conversational surface, defined as
+  concrete Pydantic v2 types in `SystemCode/remy/app/src/app/chat_contract.py`:
+  the `/chat` request schema (`ChatRequest`), the five SSE event payloads
+  (`MetadataEvent`, `TokenEvent`, `PlanUpdatedEvent`, `ErrorEvent`,
+  `DoneEvent`), the three-level explanation models (`PlanExplanation` /
+  `RecipeExplanation` / `ConstraintExplanation`, `OfferView`, `DropCause`
+  closed enum), `MealDelta` + `MealScopedExplanation` (the delta + meal-scoped
+  explanation for `plan_updated`), and `ChatResponseEnvelope` (the
+  non-streaming projection; trace referenced by `trace_id`, never embedded).
+  The pure mapper `from_trace_envelope(env: TraceEnvelope, trace_id: str) ->
+  ChatResponseEnvelope` projects p3-001's trace into the explanation,
+  preserving p2's drop-cause precedence (`present-evidence-excludes` →
+  `evidence-absent` → `unmapped`), failure-to-`ErrorEvent` mapping, and
+  infeasible binding constraints. The audit-provenance floor is the named
+  `CHAT_FORBIDDEN_FIELDS` constant (`confidence`, `normalization_version`,
+  `source`, `source_snapshot_id`, `source_id`, `mapping_version`, `food_key`,
+  `fdc_id`); prices and structural ids are permitted in the user payload, and
+  the SSE contract declares no endpoint-specific exclusions beyond R-16's
+  floor (C-3). Both constitution-named fixtures are created at
+  `SystemCode/remy/app/tests/api/<name>` per **Amendment A-007** (constitution
+  v1.6 → v1.7). The R-16 fixture has two independently-visible clauses: the
+  user-payload exclusion passes; the trace-side retention is
+  `xfail(strict=True)` under **Finding F-P3-1** (owned by p2-003). The R-17
+  fixture asserts three-level presence, distinct drop causes, and multi-cause
+  precedence. Zero loops beyond the plan-review's two minor findings (F-1
+  contract-module home for p3-004; F-2 floor constant naming). CI PASS: 81
+  passed, 3 xfailed (all strict; all F-P3-1 or its p3-001 counterpart); 4
+  `.importlinter` contracts kept, 0 broken. **Cross-feature: Amendment A-007**
+  formalizes the R-16/R-17 fixture-path divergence previously tracked as
+  p2-002 F-D and p3-001 BD-2a. (serves G-2, G-6)
 - **p3-003-web-planner-experience** *(new)* — The web request/response
   contract for meal-plan recommendations: the client-facing API surface that
   delivers p3-002's response shape to the web planner UI. (serves G-6)
@@ -594,6 +618,29 @@ The backend recommendation surface is built end-to-end: a LangGraph workflow orc
 - **Web UI tech stack.** p3-003 assumes a web frontend. The stack
   (framework, build tooling) isn't specified in the constitution. Confirm
   during p3-003's spec.
+- **F-P3-1 (trace-side R-16 provenance gap, owner: p2-003).** The user-payload
+  exclusion clause of R-16 passes; the trace-side retention fails because
+  `PlanTraceView` carries no `confidence`/`source_snapshot_id`/`mapping_version`.
+  The R-16 trace-side fixture is `xfail(strict=True)` with a reason naming
+  F-P3-1. **Resolution path (three small reopens):** p2-002 extends `OfferRef`
+  with the three provenance fields and populates them in `inspect_candidates`;
+  p2-003 carries them onto `RequirementOutcome` and projects
+  `fc.normalization_version` from `FoodConcept`; p3-001 carries them onto
+  `RequirementOutcomeView`; p3-002 removes the `xfail`. **Durable alternative:**
+  extend `BEST_FULFILLMENT` to carry the winning `FULFILLS` edge's provenance
+  (p1-002 reopen + graph rebuild). The phase review decides whether to action
+  the three reopens before p3-004 ships or track as p2-003 follow-ups.
+- **Kit defect (4th occurrence): Close artifacts in Implement task lists.**
+  p2-002 (T-24), p2-003 (T-17), p3-001 (T-16), and p3-002 (old T-15) all
+  placed `decisions.md` (a Close-stage artifact per `workflow.md`'s ownership
+  table) in the Implement task list, contradicting "a stage may only write its
+  own artifact." p3-002's implementer caught it and stopped; the task was
+  removed. **Two one-line kit-prompt fixes prevent recurrence:** (a) the plan
+  prompt should say "every task must be an Implement-stage artifact;
+  Close-stage artifacts (`decisions.md`, `CHANGELOG.md`, `state.json`) are not
+  tasks"; (b) the implement prompt should say "if a task asks you to write a
+  Close-stage artifact, stop and route to `plan`." Both belong to a kit
+  amendment at the phase review.
 
 ### Phase p3 progress
 
@@ -607,7 +654,19 @@ The backend recommendation surface is built end-to-end: a LangGraph workflow orc
   BD-2a (R-16 path divergence, same as p2-002's F-D), BD-2b (R-17 fixture
   absent; owner likely p3-002), and the langgraph pending-deprecation warning
   introduced by the new LangGraph dependency.
-- p3-002: not started.
+- p3-002: closed 2026-10-17, 0 loops. CI PASS: 81 passed, 3 xfailed (all
+  strict; the R-16 trace-side clause under F-P3-1, and p3-001's two
+  workflow-side F-P3-1 counterparts); `.importlinter` 4 kept, 0 broken.
+  Amendment A-007 landed (constitution v1.7): R-16's and R-17's named check
+  paths corrected to `SystemCode/remy/app/tests/api/<name>`. Two plan-review
+  findings folded into the task pass: F-1 (contract module lives in `app`;
+  p3-004's `/chat` endpoint must live there too) and F-2 (`CHAT_FORBIDDEN_FIELDS`
+  names the chat payload's full exclusion set, with the R-16 floor asserted
+  separately). Carry-forward items for phase review: F-P3-1 (trace-side
+  provenance; owner p2-003; three-reopen resolution path named), the kit
+  defect (Close artifacts in Implement task lists — 4th occurrence; two
+  one-line prompt fixes named), and the API_doc §3 `plan_updated` divergence
+  (p3-004 owns the doc update).
 - p3-003: not started.
 - p3-004: not started.
 
@@ -808,3 +867,24 @@ The backend recommendation surface is built end-to-end: a LangGraph workflow orc
   constitution-path findings in view before p3-002 begins. Two prerequisites
   for p3-002 are recorded: it consumes p3-001's trace boundary, and it is the
   likely owner of R-17's named fixture.
+
+- 2026-10-17 — Marked `p3-002-explainable-response-contract` as done, 0 loops.
+  Recorded what shipped (concrete Pydantic contract models for `/chat` request,
+  five SSE events, three-level explanation, `DropCause` enum, `MealDelta` +
+  `MealScopedExplanation`; `from_trace_envelope` mapper; `CHAT_FORBIDDEN_FIELDS`
+  audit floor; `trace_id`-referenced-not-embedded trace boundary per C-1;
+  `plan_updated` delta + meal-scoped explanation per C-2; layered R-16 floor per
+  C-3) and Amendment A-007 (R-16/R-17 fixture paths corrected to
+  `SystemCode/remy/app/tests/api/<name>`; constitution v1.6 → v1.7). Recorded
+  the two plan-review findings (F-1 contract-module home constrains p3-004;
+  F-2 floor constant naming) folded into the task pass, and the implement-stage
+  discovery BD-4 (T-15 mis-scoping — the 4th Close-artifact-in-Implement-list
+  occurrence across p2-002/p2-003/p3-001/p3-002; two one-line kit-prompt fixes
+  named). Flagged the phase-review carry-forwards: F-P3-1 (trace-side R-16
+  provenance gap; owner p2-003; three-reopen resolution path named; durable
+  `BEST_FULFILLMENT`-extension alternative recorded), the kit defect, the
+  API_doc §3 `plan_updated` divergence (p3-004 owns the doc update), and the
+  langgraph pending-deprecation warning. Reason: the second p3 feature closed
+  with zero loops and two non-blocking nits; the phase review needs the
+  provenance-gap resolution path and the recurring kit defect in view before
+  p3-004 begins.
