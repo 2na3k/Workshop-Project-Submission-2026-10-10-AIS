@@ -27,8 +27,8 @@ class ChatLLM:
             check: bool = True,
             **kwargs: Any,
     ) -> None:
-        self.provider = provider or os.getenv("REMY_LLM_PROVIDER", "ollama")
-        self.model = model or os.getenv("REMY_LLM_MODEL", "llama3.2:3b")
+        self.provider: str = provider or os.getenv("REMY_LLM_PROVIDER") or "ollama"
+        self.model: str = model or os.getenv("REMY_LLM_MODEL") or "llama3.2:3b"
 
         params: dict[str, Any] = {"temperature": 0}
         params.update(_PROVIDER_DEFAULTS.get(self.provider, {}))
@@ -66,7 +66,7 @@ class ChatLLM:
             )
             return False
 
-        wanted = self.model if ":" in self.model else f"{self.model}:latest"
+        wanted: str = self.model if ":" in self.model else f"{self.model}:latest"
         if wanted not in names:
             logger.warning(
                 "Ollama is running but model '%s' is not pulled. "

@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta, timezone
 
 from domain import calculate_portion_nutrients, sum_nutrition
-from domain.graph_vocab import PriceStatus, PriceMatchStatus, PriceBasis, FreshnessStatus, \
-    AllergenScreeningStatus
-from domain.types import REQUEST_TO_CANONICAL, Nutrition
 from domain.allergen import resolve_allergen_key
+from domain.graph_vocab import (AllergenScreeningStatus, FreshnessStatus,
+                                PriceBasis, PriceMatchStatus, PriceStatus)
+from domain.types import REQUEST_TO_CANONICAL, Nutrition
+
 from .exceptions import UnknownAllergen, UnknownDietary, UnknownNutrient
 from .models import (CandidateOutcome, ConstraintEvaluation, FilterResult,
                      IngredientWarning)

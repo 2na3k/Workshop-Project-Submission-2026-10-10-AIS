@@ -453,13 +453,7 @@ no live model, no Neo4j, no network. F-P3-1 is tracked, not resolved here.
 
 ### Group 5 — closing admin
 
-- [ ] **T-15** Record decisions
-  - Type: admin
-  - Covers: C-1, C-2, C-3, BD-3/A-007, F-1, F-2
-  - Files: `docs/sdd/features/p3-002-explainable-response-contract/decisions.md`
-  - Done when: the decisions file records (a) C-1 trace referenced by `trace_id`; (b) C-2 `plan_updated` delta + meal-scoped explanation; (c) C-3 layered R-16 floor, SSE contract declares no endpoint-specific exclusions; (d) A-007 approved and the fixture path; (e) **F-1**: the contract module lives in `app`; p3-004's endpoint code must live in `app` or the contract must move — pin this for p3-004's plan; (f) **F-2**: the floor constant is named `CHAT_FORBIDDEN_FIELDS` with the R-16-floor-vs-endpoint-extras split documented in a comment; AC-7b asserts the R-16 floor is the named *categories*, not the constant's full set.
-
-- [ ] **T-16** Run the full suite and CI
+- [x] **T-15** Run the full suite and CI
   - Type: verification
   - Covers: all ACs and interfaces
   - Files: (all above)
