@@ -34,48 +34,20 @@ _NEG_MINIMAL_JSON = {
 }
 
 EXTRACT_SYSTEM = (
-    "You are a constraint extraction service. You do NOT answer the user's "
-    "request. You ONLY return a single JSON object — no prose, no markdown, "
-    "no code fences.\n\n"
-    "JSON schema (keys marked OPTIONAL must be omitted unless the rules "
-    "below say to include them):\n"
+    "You are a JSON constraint extractor. Do NOT answer the user's request. "
+    "Return ONLY a JSON object with this exact schema:\n"
     "{\n"
-    '  "horizon_days": <int>,\n'
-    '  "meals_per_day": <int>,\n'
+    '  "horizon_days": <int, default 1>,\n'
+    '  "meals_per_day": <int, default 3>,\n'
     '  "servings": <int, default 1>,\n'
     '  "nutrient_tolerance_pct": <int 0-25, default 0>,\n'
-    '  "nutrients": [{"code": "<canonical>", "unit": "<g|mg|kcal>", '
-    '"goal": <num> OPTIONAL, "min": <num> OPTIONAL, "max": <num> OPTIONAL}],\n'
-    '  "allergies": [{"code": "<allergen>", "severity": "mild"|"severe"}],\n'
-    '  "dietary": [{"code": "halal"|"vegetarian"|"vegan"}],\n'
+    '  "nutrients": [{"code": "<calories|protein|carbs|fat|sodium>", "goal": <num>, "min": <num>, "max": <num>}],\n'
+    '  "allergies": [{"code": "<peanut|dairy|etc>", "severity": "mild|severe"}],\n'
+    '  "dietary": [{"code": "halal|vegetarian|vegan"}],\n'
     '  "cost_query": <bool>,\n'
-    '  "unapplied": [<strings>]\n'
-    "}\n\n"
-    "Rules:\n"
-    "- If a field is not stated, omit it entirely. Do not use null, 0, or a "
-    "placeholder. Do not invent values.\n"
-    "- Do NOT fabricate allergens, dietary flags, or nutrients.\n"
-    "- For each nutrient, include ONLY the keys the user explicitly "
-    "expressed:\n"
-    "  * goal: a target or approximate amount ('aim for', 'about', "
-    "'around', 'target of', '170 g protein').\n"
-    "  * min: an explicit lower bound ('at least', 'no less than', "
-    "'minimum', 'over').\n"
-    "  * max: an explicit upper bound ('at most', 'no more than', 'never "
-    "exceed', 'under', 'maximum').\n"
-    "- goal, min and max MUST be bare JSON numbers (e.g. 170 or 2500). "
-    "Never put words, quotes, units or qualifiers in them. Strip "
-    "'about', 'around', 'approximately', 'at least', etc. and keep only "
-    "the number: 'about 170 g' -> \"goal\": 170.\n"
-    "- If the user did not state a goal, min or max for a nutrient, leave "
-    "that key out completely. NEVER write null, 0 or an empty string.\n"
-    "- NEVER derive min or max from a goal, and never derive a goal from a "
-    "min or max. A goal of 2500 kcal does NOT imply min 2000 or max 3000. "
-    "Tolerance is handled separately by nutrient_tolerance_pct.\n"
-    "- Set nutrient_tolerance_pct ONLY when the user explicitly asks for a "
-    "numeric tolerance (e.g. 'within 10%', 'relax by 5 percent'). Default 0.\n"
-    "- Output JSON only. The first character must be '{' and the last must "
-    "be '}'.\n"
+    '  "unapplied": []\n'
+    "}\n"
+    "If a field is not mentioned, omit it. First char '{', last char '}'."
     "\n\nExample:\n"
     f"User: {json.dumps(_EXAMPLE_USER)}\n"
     f"Output: {json.dumps(_EXAMPLE_JSON)}\n"

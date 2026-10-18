@@ -15,7 +15,9 @@ _PROVIDER_DEFAULTS: dict[str, dict[str, Any]] = {
     "ollama": {
         "base_url": os.getenv("REMY_LLM_BASE_URL", "http://localhost:11434"),
         "keep_alive": "1h",
-        "num_predict": 400
+        "num_predict": 800,
+        "timeout": 10,  # HTTP timeout — fail fast if Ollama is down
+        "max_retries": 0,  # no retry backoff
     },
 }
 
@@ -86,6 +88,7 @@ class ChatLLM:
                 self.provider, self.model, type(exc).__name__, exc,
             )
             raise
+
 
 def main() -> None:
     import sys

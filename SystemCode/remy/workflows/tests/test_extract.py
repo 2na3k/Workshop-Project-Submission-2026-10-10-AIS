@@ -14,7 +14,10 @@ def test_natural_language_extracts_constraints_and_records_llm(fake_llm):
     assert parsed.allergies == (AllergyConstraint("peanut", "severe"),)
     assert parsed.dietary == (DietaryConstraint("vegan"),)
     assert result["llm_invocations"][0].raw_response == fake_llm.response
-    assert result["llm_invocations"][0].parsed_response == fake_llm.response
+    pr = result["llm_invocations"][0].parsed_response
+    assert pr["horizon_days"] == 3
+    assert pr["meals_per_day"] == 2
+    assert {"code": "peanut", "severity": "severe"} in pr["allergies"]
 
 
 def test_structured_constraints_are_passed_through_without_calling_llm(fake_llm):

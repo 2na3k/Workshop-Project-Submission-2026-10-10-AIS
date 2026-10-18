@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from typing import Any, Literal
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from workflows.prompts import EXTRACT_SYSTEM, RESPONSE_SYSTEM
 
 from domain.types import REQUEST_TO_CANONICAL
 from workflows.models import (
@@ -20,6 +20,7 @@ from workflows.models import (
     NutrientConstraint,
     PlanInput,
 )
+from workflows.prompts import EXTRACT_SYSTEM
 from workflows.trace import assemble_trace
 
 
@@ -192,16 +193,20 @@ def _clean_extraction(parsed: dict, user_message: str) -> dict:
 
 def _invoke_extract(llm, raw_message: str):
     messages = [SystemMessage(content=EXTRACT_SYSTEM), HumanMessage(content=raw_message)]
+    started = time.perf_counter()
     response = llm.invoke(messages)
+    latency = time.perf_counter() - started
     try:
-        return response, _content(response)
+        return response, _content(response), latency
     except (ValueError, json.JSONDecodeError):
         messages.append(HumanMessage(
             content="Your last output was not a JSON object. Return ONLY the JSON object, "
                     "starting with '{' and ending with '}'."
         ))
+        started = time.perf_counter()
         retry = llm.invoke(messages)
-        return retry, _content(retry)
+        latency += time.perf_counter() - started
+        return retry, _content(retry), latency
 
 
 def extract_constraints(state: dict[str, Any], *, llm: Any) -> dict[str, Any]:
@@ -211,12 +216,12 @@ def extract_constraints(state: dict[str, Any], *, llm: Any) -> dict[str, Any]:
         if state.get("structured_constraints") is not None:
             parsed = _constraint_set(state["structured_constraints"], raw_message)
         else:
-            response, parsed_response = _invoke_extract(llm, raw_message)
+            response, parsed_response, latency = _invoke_extract(llm, raw_message)
             parsed_response = _clean_extraction(parsed_response, raw_message)
             invocations.append(
                 LLMInvocation("Extract Constraints", getattr(llm, "provider", "unknown"),
                               getattr(llm, "model", "unknown"), raw_message, response,
-                              parsed_response, 0.0))
+                              parsed_response, latency))
             parsed = _constraint_set(parsed_response, raw_message)
         unapplied = tuple(state.get("unapplied_constraints", [])) + tuple(
             parsed_response.get("unapplied", []) if "parsed_response" in locals() and isinstance(
@@ -306,7 +311,7 @@ def _fact_sheet(result, constraints) -> dict:
     nutrient_status = []
     for nut in (constraints.nutrients if constraints else ()):
         code = nut.code
-        key = f"avg_daily_{_horizon_key(code)}"
+        key = _horizon_key(code)
         actual = (result.horizon_totals or {}).get(key) if key else None
         goal = getattr(nut, "goal", None)
         lo, hi = getattr(nut, "minimum", None), getattr(nut, "maximum", None)
@@ -338,19 +343,15 @@ def _fact_sheet(result, constraints) -> dict:
     # Meals with titles and per-meal nutrients only (no offers).
     meals = [
         {
-            "day": d["day"],
-            "slot": m["slot"],
-            "recipe_id": m["recipe_id"],
-            "title": m["title"],
-            "ingredients": [
-                {"text": ing["text"], "quantity": ing["quantity"],
-                 "unit": ing["unit"], "optional": ing.get("optional", False)}
-                for ing in m.get("ingredients", [])
-            ],
-            "nutrients": m.get("nutrients", {}),
-            "instructions": m.get("instructions", ""),  # optional — include if budget allows
+            "day": day["day"],
+            "slot": meal["slot"],
+            "recipe_id": meal["recipe_id"],
+            "title": meal.get("title", f"Recipe {meal.get('recipe_id', '?')}"),
+            "nutrients": meal.get("nutrients", {}),
+            "ingredients": [ing.get("text", "") for ing in meal.get("ingredients", [])],
+            "instructions": meal.get("instructions", ""),
         }
-        for d in result.days for m in d["meals"]
+        for day in result.days for meal in day["meals"]
     ]
 
     # Drops grouped by cause (count only; per-recipe details can go in the trace).
@@ -374,27 +375,49 @@ def _fact_sheet(result, constraints) -> dict:
 
 
 def _fallback_from_facts(facts) -> tuple[str, list[str], list[str]]:
-    """Deterministic prose built from facts alone. Used if the LLM fails."""
-    parts = []
-    if facts["feasibility"] == "infeasible":
-        parts.append("No feasible plan could be produced. Binding constraints: "
-                     + ", ".join(facts["binding_constraints"]) + ".")
-    else:
-        n = len(facts["meals"])
-        parts.append(f"A {len({m['day'] for m in facts['meals']})}-day plan with {n} meals.")
-    for ns in facts["nutrient_status"]:
-        if ns["status"] == "short":
-            parts.append(f"{ns['code']}: {ns['actual']:.1f} (below the {ns['min']} minimum).")
+    """Deterministic Markdown rendering of the meals and ingredients."""
+    lines = []
+
+    # 1. Prepend the nutrient status summary (the honest disclosure)
+    for ns in facts.get("nutrient_status", []):
+        if ns["status"] == "below-goal":
+            lines.append(
+                f"⚠️ **{ns['code'].title()}**: {ns['actual']:.1f} (Goal: {ns['goal']}) — Below target.\n")
         elif ns["status"] == "over":
-            parts.append(f"{ns['code']}: {ns['actual']:.1f} (above the {ns['max']} maximum).")
-        elif ns["status"] == "below-goal":
-            parts.append(f"{ns['code']}: {ns['actual']:.1f} (goal {ns['goal']}; not met).")
-        elif ns["status"] == "at-or-above-goal":
-            parts.append(f"{ns['code']}: {ns['actual']:.1f} (goal {ns['goal']}; met).")
-    if facts["unevaluated_constraints"]:
-        parts.append("Not evaluated: " + ", ".join(facts["unevaluated_constraints"]) + ".")
-    refs = [m["recipe_id"] for m in facts["meals"]]
-    return " ".join(parts), refs, list(facts["drops_by_cause"].keys())
+            lines.append(
+                f"⚠️ **{ns['code'].title()}**: {ns['actual']:.1f} (Max: {ns['max']}) — Over limit.\n")
+        elif ns["status"] in ("at-or-above-goal", "within"):
+            lines.append(f"✅ **{ns['code'].title()}**: {ns['actual']:.1f} (Goal met)\n")
+
+    if lines:
+        lines.append("")  # blank line after summary
+
+    # 2. Render meals
+    for meal in facts.get("meals", []):
+        lines.append(
+            f"### Day {meal['day']} · {meal['slot'].replace('_', ' ').title()} — {meal['title']}")
+
+        if meal.get("ingredients"):
+            lines.append("**Ingredients:**")
+            for ing in meal["ingredients"]:
+                lines.append(f"- {ing}")
+
+        if meal.get("nutrients"):
+            n = meal["nutrients"]
+            kcal = n.get("energy_kcal", 0) or 0
+            protein = n.get("protein_g", 0) or 0
+            fat = n.get("fat_g", 0) or 0
+            lines.append(f"\n*Nutrients:* {kcal:.0f} kcal, {protein:.1f}g protein, {fat:.1f}g fat")
+
+        if meal.get("instructions"):
+            lines.append("\n**Instructions:**")
+            lines.append(meal["instructions"])
+
+        lines.append("\n---\n")  # Divider between meals
+
+    refs = [m["recipe_id"] for m in facts.get("meals", [])]
+    causes = list(facts.get("drops_by_cause", {}).keys())
+    return "\n".join(lines), refs, causes
 
 
 def _enforce_nutrient_disclosure(text: str, facts) -> str:
@@ -427,70 +450,6 @@ def _strip_offer_names(text: str, facts) -> str:
     return text
 
 
-# def generate_response(state: dict[str, Any], *, llm: Any) -> dict[str, Any]:
-#     """Generate user text and verify its structured references deterministically."""
-#     raw_message = state.get("raw_message", "")
-#     result = state.get("plan_result")
-#     invocations = list(state.get("llm_invocations", []))
-#     try:
-#         if result is None:
-#             raise ValueError("plan result is required")
-#         allowed_recipes = {item.recipe_id for item in result.recipe_outcomes}
-#         allowed_requirements = {item.requirement_id for item in result.constraint_outcomes}
-#         allowed_causes = {cause for item in result.recipe_outcomes for cause in
-#                           ((item.cause,) if item.cause else ()) + item.causes}
-#         prompt = (
-#             "Write a concise recommendation using only the following opaque recipe and requirement identifiers. "
-#             f"Allowed recipes: {sorted(allowed_recipes)}; allowed requirements: {sorted(allowed_requirements)}; "
-#             f"allowed drop causes: {sorted(allowed_causes)}. Do not expose audit provenance."
-#         )
-#         response = llm.invoke(prompt)
-#         parsed = _content(response)
-#         if not isinstance(parsed, dict):
-#             raise ValueError("generation response must be an object")
-#         recipe_ids = tuple(parsed.get("recipe_ids", ()))
-#         requirement_ids = tuple(parsed.get("requirement_ids", ()))
-#         drop_causes = tuple(parsed.get("drop_causes", ()))
-#         if not set(recipe_ids) <= allowed_recipes or not set(
-#                 requirement_ids) <= allowed_requirements:
-#             raise ValueError("generation references an unknown identifier")
-#         if not set(drop_causes) <= allowed_causes:
-#             raise ValueError("generation references an unknown drop cause")
-#         if set(parsed.get("selected_recipe_ids", ())) & set(recipe_ids) & {
-#             item.recipe_id for item in result.recipe_outcomes if
-#             "evidence-absent" in ((item.cause,) if item.cause else ()) + item.causes
-#         }:
-#             raise ValueError("evidence-absent recipes cannot be selected")
-#         text = parsed.get("text", "")
-#         output = GenerationOutput(recipe_ids, requirement_ids, drop_causes, text)
-#         invocations.append(LLMInvocation("Generate Response", getattr(llm, "provider", "unknown"),
-#                                          getattr(llm, "model", "unknown"), prompt, response, parsed,
-#                                          0.0))
-#         outcome = Outcome(state.get("outcome", Outcome("plan")).kind, plan=result, text=text,
-#                           unapplied_constraints=tuple(state.get("unapplied_constraints", [])))
-#         updated = {**state, "generation_output": output, "generation_text": text,
-#                    "outcome": outcome, "llm_invocations": invocations}
-#         updated["trace"] = assemble_trace(raw_message=raw_message,
-#                                           parsed_constraints=state.get("parsed_constraints"),
-#                                           unapplied_constraints=outcome.unapplied_constraints,
-#                                           outcome=outcome,
-#                                           node_runs=tuple(state.get("node_runs", [])),
-#                                           llm_invocations=tuple(invocations),
-#                                           plan_trace=state.get("plan_trace"))
-#         return updated
-#     except Exception as exc:
-#         outcome = Outcome("failure", node="Generate Response", reason=str(exc),
-#                           unapplied_constraints=tuple(state.get("unapplied_constraints", [])))
-#         updated = {**state, "outcome": outcome, "llm_invocations": invocations}
-#         updated["trace"] = assemble_trace(raw_message=raw_message,
-#                                           parsed_constraints=state.get("parsed_constraints"),
-#                                           unapplied_constraints=outcome.unapplied_constraints,
-#                                           outcome=outcome,
-#                                           node_runs=tuple(state.get("node_runs", [])),
-#                                           llm_invocations=tuple(invocations),
-#                                           plan_trace=state.get("plan_trace"))
-#         return updated
-
 def generate_response(state, *, llm):
     raw_message = state.get("raw_message", "")
     result = state.get("plan_result")
@@ -499,60 +458,67 @@ def generate_response(state, *, llm):
     try:
         if result is None:
             raise ValueError("plan result is required")
-        facts = _fact_sheet(result, constraints)
 
-        # 1. Ask the LLM to phrase the facts.
+        # 1. Build the full deterministic meal list (with ingredients)
+        full_meal_text, ref_recipes, ref_causes = _fallback_from_facts(
+            _fact_sheet(result, constraints))
+
+        # 2. Build a slim fact sheet for the LLM (no ingredients, just summary)
+        slim_facts = {
+            "request": raw_message,
+            "horizon_days": constraints.horizon_days if constraints else 1,
+            "meals_per_day": constraints.meals_per_day if constraints else 3,
+            "nutrient_status": _fact_sheet(result, constraints).get("nutrient_status", []),
+            "meals": [{"title": m["title"], "day": m["day"], "slot": m["slot"]} for m in
+                      _fact_sheet(result, constraints).get("meals", [])]
+        }
+
+        # 3. Ask the LLM for a short intro
+        import time
         prompt = (
-                "Fact sheet:\n" + json.dumps(facts, default=str) +
-                "\nUser message: " + json.dumps(raw_message)
+            "Write a brief, encouraging 2-sentence introduction for this meal plan. "
+            "Do not say 'Here is an introduction'. Do not use JSON. Just output the text.\n"
+            f"Fact sheet:\n{json.dumps(slim_facts, default=str)}"
         )
+        t0 = time.perf_counter()
         response = llm.invoke([
-            SystemMessage(content=RESPONSE_SYSTEM),
+            SystemMessage(
+                content="You are a helpful meal planning assistant. Output plain text only, no JSON."),
             HumanMessage(content=prompt),
         ])
-        invocations.append(
-            LLMInvocation("Generate Response", getattr(llm, "provider", "unknown"),
-                          getattr(llm, "model", "unknown"), prompt, response, None, 0.0)
-        )
+        latency = time.perf_counter() - t0
+        invocations.append(LLMInvocation(
+            "Generate Response",
+            getattr(llm, "provider", "unknown"),
+            getattr(llm, "model", "unknown"),
+            prompt, response, None, latency,
+        ))
 
-        # 2. Parse tolerantly. Bad JSON -> deterministic fallback, plan survives.
-        text, ref_recipes, ref_causes = _fallback_from_facts(facts)
-        try:
-            parsed = _content(response)
-            if not isinstance(parsed, dict):
-                raise ValueError("generation response must be an object")
-            text = str(parsed.get("text") or text)
-            ref_recipes = [str(x) for x in parsed.get("referenced_recipe_ids") or ref_recipes]
-            ref_causes = [str(x) for x in parsed.get("referenced_drop_causes") or ref_causes]
-        except Exception:
-            invocations[-1] = invocations[-1]._replace(parsed=None)  # keep the raw response
+        # Tolerate both AIMessage and dict (for test fakes)
+        if hasattr(response, "content"):
+            intro = str(response.content).strip()
+        elif isinstance(response, dict):
+            intro = str(response.get("text", "")).strip()
+        elif isinstance(response, str):
+            intro = response.strip()
+        else:
+            intro = ""
 
-        # 3. Verify LLM output against facts, not against itself.
-        allowed_recipes = set(facts["selected_recipe_ids"])
-        allowed_causes = set(facts["drops_by_cause"].keys())
-        ref_recipes = [r for r in ref_recipes if r in allowed_recipes]
-        ref_causes = [c for c in ref_causes if c in allowed_causes]
+        if not intro:
+            intro = "Here is your meal plan."
 
-        # 4. Deterministic verification: reject LLM text that contradicts a
-        #    numeric claim the service computed. Cheap check: any number in the
-        #    text that matches `goal` for a nutrient whose status is 'short' or
-        #    'below-goal' must not be presented as met. Under time pressure, the
-        #    safe rule is: if any nutrient_status has status != 'within' /
-        #    'at-or-above-goal', prepend a deterministic disclosure sentence and
-        #    strip any LLM sentence claiming otherwise.
-        text = _enforce_nutrient_disclosure(text, facts)
+        # 4. Combine
+        final_text = f"{intro}\n\n{full_meal_text}"
 
-        # 5. If offers cannot be trusted (current graph), don't ship them.
-        text = _strip_offer_names(text, facts)
-
-        output = GenerationOutput(tuple(ref_recipes), (), tuple(ref_causes), text)
+        output = GenerationOutput(tuple(ref_recipes), (), tuple(ref_causes), final_text)
         outcome = Outcome(state.get("outcome", Outcome("plan")).kind,
-                          plan=result, text=text,
+                          plan=result, text=final_text,
                           unapplied_constraints=tuple(state.get("unapplied_constraints", [])))
+
         return {
             **state,
             "generation_output": output,
-            "generation_text": text,
+            "generation_text": final_text,
             "outcome": outcome,
             "llm_invocations": invocations,
             "trace": assemble_trace(

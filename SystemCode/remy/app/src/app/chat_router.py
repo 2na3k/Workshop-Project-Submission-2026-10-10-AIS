@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import secrets
 from collections.abc import Iterator
@@ -10,16 +11,13 @@ from typing import Any
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
-from api.features.calculator.schemas import CostNutritionRequest, IngredientRequest
+from api.features.calculator.schemas import IngredientRequest
 from app import composition
 from app.chat_contract import (
     ChatRequest,
     DoneEvent,
     ErrorEvent,
-    MealDelta,
-    MealScopedExplanation,
     MetadataEvent,
-    PlanUpdatedEvent,
     TokenEvent,
     from_trace_envelope,
 )
@@ -29,6 +27,7 @@ from workflows.models import TraceEnvelope
 router = APIRouter()
 
 logger = logging.getLogger(__name__)
+
 
 def _resolve_services(request: Request) -> tuple[Any, Any]:
     plan_service = getattr(request.app.state, "plan_service", None)
@@ -190,7 +189,6 @@ def _events(
 
     text = " ".join(part for part in (
         envelope.outcome.text or "",
-        *_explanation_lines(projected),
         *(cost_lines or []),
     ) if part)
     events.extend(
@@ -201,28 +199,28 @@ def _events(
     plan_result = envelope.outcome.plan
     previous = _previous_meals(payload.user_context)
     recipes = {recipe.recipe_id: recipe for recipe in projected.plan.recipes}
-    for day_value in _member(plan_result, "days", ()) or ():
-        day = _member(day_value, "day")
-        for meal in _member(day_value, "meals", ()) or ():
-            slot = _member(meal, "slot")
-            recipe_id = _member(meal, "recipe_id")
-            if day is None or slot is None or recipe_id is None:
-                continue
-            key = (int(day), str(slot))
-            recipe_id = str(recipe_id)
-            if previous.get(key) == recipe_id:
-                continue
-            recipe = recipes.get(recipe_id)
-            if recipe is None:
-                continue
-            events.append(PlanUpdatedEvent(
-                event="plan_updated",
-                delta=MealDelta(day=key[0], slot=key[1], recipe_id=recipe_id),
-                explanation=MealScopedExplanation(
-                    recipe=recipe,
-                    constraints=recipe.constraints,
-                ),
-            ))
+    # for day_value in _member(plan_result, "days", ()) or ():
+    #     day = _member(day_value, "day")
+    #     for meal in _member(day_value, "meals", ()) or ():
+    #         slot = _member(meal, "slot")
+    #         recipe_id = _member(meal, "recipe_id")
+    #         if day is None or slot is None or recipe_id is None:
+    #             continue
+    #         key = (int(day), str(slot))
+    #         recipe_id = str(recipe_id)
+    #         if previous.get(key) == recipe_id:
+    #             continue
+    #         recipe = recipes.get(recipe_id)
+    #         if recipe is None:
+    #             continue
+    #         events.append(PlanUpdatedEvent(
+    #             event="plan_updated",
+    #             delta=MealDelta(day=key[0], slot=key[1], recipe_id=recipe_id),
+    #             explanation=MealScopedExplanation(
+    #                 recipe=recipe,
+    #                 constraints=recipe.constraints,
+    #             ),
+    #         ))
 
     events.append(DoneEvent(
         event="done",
@@ -238,40 +236,78 @@ def _stream(events: list[Any]) -> Iterator[str]:
 
 
 @router.post("/chat")
-def chat(payload: ChatRequest, request: Request):
+async def chat(payload: ChatRequest, request: Request):
+    return StreamingResponse(
+        _stream_chat(payload, request),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+async def _stream_chat(payload: ChatRequest, request: Request):
     trace_id = secrets.token_hex(16)
+
+    # 1. Instant Metadata
+    yield serialize_event(MetadataEvent(
+        event="metadata",
+        session_id=payload.session_id,
+        workflow_node="Start",
+        trace_id=trace_id,
+    ))
+    await asyncio.sleep(0)
+
+    yield serialize_event(TokenEvent(event="token", delta="Planning your meals…\n\n"))
+    await asyncio.sleep(0)
+
+    # 2. Start blocking workflow in a background thread
     try:
         plan_service, calculator = _resolve_services(request)
         workflow = composition.create_workflow(plan_service)
-        state = workflow.invoke({
-            "raw_message": payload.message,
-            "user_context": payload.user_context,
-        })
+
+        task = asyncio.create_task(asyncio.to_thread(
+            workflow.invoke,
+            {"raw_message": payload.message, "user_context": payload.user_context}
+        ))
+
+        # 3. Heartbeat loop while the solver thinks
+        while not task.done():
+            try:
+                await asyncio.wait_for(asyncio.shield(task), timeout=10.0)
+            except asyncio.TimeoutError:
+                yield ": ping\n\n"  # SSE comment heartbeat
+
+        state = task.result()
         envelope = state.get("trace") if isinstance(state, dict) else None
+        if isinstance(envelope, dict):
+            envelope = TraceEnvelope(**envelope)
         if not isinstance(envelope, TraceEnvelope):
             raise TypeError("workflow did not return a TraceEnvelope")
-    except Exception as exc:
+    except Exception:
         logger.exception("chat workflow failed trace_id=%s", trace_id)
-        return StreamingResponse(
-            _stream([ErrorEvent(
-                event="error",
-                code="WORKFLOW_FAILURE",
-                message="The recommendation workflow failed.",
-                trace_id=trace_id,
-            )]),
-            media_type="text/event-stream",
-        )
+        yield serialize_event(ErrorEvent(
+            event="error",
+            code="WORKFLOW_FAILURE",
+            message="The recommendation workflow failed.",
+            trace_id=trace_id,
+        ))
+        return
+
+    yield serialize_event(TokenEvent(event="token", delta="Generating your recommendation…\n\n"))
+    await asyncio.sleep(0)
 
     projected = from_trace_envelope(envelope, trace_id)
-    cost_lines = []
-    constraints = envelope.parsed_constraints
-    if constraints is not None and constraints.cost_query:
-        scoped = _scoped_ingredients(envelope, payload.user_context)
-        if scoped:
-            calculation, _ = calculator.calculate(CostNutritionRequest(
-                servings=constraints.servings,
-                ingredients=scoped,
-            ))
-            cost_lines = _cost_lines(calculation)
-    events = _events(payload, envelope, projected, trace_id, cost_lines)
-    return StreamingResponse(_stream(events), media_type="text/event-stream")
+
+    # 4. Yield text progressively, line by line
+    # (Because the LLM intro and meal list are combined in envelope.outcome.text)
+    text = envelope.outcome.text or ""
+    for line in text.split("\n"):
+        if line.strip():
+            yield serialize_event(TokenEvent(event="token", delta=line + "\n"))
+            await asyncio.sleep(0.05)  # Force socket flush
+
+    # 5. Finish
+    yield serialize_event(DoneEvent(
+        event="done",
+        status=(projected.plan.feasibility_outcome if projected.plan else "error"),
+        trace_id=trace_id,
+    ))

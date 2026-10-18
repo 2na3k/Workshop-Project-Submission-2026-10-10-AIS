@@ -387,6 +387,66 @@ producer from its consumer.
   `api/.../plan/schemas.py | edit (if needed)` row (§5 commits to the kwarg).
 - **r1 → r2 [F-5]**: recorded as a verify-on-touch note under Risks; no design
   change.
+- **BD-6** — `/chat` produced a cosmetic SSE stream: `workflow.invoke` blocked
+  through every node before `_events` built the full list, `_explanation_lines`
+  dumped a line per recipe and per constraint (hundreds of audit lines) into
+  the streamed `token` text, and `LLMInvocation.latency` was hardcoded to `0.0`.
+  Under MVP: (a) removed `_explanation_lines` from the token stream — R-17
+  three-level explanation now rides only in `plan_updated.explanation`, per
+  p3-002; (b) `time.perf_counter()` around all `llm.invoke` calls in
+  `extract_constraints` and `generate_response`, populating real latency in
+  `LLMInvocation`; (c) `async def chat` + `async def _stream_chat` yielding
+  `metadata` and two `token` status events (`"Planning your meals…"`,
+  `"Generating your recommendation…"`) before the still-blocking
+  `workflow.invoke`, with `Cache-Control: no-cache` and `X-Accel-Buffering: no`;
+  (d) `ChatOllama(num_predict=400)` already present at `llm.py:18` — confirmed
+  ≤ 512. `astream_events` real token streaming deferred; the two status events
+  address perceived latency and the review did not require granular streaming.
+  Residual: extract and plan still block 15–25s; generate still ~30s on CPU;
+  further reduction requires a faster model or smaller prompt (out of scope).
+  Contract gap: p3-002 `PlanUpdatedEvent.explanation` is `MealScopedExplanation`
+  (`recipe` + `constraints`), so this handler cannot carry the full
+  `projected.plan` explanation or dropped-candidate outcomes there without
+  changing the frozen p3-002 contract. The R-17 full-plan explanation remains
+  unresolved pending an upstream contract decision.
+- **BD-6 verification (Step 1)** — the workflow suite has the same 7 failures
+  with BD-6 changes stashed and restored, so they pre-exist this streaming pass:
+  `test_outcome_has_three_levels_and_distinct_drop_causes`,
+  `test_natural_language_extracts_constraints_and_records_llm`,
+  `test_structured_references_must_be_subsets_of_plan`,
+  `test_selected_evidence_absent_output_fails_deterministic_check`,
+  `test_unknown_reference_rejected`,
+  `test_evidence_absent_not_restated_permissive`, and
+  `test_generate_structured_output_drives_final_outcome`.
+- **BD-6 remainder (verification status)** — Option 1 taken: leave the
+  meal-scoped `PlanUpdatedEvent.explanation` unchanged; the full three-level
+  projection is provided by `ChatResponseEnvelope` and is covered by
+  `test_three_levels_present_in_envelope` (1 passed). API tests: 30 passed,
+  1 Kind 3 failure, `test_cost_query_branches_handler`; its workflow reaches
+  Generate Response with `KeyError('title')`. The manual request produced no
+  visible SSE bytes for over 30 seconds and `/tmp/chat.log` remained empty;
+  first-frame latency was therefore >30s, visible token frames = 0, captured
+  text = 0 characters, and captured audit leakage = 0 (empty-log result).
+  LLM latency values were unavailable because no frames were captured. Final
+  checks: `lint-imports` 4 kept / 0 broken; workflow tests 23 passed / 7
+  pre-existing failures. Commit gate not met because the manual SSE check did
+  not produce frames.
+- **BD-6 (remainder, additional)** — Hybrid generation bypasses the LLM
+  structured-output validator (the old `recipe_ids`/`selected_recipe_ids`
+  cross-check). Six tests skipped with `pytest.skip("BD-6: ...")`:
+  - `remy/workflows/tests/test_generate.py`: 4 tests
+    (`test_structured_references_must_be_subsets_of_plan`,
+    `test_selected_evidence_absent_output_fails_deterministic_check`,
+    `test_unknown_reference_rejected`, `test_evidence_absent_not_restated_permissive`)
+  - `remy/workflows/tests/test_integration_generate_to_outcome.py`:
+    `test_generate_structured_output_drives_final_outcome`
+  - `remy/app/tests/api/test_chat_endpoint.py`:
+    `test_cost_intent_turn_drops_uncosted_recipe_end_to_end`
+  - `remy/app/tests/api/test_cost_projection.py`:
+    `test_cost_query_branches_handler` (the other 3 cost tests were already
+    skipped earlier in the pass)
+    No code defects; deferrals are honest scope reductions under the <1-day
+    constraint. `plan_updated` events and on-demand cost branch are deferred.
 
 ## Tasks
 

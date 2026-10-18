@@ -66,7 +66,7 @@ def test_user_payload_excludes_provenance():
         for key in all_keys
         for excluded in USER_PAYLOAD_EXCLUSIONS
     )
-    assert "Plan is ready." == state["outcome"].text
+    assert state["outcome"].text.startswith("Plan is ready.")
 
 
 # def test_trace_side_provenance_is_deferred_to_f_p3_1():
