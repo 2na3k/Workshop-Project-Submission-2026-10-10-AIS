@@ -113,8 +113,7 @@ def _send(monkeypatch, *, cost_query, calculator):
         "create_workflow",
         lambda *args, **kwargs: WorkflowStub(_envelope(cost_query)),
     )
-    application = create_app(object())
-    application.state.calculator_service = calculator
+    application = create_app(plan_service=object(), calculator_service=calculator)
     with TestClient(application) as client:
         return client.post("/api/v1/chat", json={
             "session_id": "session-1",
@@ -218,8 +217,7 @@ def test_cost_query_branches_handler(monkeypatch):
         extract_llm=ExtractLLM(), plan_port=PlanPort(), response_llm=ResponseLLM()
     )
     monkeypatch.setattr(chat_router.composition, "create_workflow", lambda *args, **kwargs: workflow)
-    application = create_app(object())
-    application.state.calculator_service = calculator
+    application = create_app(plan_service=object(), calculator_service=calculator)
     with TestClient(application) as client:
         response = client.post("/api/v1/chat", json={
             "session_id": "session-1",

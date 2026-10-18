@@ -6,7 +6,7 @@ import secrets
 from collections.abc import Iterator
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
 from api.features.calculator.schemas import CostNutritionRequest, IngredientRequest
@@ -29,11 +29,16 @@ from app.sse import serialize_event
 router = APIRouter()
 
 
-def _plan_service(request: Request) -> Any:
-    service = getattr(request.app.state, "plan_service", None)
-    if service is not None:
-        return service
-    return composition.create_plan_service(request.app.state.neo4j_driver)
+def _resolve_services(request: Request) -> tuple[Any, Any]:
+    plan_service = getattr(request.app.state, "plan_service", None)
+    calculator_service = getattr(request.app.state, "calculator_service", None)
+    if plan_service is None or calculator_service is None:
+        driver = request.app.state.neo4j_driver
+    if plan_service is None:
+        plan_service = composition.create_plan_service(driver)
+    if calculator_service is None:
+        calculator_service = composition.create_calculator_service(driver)
+    return plan_service, calculator_service
 
 
 def _member(value: Any, name: str, default: Any = None) -> Any:
@@ -231,9 +236,10 @@ def _stream(events: list[Any]) -> Iterator[str]:
 
 
 @router.post("/chat")
-def chat(payload: ChatRequest, request: Request, plan_service: Any = Depends(_plan_service)):
+def chat(payload: ChatRequest, request: Request):
     trace_id = secrets.token_hex(16)
     try:
+        plan_service, calculator = _resolve_services(request)
         workflow = composition.create_workflow(plan_service)
         state = workflow.invoke({
             "raw_message": payload.message,
@@ -248,11 +254,6 @@ def chat(payload: ChatRequest, request: Request, plan_service: Any = Depends(_pl
         if constraints is not None and constraints.cost_query:
             scoped = _scoped_ingredients(envelope, payload.user_context)
             if scoped:
-                calculator = getattr(request.app.state, "calculator_service", None)
-                if calculator is None:
-                    calculator = composition.create_calculator_service(
-                        request.app.state.neo4j_driver
-                    )
                 calculation, _calculation_trace = calculator.calculate(CostNutritionRequest(
                     servings=constraints.servings,
                     ingredients=scoped,

@@ -1,6 +1,6 @@
 # CI results - p3-004-conversational-constraint-interface
 
-Run at: 2026-10-18T11:05:00+08:00
+Run at: 2026-10-18T12:48:05+08:00
 
 | Check | Command | Result |
 |---|---|---|
@@ -22,7 +22,7 @@ OVERALL: PASS
     _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-44 passed, 1 warning in 10.13s
+44 passed, 1 warning in 11.26s
 ..............................                                           [100%]
 =============================== warnings summary ===============================
 .venv/lib/python3.12/site-packages/langgraph/cache/base/__init__.py:8
@@ -30,8 +30,8 @@ OVERALL: PASS
     from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-30 passed, 1 warning in 2.81s
-........................................                                 [100%]
+30 passed, 1 warning in 3.19s
+.............................................                            [100%]
 =============================== warnings summary ===============================
 .venv/lib/python3.12/site-packages/starlette/testclient.py:53
   /mnt/g/2Study/5Master/NUS/0ISS/1Sem1/ISY5001_Intelligent_Reasoning_System/Practice_Module/Workshop-Project-Submission-2026-10-10-AIS/SystemCode/.venv/lib/python3.12/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
@@ -42,7 +42,7 @@ OVERALL: PASS
     from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-40 passed, 2 warnings in 12.10s
+45 passed, 2 warnings in 14.21s
 ```
 
 ### lint

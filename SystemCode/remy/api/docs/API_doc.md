@@ -372,6 +372,8 @@ is returned.
 
 ## 3. POST `/api/v1/chat` (SSE Streaming)
 
+**Served entrypoint:** `app.main:app`. The chat endpoint is mounted on the composed app; `api.main:app` remains for API-only deployments and does **not** include `/api/v1/chat`.
+
 Handles interactive conversation, recipe adjustments, and follow-up Q&A via streaming events powered
 by the LangGraph engine.
 

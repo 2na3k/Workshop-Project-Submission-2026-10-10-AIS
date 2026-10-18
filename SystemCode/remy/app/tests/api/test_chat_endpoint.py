@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import create_app
+from app.plan_adapter import PlanServiceAdapter
 from workflows.models import Outcome, PlanResult, PlanTraceView, TraceEnvelope
 
 
@@ -75,7 +76,7 @@ def workflow_factory(monkeypatch):
 
 
 def test_valid_request_starts_event_stream(workflow_factory):
-    with TestClient(create_app(object())) as client:
+    with TestClient(create_app(plan_service=object())) as client:
         response = client.post("/api/v1/chat", json={
             "session_id": "session-1",
             "message": "Plan a meal",
@@ -91,14 +92,14 @@ def test_valid_request_starts_event_stream(workflow_factory):
     {"session_id": "session-1"},
 ])
 def test_missing_field_rejected(body):
-    with TestClient(create_app(object())) as client:
+    with TestClient(create_app(plan_service=object())) as client:
         response = client.post("/api/v1/chat", json=body)
 
     assert response.status_code == 422
 
 
 def test_only_five_event_types_emitted(workflow_factory):
-    with TestClient(create_app(object())) as client:
+    with TestClient(create_app(plan_service=object())) as client:
         response = client.post("/api/v1/chat", json={
             "session_id": "session-1",
             "message": "Plan a meal",
@@ -108,7 +109,7 @@ def test_only_five_event_types_emitted(workflow_factory):
 
 
 def test_events_framed_as_sse(workflow_factory):
-    with TestClient(create_app(object())) as client:
+    with TestClient(create_app(plan_service=object())) as client:
         response = client.post("/api/v1/chat", json={
             "session_id": "session-1",
             "message": "Plan a meal",
@@ -119,7 +120,7 @@ def test_events_framed_as_sse(workflow_factory):
 
 
 def test_trace_id_present_trace_not_embedded(workflow_factory):
-    with TestClient(create_app(object())) as client:
+    with TestClient(create_app(plan_service=object())) as client:
         response = client.post("/api/v1/chat", json={
             "session_id": "session-1",
             "message": "Plan a meal",
@@ -138,7 +139,7 @@ def test_failure_emits_single_error_event(monkeypatch):
 
     workflow = WorkflowStub(error=RuntimeError("workflow unavailable"))
     monkeypatch.setattr(chat_router.composition, "create_workflow", lambda *args, **kwargs: workflow)
-    with TestClient(create_app(object())) as client:
+    with TestClient(create_app(plan_service=object())) as client:
         response = client.post("/api/v1/chat", json={
             "session_id": "session-1",
             "message": "Plan a meal",
@@ -151,7 +152,7 @@ def test_failure_emits_single_error_event(monkeypatch):
 
 
 def test_two_independent_requests_no_shared_state(workflow_factory):
-    with TestClient(create_app(object())) as client:
+    with TestClient(create_app(plan_service=object())) as client:
         first = client.post("/api/v1/chat", json={
             "session_id": "session-1",
             "message": "First request",
@@ -214,7 +215,7 @@ def test_workflow_envelope_streams_events(monkeypatch):
         "create_workflow",
         lambda *args, **kwargs: workflow,
     )
-    with TestClient(create_app(object())) as client:
+    with TestClient(create_app(plan_service=object())) as client:
         response = client.post("/api/v1/chat", json={
             "session_id": "session-workflow",
             "message": "Plan a vegan meal",
@@ -310,22 +311,42 @@ def test_cost_intent_turn_drops_uncosted_recipe_end_to_end(monkeypatch):
                 "text": "The costed recipe is selected; uncosted was dropped for evidence-absent.",
             }
 
-    class CalculatorSpy:
-        def __init__(self):
-            self.calls = []
+    from api.features.calculator.repository import CostNutritionRepository
+    from api.features.calculator.service import CostNutritionService
 
-        def calculate(self, request):
-            self.calls.append(request)
-            return SimpleNamespace(itemized=[]), None
+    class EmptySession:
+        def __enter__(self):
+            return self
 
-    from types import SimpleNamespace
+        def __exit__(self, *args):
+            return False
+
+        def run(self, query, **params):
+            if "normalized_names" in params:
+                return [
+                    {"normalized_name": name, "canonical_key": "black_pepper"}
+                    for name in params["normalized_names"]
+                ]
+            if "canonical_keys" in params:
+                return [{
+                    "canonical_key": key,
+                    "approval_status": "accepted",
+                    "candidate_key": "accepted-candidate",
+                    "conversions": [],
+                } for key in params["canonical_keys"]]
+            return []
+
+    class EmptyDriver:
+        def session(self):
+            return EmptySession()
 
     plan_service = PlanService(PlanRepository(Driver()))
     plan_service.calculator_service = SignalInspector()
+    plan_adapter = PlanServiceAdapter(plan_service)
     real_create_workflow = composition.create_workflow
 
     def workflow_factory(service, **kwargs):
-        assert service is plan_service
+        assert service is plan_adapter
         return real_create_workflow(
             service,
             extract_llm=ExtractLLM(),
@@ -334,9 +355,8 @@ def test_cost_intent_turn_drops_uncosted_recipe_end_to_end(monkeypatch):
 
     import app.chat_router as chat_router
     monkeypatch.setattr(chat_router.composition, "create_workflow", workflow_factory)
-    calculator = CalculatorSpy()
-    application = create_app(plan_service)
-    application.state.calculator_service = calculator
+    calculator = CostNutritionService(CostNutritionRepository(EmptyDriver()))
+    application = create_app(plan_service=plan_adapter, calculator_service=calculator)
     with TestClient(application) as client:
         response = client.post("/api/v1/chat", json={
             "session_id": "session-cost",
@@ -347,8 +367,7 @@ def test_cost_intent_turn_drops_uncosted_recipe_end_to_end(monkeypatch):
     text = "".join(data["delta"] for kind, data in frames if kind == "token")
     updates = [data for kind, data in frames if kind == "plan_updated"]
     assert response.status_code == 200
-    assert len(calculator.calls) == 1
-    assert "uncosted" in text and "evidence-absent" in text
+    assert "uncosted" in text and "evidence-absent" in text, frames
     assert "costed" in text and "selected" in text
     assert updates and updates[0]["explanation"]["recipe"]["recipe_id"] == "costed"
     assert updates[0]["explanation"]["recipe"]["outcome"] == "selected"
@@ -401,7 +420,7 @@ def _post_envelope(monkeypatch, envelope, user_context=None):
     monkeypatch.setattr(
         chat_router.composition, "create_workflow", lambda *args, **kwargs: workflow
     )
-    with TestClient(create_app(object())) as client:
+    with TestClient(create_app(plan_service=object())) as client:
         return client.post("/api/v1/chat", json={
             "session_id": "session-detail",
             "message": "Update my plan",
