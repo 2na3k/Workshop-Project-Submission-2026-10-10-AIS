@@ -37,6 +37,7 @@ class ConstraintSet:
     dietary: tuple[DietaryConstraint, ...] = ()
     nutrients: tuple[NutrientConstraint, ...] = ()
     nutrient_tolerance_pct: int = 0
+    cost_query: bool | None = None
 
 
 @dataclass(frozen=True)

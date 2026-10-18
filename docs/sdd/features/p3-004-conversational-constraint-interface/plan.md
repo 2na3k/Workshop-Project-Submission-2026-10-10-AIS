@@ -412,7 +412,7 @@ producer from its consumer.
   - Files: `SystemCode/remy/workflows/tests/test_extract.py` (extend)
   - Done when: `test_cost_query_set_on_cost_message` and `test_cost_query_absent_without_cost_reference` fail because `ConstraintSet.cost_query` does not exist; existing extract tests still pass (additive field, default `None`). Cases: cost keywords ("cheapest", "under $5", "what's the price", "budget") set truthy; no-cost messages falsy; LLM-provided `cost_query` takes precedence over the keyword fallback.
 
-- [ ] **T-3** Add `ConstraintSet.cost_query` and set it in the Extract Constraints node
+- [x] **T-3** Add `ConstraintSet.cost_query` and set it in the Extract Constraints node
   - Type: impl
   - Covers: AC-4, AC-5
   - Files: `SystemCode/remy/workflows/src/workflows/models.py` (append `cost_query: bool | None = None` after `nutrient_tolerance_pct`); `SystemCode/remy/workflows/src/workflows/nodes.py` (set from LLM output when present, else keyword regex in `_constraint_set`)

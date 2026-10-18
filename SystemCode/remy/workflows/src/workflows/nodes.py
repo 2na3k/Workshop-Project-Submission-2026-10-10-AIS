@@ -62,6 +62,15 @@ def _constraint_set(value: Any, message: str) -> ConstraintSet:
         severity = item.get("severity")
         match = explicit_severity.search(message)
         allergies.append(AllergyConstraint(item["code"], severity if match else None))
+    cost_query = value.get("cost_query")
+    if cost_query is None:
+        cost_query = bool(
+            re.search(
+                r"\b(cost|costs|price|prices|priced|cheap|cheaper|cheapest|budget|afford|affordable|dollar|dollars|sgd)\b|\$\s?\d|\bunder\s+\$?\d",
+                message,
+                re.IGNORECASE,
+            )
+        )
     return ConstraintSet(
         horizon_days=value["horizon_days"],
         meals_per_day=value["meals_per_day"],
@@ -70,6 +79,7 @@ def _constraint_set(value: Any, message: str) -> ConstraintSet:
         dietary=tuple(DietaryConstraint(item["code"]) for item in value.get("dietary", [])),
         nutrients=tuple(nutrients),
         nutrient_tolerance_pct=tolerance if re.search(r"\b(tolerance|relax|within)\b", message, re.I) else 0,
+        cost_query=cost_query,
     )
 
 
