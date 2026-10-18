@@ -9,6 +9,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 
+from api.features.calculator.schemas import CostNutritionRequest, IngredientRequest
 from workflows.models import TraceEnvelope
 
 from app import composition
@@ -54,11 +55,75 @@ def _previous_meals(user_context: dict | None) -> dict[tuple[int, str], str]:
     return previous
 
 
+def _scoped_ingredients(envelope: TraceEnvelope, user_context: dict | None) -> list[IngredientRequest]:
+    plan_result = envelope.outcome.plan
+    days = _member(plan_result, "days", ()) or ()
+    if not days and user_context:
+        context_plan = user_context.get("plan", user_context)
+        days = _member(context_plan, "days", ()) or ()
+
+    requirements: dict[str, list[Any]] = {}
+    if envelope.plan_trace is not None:
+        for requirement in envelope.plan_trace.requirements:
+            requirements.setdefault(requirement.recipe_id, []).append(requirement)
+
+    ingredients: list[IngredientRequest] = []
+    for day_value in days:
+        for meal in _member(day_value, "meals", ()) or ():
+            recipe_id = str(_member(meal, "recipe_id", ""))
+            meal_requirements = list(requirements.get(recipe_id, []))
+            for ingredient in _member(meal, "ingredients", ()) or ():
+                text = _member(ingredient, "text")
+                quantity = _member(ingredient, "quantity")
+                unit = _member(ingredient, "unit")
+                matching = next(
+                    (item for item in meal_requirements
+                     if item.requirement_text and item.requirement_text == text),
+                    None,
+                )
+                name = (matching.resolved_concept if matching is not None else None) or text
+                if name and quantity is not None and unit:
+                    ingredients.append(IngredientRequest(
+                        name=str(name), quantity=quantity, unit=unit
+                    ))
+                if matching is not None:
+                    meal_requirements.remove(matching)
+                if len(ingredients) >= 100:
+                    return ingredients
+    return ingredients
+
+
+def _cost_lines(calculation: Any) -> list[str]:
+    lines = []
+    for item in calculation.itemized:
+        warnings = {warning.code for warning in item.warnings}
+        if "MISSING_PACKAGE_DATA" in warnings:
+            lines.append(
+                f"Cost for {item.ingredient}: consumed cost unavailable; "
+                "retail package cost unavailable. Warning: MISSING_PACKAGE_DATA."
+            )
+            continue
+        consumed = (
+            f"{item.consumed_cost_sgd:.2f}"
+            if item.consumed_cost_sgd is not None else "unavailable"
+        )
+        retail = (
+            f"{item.retail_package_cost_sgd:.2f}"
+            if item.retail_package_cost_sgd is not None else "unavailable"
+        )
+        lines.append(
+            f"Cost for {item.ingredient}: consumed cost SGD {consumed}; "
+            f"retail package cost SGD {retail}."
+        )
+    return lines
+
+
 def _events(
     payload: ChatRequest,
     envelope: TraceEnvelope,
     projected: Any,
     trace_id: str,
+    cost_lines: list[str] | None = None,
 ) -> list[Any]:
     if projected.error is not None:
         return [ErrorEvent(
@@ -78,6 +143,8 @@ def _events(
     )]
 
     text = envelope.outcome.text or ""
+    if cost_lines:
+        text = " ".join(part for part in (text, *cost_lines) if part)
     events.extend(
         TokenEvent(event="token", delta=text[index:index + 40])
         for index in range(0, len(text), 40)
@@ -132,7 +199,22 @@ def chat(payload: ChatRequest, request: Request, plan_service: Any = Depends(_pl
         if not isinstance(envelope, TraceEnvelope):
             raise TypeError("workflow did not return a TraceEnvelope")
         projected = from_trace_envelope(envelope, trace_id)
-        events = _events(payload, envelope, projected, trace_id)
+        cost_lines = []
+        constraints = envelope.parsed_constraints
+        if constraints is not None and constraints.cost_query:
+            scoped = _scoped_ingredients(envelope, payload.user_context)
+            if scoped:
+                calculator = getattr(request.app.state, "calculator_service", None)
+                if calculator is None:
+                    calculator = composition.create_calculator_service(
+                        request.app.state.neo4j_driver
+                    )
+                calculation, _calculation_trace = calculator.calculate(CostNutritionRequest(
+                    servings=constraints.servings,
+                    ingredients=scoped,
+                ))
+                cost_lines = _cost_lines(calculation)
+        events = _events(payload, envelope, projected, trace_id, cost_lines)
     except Exception:
         events = [ErrorEvent(
             event="error",

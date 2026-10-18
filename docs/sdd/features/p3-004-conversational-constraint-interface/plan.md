@@ -477,7 +477,7 @@ producer from its consumer.
   - Files: `SystemCode/remy/app/tests/api/test_cost_projection.py` (create)
   - Done when: tests fail because the handler's cost branch does not exist. `test_cost_surfaced_on_cost_intent` (cost_query truthy → calculator called, cost in payload); `test_no_cost_without_intent` (cost_query falsy → calculator not called); `test_consumed_and_retail_distinct_via_calculator` (real `CostNutritionService.calculate` with mocked repo — consumed vs retail exposed separately, R-11); `test_missing_package_reported_not_fabricated` (`MISSING_PACKAGE_DATA` warning present; no fabricated/zero price); `test_cost_query_branches_handler` (real `extract_constraints` sets `cost_query` → handler takes the cost path).
 
-- [ ] **T-12** Implement on-demand cost projection in `/chat` handler
+- [x] **T-12** Implement on-demand cost projection in `/chat` handler
   - Type: impl
   - Covers: AC-4, AC-5, AC-6, AC-7
   - Files: `SystemCode/remy/app/src/app/chat_router.py` (edit — cost branch); `SystemCode/remy/app/src/app/composition.py` (extend — expose calculator wiring)
