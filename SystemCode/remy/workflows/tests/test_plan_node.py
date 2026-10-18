@@ -92,3 +92,13 @@ def test_horizon_only_request_is_sent_unchanged():
     assert port.requests[0].horizon_days == 4
     assert port.requests[0].allergies == ()
     assert port.requests[0].nutrients == ()
+
+
+def test_plan_node_maps_cost_query_to_plan_input():
+    for cost_query in (True, False, None):
+        constraints = ConstraintSet(2, 2, cost_query=cost_query)
+        port = FakePort(PlanResult("p1", "complete", "ok"), _trace())
+
+        plan({"raw_message": "", "parsed_constraints": constraints}, port=port)
+
+        assert port.requests[0].cost_query is bool(cost_query)

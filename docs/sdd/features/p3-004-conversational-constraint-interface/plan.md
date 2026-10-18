@@ -437,7 +437,7 @@ producer from its consumer.
 
 ### Group 3 — workflow: thread budget signal to the adapter
 
-- [ ] **T-6** Write failing test: `PlanInput.cost_query` threads to `drop_uncosted`
+- [x] **T-6** Write failing test: `PlanInput.cost_query` threads to `drop_uncosted`
   - Type: test
   - Covers: AC-8 (via plan §5 F-1 additive path)
   - Files: `SystemCode/remy/workflows/tests/test_plan_node.py` (create if absent; append if present)
