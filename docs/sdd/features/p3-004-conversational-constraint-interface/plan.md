@@ -489,7 +489,7 @@ producer from its consumer.
   - Files: `SystemCode/remy/app/tests/api/test_chat_endpoint.py` (append)
   - Done when: `test_cost_intent_turn_drops_uncosted_recipe_end_to_end` fails because the production wiring (T-8) or the handler cost branch is missing. **Fixture-wiring per verdict:** the test wires **real** `PlanServiceAdapter` + **real** `PlanService` (the `SignalInspector` pattern from `test_service_cost_drop.py` fakes repo/calculator; the LLM and port fake only at the workflow boundary is allowed only if the adapter and PlanService still run for real). Asserts: cost-intent `/chat` turn → streamed explanation shows the uncosted recipe as `evidence-absent` (not `selected`); a costed recipe remains selectable. **Optional-if-free:** pool-emptied-by-cost-drop → infeasible with named binding constraints.
 
-- [ ] **T-14** Write failing endpoint tests: served-surface conformance
+- [x] **T-14** Write failing endpoint tests: served-surface conformance
   - Type: test
   - Covers: AC-13, AC-14, AC-15, AC-18, AC-20
   - Files: `SystemCode/remy/app/tests/api/test_chat_endpoint.py` (append); `SystemCode/remy/app/tests/api/test_response_schema.py` (extend only if R-16 does not already exercise the streamed payload)

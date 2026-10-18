@@ -49,6 +49,16 @@ def _frames(response):
     return frames
 
 
+def _keys(value):
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            yield key
+            yield from _keys(nested)
+    elif isinstance(value, list):
+        for nested in value:
+            yield from _keys(nested)
+
+
 @pytest.fixture
 def workflow_factory(monkeypatch):
     import app.chat_router as chat_router
@@ -271,3 +281,103 @@ def test_cost_intent_turn_drops_uncosted_recipe_end_to_end(monkeypatch):
     assert "costed" in text and "selected" in text
     assert updates and updates[0]["explanation"]["recipe"]["recipe_id"] == "costed"
     assert updates[0]["explanation"]["recipe"]["outcome"] == "selected"
+
+
+def _detailed_envelope():
+    from workflows.models import RecipeOutcomeView, RequirementOutcomeView
+
+    recipes = (
+        RecipeOutcomeView("selected", "selected"),
+        RecipeOutcomeView("absent", "dropped", "evidence-absent", ("evidence-absent",)),
+        RecipeOutcomeView(
+            "excluded", "dropped", "present-evidence-excludes",
+            ("present-evidence-excludes",),
+        ),
+        RecipeOutcomeView("unmapped", "dropped", "unmapped", ("unmapped",)),
+    )
+    requirements = (
+        RequirementOutcomeView(
+            "selected", "selected-req", "dietary", "pass", "vegan",
+            resolved_concept="tofu", selected_offer={"listing_name": "Tofu", "retailer": "Market"},
+        ),
+        RequirementOutcomeView("absent", "absent-req", "budget", "evidence-absent", "pepper"),
+        RequirementOutcomeView(
+            "excluded", "excluded-req", "allergen", "present-evidence-excludes", "peanut"
+        ),
+        RequirementOutcomeView("unmapped", "unmapped-req", "unmapped", "unmapped", "rare spice"),
+    )
+    plan = PlanResult(
+        "plan-1", "complete", "ok", recipe_outcomes=recipes,
+        constraint_outcomes=requirements,
+        days=({"day": 1, "meals": [{
+            "slot": "meal_1", "recipe_id": "selected", "ingredients": [],
+        }]},),
+    )
+    return TraceEnvelope(
+        schema_version="p3-001.v1",
+        outcome=Outcome(kind="plan", plan=plan, text=""),
+        raw_message="Update my plan",
+        plan_trace=PlanTraceView(
+            "plan-produced", None, recipes=recipes, requirements=requirements
+        ),
+    )
+
+
+def _post_envelope(monkeypatch, envelope, user_context=None):
+    import app.chat_router as chat_router
+
+    workflow = WorkflowStub(result={"trace": envelope})
+    monkeypatch.setattr(
+        chat_router.composition, "create_workflow", lambda *args, **kwargs: workflow
+    )
+    with TestClient(create_app(object())) as client:
+        return client.post("/api/v1/chat", json={
+            "session_id": "session-detail",
+            "message": "Update my plan",
+            "user_context": user_context,
+        })
+
+
+def test_three_levels_present_in_stream(monkeypatch):
+    response = _post_envelope(monkeypatch, _detailed_envelope())
+    frames = _frames(response)
+    done = next(data for kind, data in frames if kind == "done")
+    update = next(data for kind, data in frames if kind == "plan_updated")
+    text = "".join(data["delta"] for kind, data in frames if kind == "token")
+
+    assert done["status"] == "plan-produced"
+    assert "Plan outcome: plan-produced" in text
+    assert update["explanation"]["recipe"]["recipe_id"] == "selected"
+    assert update["explanation"]["constraints"][0]["constraint"] == "dietary"
+
+
+def test_distinct_causes_in_stream(monkeypatch):
+    response = _post_envelope(monkeypatch, _detailed_envelope())
+    text = "".join(data["delta"] for kind, data in _frames(response) if kind == "token")
+
+    assert "Recipe absent: dropped (evidence-absent)" in text
+    assert "Recipe excluded: dropped (present-evidence-excludes)" in text
+    assert "Recipe unmapped: dropped (unmapped)" in text
+
+
+def test_stream_excludes_forbidden_fields(monkeypatch):
+    from app.chat_contract import CHAT_FORBIDDEN_FIELDS
+
+    response = _post_envelope(monkeypatch, _detailed_envelope())
+    keys = list(_keys([data for _kind, data in _frames(response)]))
+
+    assert not [key for key in keys if any(field in key for field in CHAT_FORBIDDEN_FIELDS)]
+
+
+def test_plan_updated_has_delta_and_scoped_explanation(monkeypatch):
+    context = {"plan": {"days": [{
+        "day": 1,
+        "meals": [{"slot": "meal_1", "recipe_id": "old-recipe"}],
+    }]}}
+    response = _post_envelope(monkeypatch, _detailed_envelope(), context)
+    updates = [data for kind, data in _frames(response) if kind == "plan_updated"]
+
+    assert len(updates) == 1
+    assert updates[0]["delta"] == {"day": 1, "slot": "meal_1", "recipe_id": "selected"}
+    assert updates[0]["explanation"]["recipe"]["recipe_id"] == "selected"
+    assert updates[0]["explanation"]["constraints"][0]["requirement_id"] == "selected-req"
