@@ -420,7 +420,7 @@ producer from its consumer.
 
 ### Group 2 — api plan service: A-006 recipe-level cost drop
 
-- [ ] **T-4** Write failing tests: R-8/R-10 recipe-level cost drop + default-off gate
+- [x] **T-4** Write failing tests: R-8/R-10 recipe-level cost drop + default-off gate
   - Type: test
   - Covers: AC-8, AC-9, AC-10; F-5(a) warning-string assertion
   - Files: `SystemCode/remy/api/tests/features/plan/test_service_cost_drop.py` (create); `SystemCode/remy/api/tests/features/plan/test_cost_drop_eligibility.py` (create)
