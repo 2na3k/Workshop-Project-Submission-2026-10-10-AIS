@@ -15,6 +15,7 @@ _PROVIDER_DEFAULTS: dict[str, dict[str, Any]] = {
     "ollama": {
         "base_url": os.getenv("REMY_LLM_BASE_URL", "http://localhost:11434"),
         "keep_alive": "1h",
+        "num_predict": 400
     },
 }
 
@@ -85,3 +86,19 @@ class ChatLLM:
                 self.provider, self.model, type(exc).__name__, exc,
             )
             raise
+
+def main() -> None:
+    import sys
+
+    logging.basicConfig(level=logging.INFO)
+    prompt = " ".join(sys.argv[1:]) or "Say hello in one short sentence."
+
+    llm = ChatLLM()
+    print(f"[{llm.provider}:{llm.model}] > {prompt}")
+
+    response = llm.invoke(prompt)
+    print(response.content)
+
+
+if __name__ == "__main__":
+    main()

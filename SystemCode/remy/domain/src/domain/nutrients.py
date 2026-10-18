@@ -24,7 +24,7 @@ def sum_nutrients(items: list[NutrientProfile]) -> NutrientProfile:
 
 def per_serving(profile: NutrientProfile, servings: int) -> NutrientProfile:
     return NutrientProfile(**{
-        key: (value / servings if value is not None else None)
+        key: (round((value / servings), 2) if value is not None else None)
         for key, value in asdict(profile).items()
     })
 

@@ -25,11 +25,11 @@ def create_calculator_service(driver: Any) -> CostNutritionService:
 
 def create_workflow(plan_service: Any, *, extract_llm: Any | None = None, response_llm: Any | None = None):
     return build(
-        extract_llm=extract_llm or ChatLLM(),
+        extract_llm=extract_llm or ChatLLM(format="json"),
         plan_port=(
             plan_service
             if isinstance(plan_service, PlanServiceAdapter)
             else PlanServiceAdapter(plan_service)
         ),
-        response_llm=response_llm or ChatLLM(),
+        response_llm=response_llm or ChatLLM(format="json"),
     )

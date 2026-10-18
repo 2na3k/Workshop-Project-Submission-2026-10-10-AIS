@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import secrets
 from collections.abc import Iterator
 from typing import Any
@@ -10,8 +11,6 @@ from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
 from api.features.calculator.schemas import CostNutritionRequest, IngredientRequest
-from workflows.models import TraceEnvelope
-
 from app import composition
 from app.chat_contract import (
     ChatRequest,
@@ -25,9 +24,11 @@ from app.chat_contract import (
     from_trace_envelope,
 )
 from app.sse import serialize_event
+from workflows.models import TraceEnvelope
 
 router = APIRouter()
 
+logger = logging.getLogger(__name__)
 
 def _resolve_services(request: Request) -> tuple[Any, Any]:
     plan_service = getattr(request.app.state, "plan_service", None)
@@ -62,7 +63,8 @@ def _previous_meals(user_context: dict | None) -> dict[tuple[int, str], str]:
     return previous
 
 
-def _scoped_ingredients(envelope: TraceEnvelope, user_context: dict | None) -> list[IngredientRequest]:
+def _scoped_ingredients(envelope: TraceEnvelope, user_context: dict | None) -> list[
+    IngredientRequest]:
     plan_result = envelope.outcome.plan
     days = _member(plan_result, "days", ()) or ()
     if not days and user_context:
@@ -163,11 +165,11 @@ def _explanation_lines(projected: Any) -> list[str]:
 
 
 def _events(
-    payload: ChatRequest,
-    envelope: TraceEnvelope,
-    projected: Any,
-    trace_id: str,
-    cost_lines: list[str] | None = None,
+        payload: ChatRequest,
+        envelope: TraceEnvelope,
+        projected: Any,
+        trace_id: str,
+        cost_lines: list[str] | None = None,
 ) -> list[Any]:
     if projected.error is not None:
         return [ErrorEvent(
@@ -245,26 +247,31 @@ def chat(payload: ChatRequest, request: Request):
             "raw_message": payload.message,
             "user_context": payload.user_context,
         })
-        envelope = state if isinstance(state, TraceEnvelope) else state.get("trace")
+        envelope = state.get("trace") if isinstance(state, dict) else None
         if not isinstance(envelope, TraceEnvelope):
             raise TypeError("workflow did not return a TraceEnvelope")
-        projected = from_trace_envelope(envelope, trace_id)
-        cost_lines = []
-        constraints = envelope.parsed_constraints
-        if constraints is not None and constraints.cost_query:
-            scoped = _scoped_ingredients(envelope, payload.user_context)
-            if scoped:
-                calculation, _calculation_trace = calculator.calculate(CostNutritionRequest(
-                    servings=constraints.servings,
-                    ingredients=scoped,
-                ))
-                cost_lines = _cost_lines(calculation)
-        events = _events(payload, envelope, projected, trace_id, cost_lines)
-    except Exception:
-        events = [ErrorEvent(
-            event="error",
-            code="WORKFLOW_FAILURE",
-            message="The recommendation workflow failed.",
-            trace_id=trace_id,
-        )]
+    except Exception as exc:
+        logger.exception("chat workflow failed trace_id=%s", trace_id)
+        return StreamingResponse(
+            _stream([ErrorEvent(
+                event="error",
+                code="WORKFLOW_FAILURE",
+                message="The recommendation workflow failed.",
+                trace_id=trace_id,
+            )]),
+            media_type="text/event-stream",
+        )
+
+    projected = from_trace_envelope(envelope, trace_id)
+    cost_lines = []
+    constraints = envelope.parsed_constraints
+    if constraints is not None and constraints.cost_query:
+        scoped = _scoped_ingredients(envelope, payload.user_context)
+        if scoped:
+            calculation, _ = calculator.calculate(CostNutritionRequest(
+                servings=constraints.servings,
+                ingredients=scoped,
+            ))
+            cost_lines = _cost_lines(calculation)
+    events = _events(payload, envelope, projected, trace_id, cost_lines)
     return StreamingResponse(_stream(events), media_type="text/event-stream")
