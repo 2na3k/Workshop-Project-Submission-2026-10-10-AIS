@@ -7,11 +7,11 @@
     },
     {
       "name": "lint",
-      "command": "cd SystemCode && uv run --package remy-workflows ruff check remy/workflows/src remy/workflows/tests --select F,E9 && uv run --package remy-app ruff check remy/app/src remy/app/tests --select F,E9"
+      "command": "cd SystemCode && uv run --package remy-api ruff check remy/api/src/api/features/plan remy/api/tests/features/plan --select F,E9 && uv run --package remy-workflows ruff check remy/workflows/src remy/workflows/tests --select F,E9 && uv run --package remy-app ruff check remy/app/src remy/app/tests --select F,E9"
     },
     {
       "name": "typecheck",
-      "command": "cd SystemCode && uv run --package remy-workflows mypy remy/workflows/src --ignore-missing-imports && uv run --package remy-app mypy remy/app/src --ignore-missing-imports"
+      "command": "cd SystemCode && uv run --package remy-api mypy remy/api/src/api/features/plan --ignore-missing-imports && uv run --package remy-workflows mypy remy/workflows/src --ignore-missing-imports && uv run --package remy-app mypy remy/app/src --ignore-missing-imports"
     },
     {
       "name": "lint-imports",
