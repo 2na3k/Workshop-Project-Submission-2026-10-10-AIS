@@ -523,7 +523,7 @@ producer from its consumer.
 
 ### Group 7 — CI check set
 
-- [ ] **T-19** Update `sdd.json` to cover p3-004's source and test paths
+- [x] **T-19** Update `sdd.json` to cover p3-004's source and test paths
   - Type: impl
   - Covers: plan Output §sdd.json
   - Files: `sdd.json` (edit)

@@ -3,7 +3,7 @@
   "checks": [
     {
       "name": "test",
-      "command": "cd SystemCode && uv run --package remy-api pytest -q remy/api/tests/features/plan && uv run --package remy-workflows pytest -q remy/workflows/tests && uv run --package remy-app pytest -q remy/app/tests"
+      "command": "cd SystemCode && test -f remy/api/docs/API_doc.md && uv run --package remy-api pytest -q remy/api/tests/features/plan && uv run --package remy-workflows pytest -q remy/workflows/tests && uv run --package remy-app pytest -q remy/app/tests"
     },
     {
       "name": "lint",
