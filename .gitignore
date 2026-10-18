@@ -91,3 +91,10 @@ logs/
 docs/drafts/
 
 .kiro/settings
+
+.sdd/
+.agents/
+.prompts/
+.kiro/
+.gemini/
+.codex/
