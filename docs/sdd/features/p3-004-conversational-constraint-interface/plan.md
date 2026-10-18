@@ -509,7 +509,7 @@ producer from its consumer.
 
 ### Group 6 — docs
 
-- [ ] **T-17** Write failing doc test: `plan_updated` example carries delta + scoped explanation
+- [x] **T-17** Write failing doc test: `plan_updated` example carries delta + scoped explanation
   - Type: test
   - Covers: AC-21
   - Files: `SystemCode/remy/app/tests/api/test_api_doc_plan_updated.py` (create)
