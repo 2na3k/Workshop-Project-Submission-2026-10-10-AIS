@@ -121,6 +121,7 @@ def plan(state: dict[str, Any], *, port: Any) -> dict[str, Any]:
             dietary=constraints.dietary,
             nutrients=constraints.nutrients,
             nutrient_tolerance_pct=constraints.nutrient_tolerance_pct,
+            cost_query=bool(constraints.cost_query),
         )
         result, trace_view = port.generate(request)
         kind: Literal["plan", "infeasible"] = "infeasible" if result.feasibility_outcome == "infeasible" else "plan"

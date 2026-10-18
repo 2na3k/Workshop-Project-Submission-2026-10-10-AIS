@@ -443,7 +443,7 @@ producer from its consumer.
   - Files: `SystemCode/remy/workflows/tests/test_plan_node.py` (create if absent; append if present)
   - Done when: `test_plan_node_maps_cost_query_to_plan_input` fails because `PlanInput.cost_query` does not exist; the test drives the real Plan node with a fake port and asserts `PlanInput.cost_query` mirrors `ConstraintSet.cost_query` (truthy source → True; falsy/None → False).
 
-- [ ] **T-7** Add `PlanInput.cost_query` and map it in the Plan node
+- [x] **T-7** Add `PlanInput.cost_query` and map it in the Plan node
   - Type: impl
   - Covers: plan §5 (F-1 additive field)
   - Files: `SystemCode/remy/workflows/src/workflows/models.py` (append `PlanInput.cost_query: bool = False`); `SystemCode/remy/workflows/src/workflows/nodes.py` (`plan` node maps `bool(constraint_set.cost_query)` onto `PlanInput.cost_query`)
