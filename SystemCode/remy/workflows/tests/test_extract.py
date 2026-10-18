@@ -76,3 +76,39 @@ def test_ambiguous_severity_is_not_invented_and_tolerance_defaults_to_zero():
     result = extract_constraints(_state("I am a bit allergic to peanuts"), llm=LLM())
     assert result["parsed_constraints"].allergies[0].severity is None
     assert result["parsed_constraints"].nutrient_tolerance_pct == 0
+
+
+def test_cost_query_set_on_cost_message(fake_llm):
+    for message in (
+        "Give me the cheapest meals",
+        "Plan meals under $5",
+        "What's the price?",
+        "Keep it within my budget",
+    ):
+        result = extract_constraints(_state(message), llm=fake_llm)
+        assert result["parsed_constraints"].cost_query
+
+    class ExplicitCostIntent:
+        provider = "fake"
+        model = "fake"
+
+        def invoke(self, prompt):
+            return {"horizon_days": 2, "meals_per_day": 2, "cost_query": True}
+
+    result = extract_constraints(_state("Meals that won't break the bank"), llm=ExplicitCostIntent())
+    assert result["parsed_constraints"].cost_query is True
+
+    class ExplicitNoCostIntent:
+        provider = "fake"
+        model = "fake"
+
+        def invoke(self, prompt):
+            return {"horizon_days": 2, "meals_per_day": 2, "cost_query": False}
+
+    result = extract_constraints(_state("What's the cheapest option?"), llm=ExplicitNoCostIntent())
+    assert result["parsed_constraints"].cost_query is False
+
+
+def test_cost_query_absent_without_cost_reference(fake_llm):
+    result = extract_constraints(_state("Plan three vegetarian dinners"), llm=fake_llm)
+    assert not result["parsed_constraints"].cost_query

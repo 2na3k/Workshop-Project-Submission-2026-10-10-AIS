@@ -406,7 +406,7 @@ producer from its consumer.
 
 ### Group 1 — workflow: cost-query extraction (p3-001 extension, additive)
 
-- [ ] **T-2** Write failing tests: `cost_query` extraction and keyword predicate
+- [x] **T-2** Write failing tests: `cost_query` extraction and keyword predicate
   - Type: test
   - Covers: AC-4, AC-5
   - Files: `SystemCode/remy/workflows/tests/test_extract.py` (extend)
