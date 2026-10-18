@@ -118,6 +118,43 @@ def _cost_lines(calculation: Any) -> list[str]:
     return lines
 
 
+def _explanation_lines(projected: Any) -> list[str]:
+    plan = projected.plan
+    if plan is None:
+        return []
+    lines = [f"Plan outcome: {plan.feasibility_outcome}."]
+    if plan.reason:
+        lines.append(f"Plan reason: {plan.reason}.")
+    for binding in plan.binding_constraints:
+        lines.append(f"Binding constraint: {binding.scope} {binding.code} ({binding.kind}).")
+    for recipe in plan.recipes:
+        causes = ", ".join(cause.value for cause in recipe.drop_causes)
+        outcome = f"{recipe.outcome} ({causes})" if causes else recipe.outcome
+        lines.append(f"Recipe {recipe.recipe_id}: {outcome}.")
+        for constraint in recipe.constraints:
+            requirement = (
+                f" requirement {constraint.requirement_id}"
+                if constraint.requirement_id is not None else ""
+            )
+            resolved = (
+                f"; resolved as {constraint.resolved_concept}"
+                if constraint.resolved_concept else ""
+            )
+            offer = ""
+            if constraint.selected_offer is not None:
+                offer = (
+                    f"; offer {constraint.selected_offer.listing_name}"
+                    f" from {constraint.selected_offer.retailer}"
+                )
+            lines.append(
+                f"Constraint {constraint.constraint} for recipe {recipe.recipe_id}"
+                f"{requirement}: {constraint.state}{resolved}{offer}."
+            )
+            for warning in constraint.warnings:
+                lines.append(f"Warning for recipe {recipe.recipe_id}: {warning}.")
+    return lines
+
+
 def _events(
     payload: ChatRequest,
     envelope: TraceEnvelope,
@@ -142,9 +179,11 @@ def _events(
         trace_id=trace_id,
     )]
 
-    text = envelope.outcome.text or ""
-    if cost_lines:
-        text = " ".join(part for part in (text, *cost_lines) if part)
+    text = " ".join(part for part in (
+        envelope.outcome.text or "",
+        *_explanation_lines(projected),
+        *(cost_lines or []),
+    ) if part)
     events.extend(
         TokenEvent(event="token", delta=text[index:index + 40])
         for index in range(0, len(text), 40)

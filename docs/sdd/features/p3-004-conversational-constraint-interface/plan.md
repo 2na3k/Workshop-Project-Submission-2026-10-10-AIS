@@ -495,7 +495,7 @@ producer from its consumer.
   - Files: `SystemCode/remy/app/tests/api/test_chat_endpoint.py` (append); `SystemCode/remy/app/tests/api/test_response_schema.py` (extend only if R-16 does not already exercise the streamed payload)
   - Done when: `test_three_levels_present_in_stream` (AC-13), `test_distinct_causes_in_stream` (AC-14; evidence-absent vs present-evidence-excludes vs unmapped), `test_stream_excludes_forbidden_fields` (AC-15; **full** `CHAT_FORBIDDEN_FIELDS` set — all eight, per F-5 note), `test_plan_updated_has_delta_and_scoped_explanation` (AC-18) fail against the current handler. AC-20: the A-007 fixtures (`test_response_schema.py`, `test_explanation_shape.py`) remain green against the mapped response.
 
-- [ ] **T-15** Fix any served-surface defects surfaced by T-13/T-14
+- [x] **T-15** Fix any served-surface defects surfaced by T-13/T-14
   - Type: impl
   - Covers: AC-13, AC-14, AC-15, AC-18, AC-20
   - Files: `SystemCode/remy/app/src/app/chat_router.py` (edit — payload construction only, if needed)
