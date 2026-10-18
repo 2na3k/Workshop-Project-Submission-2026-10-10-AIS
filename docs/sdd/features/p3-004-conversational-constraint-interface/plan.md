@@ -471,7 +471,7 @@ producer from its consumer.
 
 ### Group 5 — app: cost projection and served-surface conformance
 
-- [ ] **T-11** Write failing tests: on-demand cost folded into `/chat`
+- [x] **T-11** Write failing tests: on-demand cost folded into `/chat`
   - Type: test
   - Covers: AC-4, AC-5, AC-6, AC-7
   - Files: `SystemCode/remy/app/tests/api/test_cost_projection.py` (create)
