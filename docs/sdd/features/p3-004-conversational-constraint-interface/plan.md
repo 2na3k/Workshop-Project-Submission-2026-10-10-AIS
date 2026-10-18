@@ -463,7 +463,7 @@ producer from its consumer.
   - Files: `SystemCode/remy/app/tests/api/test_sse.py` (create); `SystemCode/remy/app/tests/api/test_chat_endpoint.py` (create)
   - Done when: tests fail because `app.sse` and `app.chat_router` do not exist. `test_sse.py::test_frame_shape` asserts `event: <type>\ndata: <json>\n\n` framing, JSON round-trips through the p3-002 event models, and no trace object leaks. `test_chat_endpoint.py` covers AC-1 (`text/event-stream`; 422 on missing session/message), AC-2 (only five event types), AC-16 (`trace_id` present, trace object absent), AC-17 (failure → single `error` event, stream closes), AC-19 (two independent calls).
 
-- [ ] **T-10** Implement SSE serializer and `/chat` router
+- [x] **T-10** Implement SSE serializer and `/chat` router
   - Type: impl
   - Covers: AC-1, AC-2, AC-16, AC-17, AC-19
   - Files: `SystemCode/remy/app/src/app/sse.py` (create); `SystemCode/remy/app/src/app/chat_router.py` (create); `SystemCode/remy/app/src/app/main.py` (create); `SystemCode/remy/app/src/app/composition.py` (extend)
