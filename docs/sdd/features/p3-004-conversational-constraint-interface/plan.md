@@ -457,7 +457,7 @@ producer from its consumer.
 
 ### Group 4 — app: SSE serializer and `/chat` endpoint
 
-- [ ] **T-9** Write failing tests: SSE serializer and `/chat` endpoint surface
+- [x] **T-9** Write failing tests: SSE serializer and `/chat` endpoint surface
   - Type: test
   - Covers: AC-1, AC-2, AC-16, AC-17, AC-19
   - Files: `SystemCode/remy/app/tests/api/test_sse.py` (create); `SystemCode/remy/app/tests/api/test_chat_endpoint.py` (create)
