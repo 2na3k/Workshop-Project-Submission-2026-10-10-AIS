@@ -38,7 +38,10 @@ class PlanServiceAdapter(PlanPort):
             dietary=[DietaryRequest(code=item.code) for item in request.dietary] or None,
             nutrients=[self._nutrient(item) for item in request.nutrients] or None,
         )
-        returned = self._service.generate(api_request)
+        returned = self._service.generate(
+            api_request,
+            drop_uncosted=request.cost_query,
+        )
         if not isinstance(returned, tuple) or len(returned) != 2:
             raise TypeError("generate did not return a tuple; P-1 prerequisite missing")
         response, trace = returned

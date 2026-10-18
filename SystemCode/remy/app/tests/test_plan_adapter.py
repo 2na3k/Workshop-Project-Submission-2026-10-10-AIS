@@ -10,8 +10,9 @@ class Service:
         self.response = response
         self.trace = trace
 
-    def generate(self, request):
+    def generate(self, request, *, drop_uncosted=False):
         self.request = request
+        self.drop_uncosted = drop_uncosted
         return self.response, self.trace
 
 
@@ -31,9 +32,12 @@ def _response():
 def test_adapter_maps_real_tuple_losslessly():
     trace = PlanTrace(binding_constraints=[NamedConstraint("plan", "horizon", "horizon")], recipes=[RecipeOutcome("r1", "selected")], requirements=[RequirementOutcome("r1", "q1", "dietary", "pass")])
     service = Service(_response(), trace)
-    result, trace_view = PlanServiceAdapter(service).generate(PlanInput(2, 2))
+    result, trace_view = PlanServiceAdapter(service).generate(
+        PlanInput(2, 2, cost_query=True)
+    )
 
     assert service.request.horizon_days == 2
+    assert service.drop_uncosted is True
     assert result.recipe_outcomes[0].recipe_id == "r1"
     assert trace_view.binding_constraints[0].code == "horizon"
     assert result.constraint_outcomes[0].requirement_id == "q1"

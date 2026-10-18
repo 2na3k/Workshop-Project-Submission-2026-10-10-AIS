@@ -449,7 +449,7 @@ producer from its consumer.
   - Files: `SystemCode/remy/workflows/src/workflows/models.py` (append `PlanInput.cost_query: bool = False`); `SystemCode/remy/workflows/src/workflows/nodes.py` (`plan` node maps `bool(constraint_set.cost_query)` onto `PlanInput.cost_query`)
   - Done when: T-6 passes; `bool(None)` coercion is the only behavior for the falsy case; existing Plan node tests stay green.
 
-- [ ] **T-8** Wire `cost_query` → `drop_uncosted` in `PlanServiceAdapter`
+- [x] **T-8** Wire `cost_query` → `drop_uncosted` in `PlanServiceAdapter`
   - Type: impl
   - Covers: AC-8 (production wiring; risks #1 mitigation)
   - Files: `SystemCode/remy/app/src/app/plan_adapter.py` (edit)
