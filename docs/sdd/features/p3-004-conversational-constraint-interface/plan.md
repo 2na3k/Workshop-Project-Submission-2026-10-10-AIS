@@ -501,7 +501,7 @@ producer from its consumer.
   - Files: `SystemCode/remy/app/src/app/chat_router.py` (edit — payload construction only, if needed)
   - Done when: T-13, T-14 pass; no reimplementation of p3-002's projection (`from_trace_envelope` stays the source); the full `CHAT_FORBIDDEN_FIELDS` set is excluded from every event payload; prices remain permitted.
 
-- [ ] **T-16** Extend Generate Response tests for the inherited cost-drop cause
+- [x] **T-16** Extend Generate Response tests for the inherited cost-drop cause
   - Type: test
   - Covers: AC-11, AC-12
   - Files: `SystemCode/remy/workflows/tests/test_generate.py` (extend)

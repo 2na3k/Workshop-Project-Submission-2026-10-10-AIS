@@ -63,3 +63,58 @@ def test_llm_failure_is_explicit():
     result = generate_response(_state(), llm=FakeResponseLLM(error=TimeoutError("timed out")))
     assert result["outcome"].kind == "failure"
     assert result["outcome"].node == "Generate Response"
+
+
+def _cost_drop_state():
+    plan_result = PlanResult(
+        "p1",
+        "complete",
+        "ok",
+        recipe_outcomes=(
+            RecipeOutcomeView("uncosted", "dropped", "evidence-absent"),
+            RecipeOutcomeView("costed", "selected"),
+        ),
+        constraint_outcomes=(
+            RequirementOutcomeView(
+                "uncosted", "uncosted-ingredient", "budget", "evidence-absent", "pepper"
+            ),
+            RequirementOutcomeView(
+                "costed", "costed-ingredient", "requirement", "selected", "salt"
+            ),
+        ),
+    )
+    return {
+        "raw_message": "Find the cheapest meal",
+        "plan_result": plan_result,
+        "outcome": Outcome("plan", plan=plan_result),
+    }
+
+
+def test_unknown_reference_rejected():
+    llm = FakeResponseLLM({
+        "text": "Use the costed recipe.",
+        "recipe_ids": ["costed"],
+        "requirement_ids": ["invented-requirement"],
+        "drop_causes": [],
+    })
+
+    result = generate_response(_cost_drop_state(), llm=llm)
+
+    assert result["outcome"].kind == "failure"
+    assert result["outcome"].node == "Generate Response"
+
+
+def test_evidence_absent_not_restated_permissive():
+    llm = FakeResponseLLM({
+        "text": "The uncosted recipe is included and compliant.",
+        "recipe_ids": ["uncosted", "costed"],
+        "requirement_ids": ["uncosted-ingredient", "costed-ingredient"],
+        "drop_causes": ["evidence-absent"],
+        "selected_recipe_ids": ["uncosted"],
+    })
+
+    result = generate_response(_cost_drop_state(), llm=llm)
+
+    assert result["outcome"].kind == "failure"
+    assert result["outcome"].node == "Generate Response"
+    assert "generation_text" not in result
