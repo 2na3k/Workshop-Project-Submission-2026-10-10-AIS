@@ -392,14 +392,14 @@ producer from its consumer.
 
 ### Group 0 — pre-task admin
 
-- [ ] **T-1** Verify prerequisites and confirm the frozen plan is in force
+- [x] **T-1** Verify prerequisites and confirm the frozen plan is in force
   - Type: admin
   - Covers: plan r2 (frozen); C-1..C-7 (all logged in spec `## Clarifications`); F-5 verify-on-touch surfaces
   - Files: none (verification only)
   - Done when:
-    - `sdd.py gate tasks p3-004-conversational-constraint-interface` passes.
+    - `sdd.py gate implement p3-004-conversational-constraint-interface` passes.
     - `docs/sdd/features/p3-004-conversational-constraint-interface/spec.md` `## Clarifications` contains C-1..C-7 with the seven confirmed decisions (A-006 layer=api plan service; stateless; reuse Generate Response; DQ-1..DQ-7 accepted; D-a cost folded into `/chat`; D-b `cost_query` field; A-007 fixture paths).
-    - `docs/sdd/amendments/` contains A-006 and A-007.
+    - `docs/amendments/` contains A-006 and A-007.
     - `find SystemCode/remy/app/tests/api -name 'test_response_schema.py' -o -name 'test_explanation_shape.py'` returns both (p3-002 landed) — the A-007 fixtures exist and are green.
     - `grep -n 'def generate' SystemCode/remy/api/src/api/features/plan/service.py` shows `PlanService.generate` (the p2-003 tuple-return shape) and `inspect_candidates` on the calculator service.
     - `uv run lint-imports` reports 4 kept, 0 broken.
