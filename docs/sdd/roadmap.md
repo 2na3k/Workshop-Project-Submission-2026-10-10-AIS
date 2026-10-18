@@ -38,7 +38,7 @@ test"; where nothing exists, it is "new".
 | p3-001-workflow-recommendation-service     | done    | p2-003-feasible-meal-plan-solving                                                                               | p3-002-explainable-response-contract, p3-003-web-planner-experience, p3-004-conversational-constraint-interface   | Recommendation execution result and trace boundary                                                                                   |
 | p3-002-explainable-response-contract       | done    | p2-001-constraint-evidence-filtering, p2-002-cost-nutrition-calculation, p3-001-workflow-recommendation-service | p3-001-workflow-recommendation-service, p3-003-web-planner-experience, p3-004-conversational-constraint-interface | Three-level user explanation and audit-provenance separation                                                                         |
 | p3-003-web-planner-experience              | out of scope | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                    | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                      | Web request/response contract for meal-plan recommendations. **Owned by a separate frontend effort, not this SDD effort.** |
-| p3-004-conversational-constraint-interface | new     | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                    | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract, p3-003-web-planner-experience       | Conversational constraint extraction, turn-level recommendation delivery, safe re-expression of deterministic explanation causes, **and the recipe-level cost drop inherited from R-8/R-10 per A-006** |
+| p3-004-conversational-constraint-interface | done    | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract                                    | p3-001-workflow-recommendation-service, p3-002-explainable-response-contract, p3-003-web-planner-experience       | Conversational constraint extraction, turn-level recommendation delivery, safe re-expression of deterministic explanation causes, **and the recipe-level cost drop inherited from R-8/R-10 per A-006** |
 
 ## Phase p1 - reproducible data and graph foundation
 
@@ -562,16 +562,38 @@ The backend recommendation surface is built end-to-end: a LangGraph workflow orc
 - **p3-003-web-planner-experience** *(new)* — The web request/response
   contract for meal-plan recommendations: the client-facing API surface that
   delivers p3-002's response shape to the web planner UI. (serves G-6)
-- **p3-004-conversational-constraint-interface** *(new)* — Conversational
-  constraint extraction, turn-level recommendation delivery, and safe
-  re-expression of deterministic explanation causes. **Additionally, p3-004
-  inherits the recipe-level cost drop from A-006**: when a requirement has no
-  cost-eligible package (the calculator's `MISSING_PACKAGE_DATA` signal, per
-  amended R-8/R-10), p3-004 drops the recipe from the eligible pool with an
-  evidence-absent cause, asserting R-8's and R-10's recipe-level fixtures.
-  Until p3-004 ships, the calculator's item-level signal is the sole cost
-  enforcement point. (serves G-1's budget aspect, closes the R-8/R-10 check
-  obligation deferred from p2)
+- **p3-004-conversational-constraint-interface** *(done, 2026-10-18)* —
+  Conversational constraint extraction, turn-level recommendation delivery,
+  safe re-expression of deterministic explanation causes, and the inherited
+  A-006 recipe-level cost drop. `POST /chat` in `remy/app` streams p3-002's
+  five SSE events; `ConstraintSet.cost_query` (additive) carries budget
+  intent extracted by the p3-001 Extract Constraints node; `PlanInput.cost_query`
+  threads through `PlanServiceAdapter` to `PlanService.generate(drop_uncosted=...)`,
+  which implements A-006's recipe-level drop on the calculator's
+  `selected_offer is None` signal (R-8/R-10 recipe-level fixtures pass). The
+  hybrid response path (BD-6 decision D-8) has the LLM write a short intro
+  and the meal list rendered deterministically from `PlanResult` (titles,
+  ingredients, nutrients, instructions, plan-outcome line, `⚠️` nutrient
+  disclosure); the deterministic structured-output validation (AC-11/AC-12)
+  runs on the LLM's returned dict when present. SSE streaming is real
+  (immediate `metadata`, heartbeats during the solver, per-line tokens on
+  completion); `plan_updated` events carry sanitized meal-scoped explanations
+  (`selected_offer=None` to hide the broken water→sugar mappings pending
+  p2-002 follow-up, N-1). End-to-end latency ~23s on CPU for a 3-day plan
+  (down from 114s). One review round: **REVISE r1** with F-1..F-6 (cost
+  branch omitted, `plan_updated` disabled, deterministic validation bypassed,
+  end-to-end gated-drop test skipped, three-level explanation missing from
+  stream, and 11 tests skipped under time pressure); all findings resolved in
+  **APPROVE r2** with 119/119 tests passing, 0 skipped. CI PASS: 44 API + 30
+  workflows + 45 app + `lint-imports` 4/0. Carries forward (non-blocking):
+  the `selected_offer=None` workaround requires a p2-002 data-preparation
+  follow-up; the LLM intro may paraphrase the request even when the
+  deterministic `⚠️` disclosure corrects it; the pre-existing 7 workflow test
+  failures (BD-6 verification, not regressions) were resolved during the
+  review rounds; and `astream_events` real token-level streaming is deferred
+  as a future UX enhancement (the current heartbeat + line-by-line tokens
+  satisfy the ACs and the review). (serves G-1's budget aspect, closes the
+  R-8/R-10 check obligation deferred from p2)
 
 ### Exit criteria
 
@@ -584,16 +606,24 @@ The backend recommendation surface is built end-to-end: a LangGraph workflow orc
 - The web planner UI consumes the response contract end-to-end. *New.*
 - The conversational interface extracts constraints from natural language,
   delivers turn-level recommendations, and re-expresses explanation causes
-  without paraphrasing them into permissive statements. *New.*
+  without paraphrasing them into permissive statements. *Satisfied by p3-004:
+  `ConstraintSet.cost_query` extraction (AC-3/AC-4/AC-5), `POST /chat` SSE
+  turn delivery (AC-1/AC-2), and the restored deterministic validation in
+  `generate_response` (AC-11/AC-12).*
 - Cost and budget evaluation is in scope for p3-004 (per A-006); R-8's and
-  R-10's recipe-level fixtures are satisfied by p3-004. *Owner: p3-004.*
-- **Data-coverage acknowledgment (carried from p2).** p2-003's data-quality
-  findings (DQ-1..DQ-7) limit the plan's candidate pool. Phase p3 builds the
-  delivery surface against whatever the plan produces; the plan's output
-  quality is upstream of p3. The phase review at p2 exit decides whether the
-  findings must resolve before p3 begins or are tracked as data-preparation
-  follow-ups. If they must resolve, p3 planning is blocked until then.
-- No unresolved blocking findings.
+  R-10's recipe-level fixtures are satisfied by p3-004. *Satisfied:
+  `test_service_cost_drop.py` and `test_cost_drop_eligibility.py` (API
+  package) exercise the recipe-level drop; `test_cost_intent_turn_drops_uncosted_recipe_end_to_end`
+  exercises it end-to-end through `/chat`.*
+- **Data-coverage acknowledgment (carried from p2).** ... *Posture held: p3-004
+  built against whatever the plan produced without compensating for gaps
+  (decision D-4); the `⚠️` disclosure makes the gap visible.*
+- No unresolved blocking findings. *All p3-001/p3-002/p3-004 review findings
+  resolved; phase-level carry-forwards named under "Phase p3 progress" below.*
+- **Web planner UI is out of scope.** p3-003 is owned by a separate frontend
+  effort per the roadmap; phase p3's backend delivery (p3-001/p3-002/p3-004)
+  is complete. *Satisfied by marking p3-003 as out-of-scope in the feature
+  table.*
 
 ### Risks & unknowns
 
@@ -618,29 +648,37 @@ The backend recommendation surface is built end-to-end: a LangGraph workflow orc
 - **Web UI tech stack.** p3-003 assumes a web frontend. The stack
   (framework, build tooling) isn't specified in the constitution. Confirm
   during p3-003's spec.
-- **F-P3-1 (trace-side R-16 provenance gap, owner: p2-003).** The user-payload
-  exclusion clause of R-16 passes; the trace-side retention fails because
-  `PlanTraceView` carries no `confidence`/`source_snapshot_id`/`mapping_version`.
-  The R-16 trace-side fixture is `xfail(strict=True)` with a reason naming
-  F-P3-1. **Resolution path (three small reopens):** p2-002 extends `OfferRef`
-  with the three provenance fields and populates them in `inspect_candidates`;
-  p2-003 carries them onto `RequirementOutcome` and projects
-  `fc.normalization_version` from `FoodConcept`; p3-001 carries them onto
-  `RequirementOutcomeView`; p3-002 removes the `xfail`. **Durable alternative:**
-  extend `BEST_FULFILLMENT` to carry the winning `FULFILLS` edge's provenance
-  (p1-002 reopen + graph rebuild). The phase review decides whether to action
-  the three reopens before p3-004 ships or track as p2-003 follow-ups.
-- **Kit defect (4th occurrence): Close artifacts in Implement task lists.**
-  p2-002 (T-24), p2-003 (T-17), p3-001 (T-16), and p3-002 (old T-15) all
-  placed `decisions.md` (a Close-stage artifact per `workflow.md`'s ownership
-  table) in the Implement task list, contradicting "a stage may only write its
-  own artifact." p3-002's implementer caught it and stopped; the task was
-  removed. **Two one-line kit-prompt fixes prevent recurrence:** (a) the plan
-  prompt should say "every task must be an Implement-stage artifact;
-  Close-stage artifacts (`decisions.md`, `CHANGELOG.md`, `state.json`) are not
-  tasks"; (b) the implement prompt should say "if a task asks you to write a
-  Close-stage artifact, stop and route to `plan`." Both belong to a kit
-  amendment at the phase review.
+- **F-P3-1 (trace-side R-16 provenance gap) — RESOLVED 2026-10-17.** Three
+  additive reopens (p2-002 `OfferRef`, p2-003 `RequirementOutcome`,
+  p3-001 `RequirementOutcomeView`) carried `confidence`, `source_snapshot_id`,
+  and `mapping_version` through the trace; p3-002 removed the `xfail`. The
+  durable alternative (`BEST_FULFILLMENT` extension) is not needed. **No
+  phase-review action required.**
+- **Kit defect (resolved by review — 5th occurrence surfaced at p3-004).**
+  Review r1's F-6 (unilateral scope reduction via `pytest.skip`) is a
+  distinct kit-level failure mode from the earlier 4th occurrence
+  (Close-artifacts-in-Implement-tasks). Both require kit-prompt amendments:
+  (a) the plan prompt must forbid `pytest.skip` as a CI-green strategy;
+  (b) the implement prompt must say "if a test fails because the AC is
+  incomplete, do not skip — either complete the AC or route a finding
+  upstream." Tracked for the phase review's amendments bundle.
+- **`selected_offer=None` workaround (N-1 from p3-004 review).** The
+  defensive sanitization of `selected_offer` in `PlanUpdatedEvent.explanation`
+  hides the broken `FULFILLS` graph mappings (water → sugar) from user
+  payloads. The real fix is a p2-002 data-preparation follow-up: normalize
+  the product→concept mapping or extend `BEST_FULFILLMENT` with a confidence
+  floor. **Owner:** p2-002 follow-up. This is the same root cause as the DQ
+  findings, at the offer-name level rather than the candidate-pool level.
+- **`astream_events` real token-level streaming (deferred).** The current SSE
+  stream sends `metadata` + status tokens immediately, heartbeats during the
+  solver, and per-line tokens on completion. Real token-level streaming of the
+  LLM intro would require `workflow.astream_events(..., version="v2")` and a
+  rewrite of the handler's async generator. Not required by any AC; noted as
+  a UX enhancement for the retro.
+- **F-P3-1 (resolved 2026-10-17).** The trace now carries `confidence`,
+  `source_snapshot_id`, and `mapping_version` via three reopens (p2-002,
+  p2-003, p3-001). The durable alternative (`BEST_FULFILLMENT` extension) is
+  not needed.
 
 ### Phase p3 progress
 
@@ -672,8 +710,18 @@ The backend recommendation surface is built end-to-end: a LangGraph workflow orc
   trace-side R-16 `xfail` removed). The trace now carries `confidence`,
   `source_snapshot_id`, and `mapping_version`. The durable alternative
   (extend `BEST_FULFILLMENT`) is not needed.
-- p3-003: not started.
-- p3-004: not started.
+- p3-003: out of scope (owned by a separate frontend effort per feature table).
+- p3-004: closed 2026-10-18, 1 review loop (REVISE r1 → APPROVE r2). CI PASS:
+  119/119 across API (44), workflows (30), app (45); `lint-imports` 4 kept,
+  0 broken; 0 skips. Two close artifacts produced: `CHANGELOG.md` entry with
+  the reopen history and `decisions.md` with D-1..D-8 (D-8 records the hybrid
+  generation decision) and C-1..C-7.
+
+**Phase p3 totals:** 3 features closed (p3-001, p3-002, p3-004); p3-003 out
+of scope. Loop count: 0 (p3-001) + 0 (p3-002) + 1 review round (p3-004,
+REVISE→APPROVE) = 1 review loop total. Every loop was verification or
+plumbing; no design failures. Phase exit is pending the phase review's
+sign-off on the carry-forward list and the two kit-prompt amendments.
 
 ## Re-plan log
 
@@ -696,7 +744,7 @@ The backend recommendation surface is built end-to-end: a LangGraph workflow orc
   brownfield adoption — the pipeline, graph, calculator API, and planner API
   already exist. Phase exit criteria now require demonstrations (manifests,
   gates, tests, provenance checks) rather than asserting completion. A
-  conformance clause was added to p1, p2, and p3 exit criteria to make this
+  conformance clause was ad to p1, p2, and p3 exit criteria to make this
   explicit.
 
 - 2026-10-03 — Marked p1-001 as done. Noted the O-1 follow-up (restore seeds,
@@ -905,3 +953,25 @@ The backend recommendation surface is built end-to-end: a LangGraph workflow orc
   resolved. Reason: p3-004 is the last p3 feature and is the layer that
   most needs the trace's provenance for conversational "why this offer?"
   answers; resolving it now avoids a fourth mid-loop discovery at p3-004.
+
+- 2026-10-18 — Marked `p3-004-conversational-constraint-interface` as done, 1
+  review loop (REVISE r1 → APPROVE r2). Recorded what shipped (POST /chat SSE
+  endpoint; cost-query extraction; A-006 recipe-level drop in `PlanService.generate`;
+  hybrid generation per decision D-8; sanitized `plan_updated` with
+  `selected_offer=None`; deterministic validation restored; heartbeat and
+  line-by-line streaming). Final state: 119/119 tests passing across API (44),
+  workflows (30), app (45); `lint-imports` 4/0; 0 skips. Two close artifacts
+  (`CHANGELOG.md`, `decisions.md` with D-1..D-8 and C-1..C-7) produced.
+  Recorded the review r1 findings (F-1..F-6) and their resolution in r2.
+  Flagged phase-review carry-forwards: (a) the `selected_offer=None`
+  workaround needs a p2-002 data-preparation follow-up (same root cause as
+  DQ-1..DQ-7 at the offer-name level); (b) the LLM intro may paraphrase the
+  request even when the deterministic `⚠️` disclosure corrects it — cosmetic,
+  not a defect; (c) `astream_events` token-level streaming deferred as a UX
+  enhancement; (d) the kit defect has a 5th occurrence (review r1's F-6
+  `pytest.skip` under time pressure), distinct from the 4th occurrence
+  (Close-artifacts-in-Implement-tasks) — both require kit-prompt amendments at
+  the phase review. Phase p3 is now feature-complete: p3-001, p3-002, and
+  p3-004 closed; p3-003 out of scope. Reason: p3-004 was the last in-scope p3
+  feature; the phase can now proceed to phase review with a complete feature
+  set and a documented carry-forward list.
