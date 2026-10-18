@@ -417,7 +417,7 @@ event: token
 data: {"delta": "that! Swapping Day 2 lunch to a Tofu Warm Bowl..."}
 
 event: plan_updated
-data: {"updated_meal": {"day": 2, "slot": "lunch", "recipe_id": "rec_tofu_04", "cost_sgd": 4.20}}
+data: {"event": "plan_updated", "delta": {"day": 2, "slot": "meal_2", "recipe_id": "rec_tofu_04"}, "explanation": {"recipe": {"recipe_id": "rec_tofu_04", "outcome": "selected", "drop_causes": [], "constraints": [{"requirement_id": "req-tofu", "constraint": "vegetarian", "state": "pass", "resolved_concept": "tofu", "selected_offer": {"listing_name": "Firm tofu", "retailer": "Example Market"}, "warnings": []}]}, "constraints": [{"requirement_id": "req-tofu", "constraint": "vegetarian", "state": "pass", "resolved_concept": "tofu", "selected_offer": {"listing_name": "Firm tofu", "retailer": "Example Market"}, "warnings": []}]}}
 
 event: error
 data: {"code": "STREAM_INTERRUPTED", "message": "Downstream workflow timeout."}

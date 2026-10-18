@@ -515,7 +515,7 @@ producer from its consumer.
   - Files: `SystemCode/remy/app/tests/api/test_api_doc_plan_updated.py` (create)
   - Done when: `test_plan_updated_example_has_explanation` fails because API_doc §3 still carries the legacy delta-only example. Reads `SystemCode/remy/api/docs/API_doc.md` §3, asserts the `plan_updated` example contains an `explanation` with `recipe` and `constraints`.
 
-- [ ] **T-18** Update API_doc §3 `plan_updated` example
+- [x] **T-18** Update API_doc §3 `plan_updated` example
   - Type: impl
   - Covers: AC-21; p3-002 C-2 / N-2
   - Files: `SystemCode/remy/api/docs/API_doc.md` (edit §3)
