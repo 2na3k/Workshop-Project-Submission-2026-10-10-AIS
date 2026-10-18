@@ -186,7 +186,7 @@ class PlanService:
         )
         self.last_trace: PlanTrace | None = None
 
-    def generate(self, request) -> tuple[PlanResponse, PlanTrace]:
+    def generate(self, request, *, drop_uncosted: bool = False) -> tuple[PlanResponse, PlanTrace]:
         for nutrient in request.nutrients or []:
             if nutrient.code not in REQUEST_TO_CANONICAL:
                 raise UnknownNutrient(f"Unknown nutrient: {nutrient.code}")
@@ -261,10 +261,28 @@ class PlanService:
                         state="evidence-absent",
                     ))
 
+        cost_dropped = set()
+        if drop_uncosted:
+            for recipe in filtered:
+                signal = signals.get(recipe.recipe_id) or RecipeNutritionSignal(
+                    recipe_id=recipe.recipe_id, missing_nutrients=[]
+                )
+                for requirement_offer in signal.selected_offers:
+                    if requirement_offer.selected_offer is None:
+                        causes.setdefault(recipe.recipe_id, []).append("evidence-absent")
+                        cost_dropped.add(recipe.recipe_id)
+                        constraint_records.append(RequirementOutcome(
+                            recipe_id=recipe.recipe_id,
+                            requirement_id=requirement_offer.occurrence_id,
+                            constraint="budget",
+                            state="evidence-absent",
+                        ))
+
         eligible = [
             recipe for recipe in filtered
             if not recipe.unmapped_requirements
                and recipe.recipe_id not in nutrition_dropped
+               and recipe.recipe_id not in cost_dropped
         ]
         ranked = rank_candidates(eligible, request)
         try:

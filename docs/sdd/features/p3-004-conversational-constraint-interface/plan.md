@@ -429,7 +429,7 @@ producer from its consumer.
     - `test_service_cost_drop.py::test_uncosted_recipe_retained_when_cost_not_requested` fails: default `drop_uncosted=False` retains the uncosted recipe (guards A-006 default + existing plan tests).
     - `test_cost_drop_eligibility.py::test_non_fresh_package_drops_recipe` (R-8) and `::test_ineligible_price_basis_drops_recipe` (R-10) fail: `select_package` returns `None` for the sole package (non-fresh; or `price_status != estimated` / `price_match_status != accepted` / `price_basis ∉ {package_mass,package_volume}`) → `SignalInspector` returns `selected_offer is None` → recipe dropped `evidence-absent`. **F-5(a):** each drop fixture asserts the calculator's `MISSING_PACKAGE_DATA` warning string is the item-level analogue of `selected_offer is None`.
 
-- [ ] **T-5** Add `drop_uncosted` kwarg and the `cost_dropped` loop
+- [x] **T-5** Add `drop_uncosted` kwarg and the `cost_dropped` loop
   - Type: impl
   - Covers: AC-8, AC-9, AC-10; plan §5 gating
   - Files: `SystemCode/remy/api/src/api/features/plan/service.py` (edit)
