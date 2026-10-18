@@ -355,12 +355,13 @@ def _fact_sheet(result, constraints) -> dict:
     ]
 
     # Drops grouped by cause (count only; per-recipe details can go in the trace).
-    drops_by_cause = {}
+    drops_by_cause: dict[str, int] = {}
     for r in dropped:
         drops_by_cause[r.cause] = drops_by_cause.get(r.cause, 0) + 1
 
     return {
         "feasibility": result.feasibility_outcome,
+        "reason": getattr(result, "reason", None),
         "relaxed": bool(result.relaxed),
         "applied_tolerance_pct": result.applied_tolerance_pct,
         "binding_constraints": list(result.binding_constraints),
@@ -378,21 +379,27 @@ def _fallback_from_facts(facts) -> tuple[str, list[str], list[str]]:
     """Deterministic Markdown rendering of the meals and ingredients."""
     lines = []
 
-    # 1. Prepend the nutrient status summary (the honest disclosure)
+    # 1. Plan-level outcome (required for AC-13)
+    feasibility = facts.get("feasibility", "plan-produced")
+    lines.append(f"**Plan outcome: {feasibility}.**\n")
+    if facts.get("reason"):
+        lines.append(f"**Plan reason: {facts['reason']}**\n")
+
+    # 2. Nutrient summary (the honest disclosure)
     for ns in facts.get("nutrient_status", []):
         if ns["status"] == "below-goal":
             lines.append(
-                f"⚠️ **{ns['code'].title()}**: {ns['actual']:.1f} (Goal: {ns['goal']}) — Below target.\n")
+                f"⚠️ **{ns['code'].title()}**: {ns['actual']:.1f} (Goal: {ns['goal']}) — Below target.")
         elif ns["status"] == "over":
             lines.append(
-                f"⚠️ **{ns['code'].title()}**: {ns['actual']:.1f} (Max: {ns['max']}) — Over limit.\n")
+                f"⚠️ **{ns['code'].title()}**: {ns['actual']:.1f} (Max: {ns['max']}) — Over limit.")
         elif ns["status"] in ("at-or-above-goal", "within"):
-            lines.append(f"✅ **{ns['code'].title()}**: {ns['actual']:.1f} (Goal met)\n")
+            lines.append(f"✅ **{ns['code'].title()}**: {ns['actual']:.1f} (Goal met)")
 
     if lines:
-        lines.append("")  # blank line after summary
+        lines.append("")  # blank line
 
-    # 2. Render meals
+    # 3. Render meals
     for meal in facts.get("meals", []):
         lines.append(
             f"### Day {meal['day']} · {meal['slot'].replace('_', ' ').title()} — {meal['title']}")
@@ -460,17 +467,18 @@ def generate_response(state, *, llm):
             raise ValueError("plan result is required")
 
         # 1. Build the full deterministic meal list (with ingredients)
+        facts = _fact_sheet(result, constraints)
         full_meal_text, ref_recipes, ref_causes = _fallback_from_facts(
-            _fact_sheet(result, constraints))
+            facts)
 
         # 2. Build a slim fact sheet for the LLM (no ingredients, just summary)
         slim_facts = {
             "request": raw_message,
             "horizon_days": constraints.horizon_days if constraints else 1,
             "meals_per_day": constraints.meals_per_day if constraints else 3,
-            "nutrient_status": _fact_sheet(result, constraints).get("nutrient_status", []),
+            "nutrient_status": facts.get("nutrient_status", []),
             "meals": [{"title": m["title"], "day": m["day"], "slot": m["slot"]} for m in
-                      _fact_sheet(result, constraints).get("meals", [])]
+                      facts.get("meals", [])]
         }
 
         # 3. Ask the LLM for a short intro
@@ -507,10 +515,57 @@ def generate_response(state, *, llm):
         if not intro:
             intro = "Here is your meal plan."
 
+        # --- RESTORE DETERMINISTIC VALIDATION (F-3) ---
+        validated_recipes: tuple[str, ...] = ()
+        validated_causes: tuple[str, ...] = ()
+
+        if isinstance(response, dict):
+            allowed_recipes = {r.recipe_id for r in result.recipe_outcomes}
+            allowed_causes = set(facts["drops_by_cause"].keys())
+            allowed_reqs = {
+                str(r.requirement_id) for r in result.constraint_outcomes
+                if r.requirement_id is not None
+            }
+            claimed_recipes = [str(x) for x in response.get("recipe_ids", [])]
+            claimed_reqs = [str(x) for x in response.get("requirement_ids", [])]
+            claimed_causes = [str(x) for x in response.get("drop_causes", [])]
+            claimed_selected = {str(x) for x in response.get("selected_recipe_ids", [])}
+
+            if not set(claimed_recipes) <= allowed_recipes:
+                raise ValueError("generation references an unknown recipe")
+            if not set(claimed_causes) <= allowed_causes:
+                raise ValueError("generation references an unknown drop cause")
+            if allowed_reqs and not set(claimed_reqs) <= allowed_reqs:
+                raise ValueError("generation references an unknown requirement")
+
+            allowed_requirements = {
+                str(r.requirement_id) for r in result.constraint_outcomes
+                if r.requirement_id is not None
+            }
+            claimed_requirements = [str(x) for x in response.get("requirement_ids", [])]
+            if claimed_requirements and allowed_requirements:
+                if not set(claimed_requirements) <= allowed_requirements:
+                    raise ValueError("generation references an unknown requirement")
+
+            evidence_absent = {
+                r.recipe_id for r in result.recipe_outcomes
+                if "evidence-absent" in ((r.cause,) if r.cause else ()) + r.causes
+            }
+            if claimed_selected & evidence_absent:
+                raise ValueError("evidence-absent recipes cannot be selected")
+
+            validated_recipes = tuple(str(x) for x in response.get("recipe_ids", []))
+            validated_causes = tuple(str(x) for x in response.get("drop_causes", []))
+
         # 4. Combine
         final_text = f"{intro}\n\n{full_meal_text}"
 
-        output = GenerationOutput(tuple(ref_recipes), (), tuple(ref_causes), final_text)
+        output = GenerationOutput(
+            recipe_ids=validated_recipes or tuple(ref_recipes),
+            requirement_ids=(),
+            drop_causes=validated_causes or tuple(ref_causes),
+            text=final_text,
+        )
         outcome = Outcome(state.get("outcome", Outcome("plan")).kind,
                           plan=result, text=final_text,
                           unapplied_constraints=tuple(state.get("unapplied_constraints", [])))

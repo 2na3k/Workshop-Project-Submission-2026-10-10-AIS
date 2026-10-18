@@ -1,11 +1,10 @@
 import json
 from types import SimpleNamespace
 
-import pytest
 from fastapi.testclient import TestClient
 
+from api.features.calculator import CostNutritionService
 from api.features.calculator.models import FoodFacts, NutrientProfile, RetailSKU
-from api.features.calculator.service import CostNutritionService
 from app.main import create_app
 from workflows.models import (
     ConstraintSet,
@@ -146,7 +145,14 @@ def _package(**overrides):
 
 
 def test_cost_surfaced_on_cost_intent(monkeypatch):
-    pytest.skip("BD-6: on-demand cost branch deferred to p3-004 follow-up; token stream carries meal plan only.")
+    calculator = CalculatorSpy()
+
+    response = _send(monkeypatch, cost_query=True, calculator=calculator)
+
+    assert response.status_code == 200
+    assert len(calculator.calls) == 1
+    assert "consumed cost SGD 0.20" in _token_text(response)
+    assert "retail package cost SGD 1.00" in _token_text(response)
 
 
 def test_no_cost_without_intent(monkeypatch):
@@ -160,52 +166,64 @@ def test_no_cost_without_intent(monkeypatch):
 
 
 def test_consumed_and_retail_distinct_via_calculator(monkeypatch):
-    pytest.skip("BD-6: on-demand cost branch deferred; see BD-6 remainder.")
+    calculator = CostNutritionService(Repository(_package()))
+
+    response = _send(monkeypatch, cost_query=True, calculator=calculator)
+    text = _token_text(response)
+
+    assert "consumed cost SGD 0.20" in text
+    assert "retail package cost SGD 1.00" in text
 
 
 def test_missing_package_reported_not_fabricated(monkeypatch):
-    pytest.skip("BD-6: on-demand cost branch deferred; see BD-6 remainder.")
+    calculator = CostNutritionService(Repository(_package(freshness_status="stale")))
+
+    response = _send(monkeypatch, cost_query=True, calculator=calculator)
+    text = _token_text(response)
+
+    assert "MISSING_PACKAGE_DATA" in text
+    assert "consumed cost SGD 0.00" not in text
+    assert "retail package cost SGD 0.00" not in text
 
 
 def test_cost_query_branches_handler(monkeypatch):
-    pytest.skip("BD-6: on-demand cost branch deferred; see BD-6 remainder.")
-    # from workflows.graph import build
-    #
-    # class ExtractLLM:
-    #     provider = "test"
-    #     model = "extract"
-    #
-    #     def invoke(self, _prompt):
-    #         return {"horizon_days": 1, "meals_per_day": 1}
-    #
-    # class PlanPort:
-    #     def generate(self, request):
-    #         assert request.cost_query is True
-    #         plan = _envelope(True).outcome.plan
-    #         trace = _envelope(True).plan_trace
-    #         return plan, trace
-    #
-    # class ResponseLLM:
-    #     provider = "test"
-    #     model = "response"
-    #
-    #     def invoke(self, _prompt):
-    #         return {"text": "Recommended."}
-    #
-    # import app.chat_router as chat_router
-    #
-    # calculator = CalculatorSpy()
-    # workflow = build(
-    #     extract_llm=ExtractLLM(), plan_port=PlanPort(), response_llm=ResponseLLM()
-    # )
-    # monkeypatch.setattr(chat_router.composition, "create_workflow", lambda *args, **kwargs: workflow)
-    # application = create_app(plan_service=object(), calculator_service=calculator)
-    # with TestClient(application) as client:
-    #     response = client.post("/api/v1/chat", json={
-    #         "session_id": "session-1",
-    #         "message": "How much does black pepper cost?",
-    #     })
-    #
-    # assert response.status_code == 200
-    # assert len(calculator.calls) == 1
-    # assert "consumed cost SGD 0.20" in _token_text(response)
+    from workflows.graph import build
+
+    class ExtractLLM:
+        provider = "test"
+        model = "extract"
+
+        def invoke(self, _prompt):
+            return {"horizon_days": 1, "meals_per_day": 1}
+
+    class PlanPort:
+        def generate(self, request):
+            assert request.cost_query is True
+            plan = _envelope(True).outcome.plan
+            trace = _envelope(True).plan_trace
+            return plan, trace
+
+    class ResponseLLM:
+        provider = "test"
+        model = "response"
+
+        def invoke(self, _prompt):
+            return {"text": "Recommended."}
+
+    import app.chat_router as chat_router
+
+    calculator = CalculatorSpy()
+    workflow = build(
+        extract_llm=ExtractLLM(), plan_port=PlanPort(), response_llm=ResponseLLM()
+    )
+    monkeypatch.setattr(chat_router.composition, "create_workflow", lambda *args, **kwargs: workflow)
+    application = create_app(plan_service=object(), calculator_service=calculator)
+    with TestClient(application) as client:
+        response = client.post("/api/v1/chat", json={
+            "session_id": "session-1",
+            "message": "What is the price?",
+        })
+
+    assert response.status_code == 200
+    assert len(calculator.calls) == 1
+    assert "consumed cost SGD 0.20" in _token_text(response)

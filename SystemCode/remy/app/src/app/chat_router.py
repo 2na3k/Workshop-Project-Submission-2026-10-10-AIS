@@ -11,7 +11,7 @@ from typing import Any
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
-from api.features.calculator.schemas import IngredientRequest
+from api.features.calculator.schemas import IngredientRequest, CostNutritionRequest
 from app import composition
 from app.chat_contract import (
     ChatRequest,
@@ -19,7 +19,7 @@ from app.chat_contract import (
     ErrorEvent,
     MetadataEvent,
     TokenEvent,
-    from_trace_envelope,
+    from_trace_envelope, MealDelta, MealScopedExplanation, PlanUpdatedEvent,
 )
 from app.sse import serialize_event
 from workflows.models import TraceEnvelope
@@ -196,9 +196,9 @@ def _events(
         for index in range(0, len(text), 40)
     )
 
-    plan_result = envelope.outcome.plan
-    previous = _previous_meals(payload.user_context)
-    recipes = {recipe.recipe_id: recipe for recipe in projected.plan.recipes}
+    # plan_result = envelope.outcome.plan
+    # previous = _previous_meals(payload.user_context)
+    # recipes = {recipe.recipe_id: recipe for recipe in projected.plan.recipes}
     # for day_value in _member(plan_result, "days", ()) or ():
     #     day = _member(day_value, "day")
     #     for meal in _member(day_value, "meals", ()) or ():
@@ -297,13 +297,66 @@ async def _stream_chat(payload: ChatRequest, request: Request):
 
     projected = from_trace_envelope(envelope, trace_id)
 
+    # --- RESTORE COST BRANCH (F-1) ---
+    cost_lines: list[str] = []
+    constraints = envelope.parsed_constraints
+    if constraints is not None and getattr(constraints, "cost_query", False):
+        scoped = _scoped_ingredients(envelope, payload.user_context)
+        if scoped:
+            try:
+                calculation, _ = calculator.calculate(CostNutritionRequest(
+                    servings=constraints.servings,
+                    ingredients=scoped,
+                ))
+                cost_lines = _cost_lines(calculation)
+            except Exception:
+                logger.exception("cost projection failed trace_id=%s", trace_id)
+                cost_lines = []
+
+    # --- RESTORE PLAN UPDATED (F-2, F-5) ---
+    previous = _previous_meals(payload.user_context)
+    if projected.plan is not None:
+        recipes = {recipe.recipe_id: recipe for recipe in projected.plan.recipes}
+        for day_value in _member(envelope.outcome.plan, "days", ()) or ():
+            day = _member(day_value, "day")
+            for meal in _member(day_value, "meals", ()) or ():
+                slot = _member(meal, "slot")
+                recipe_id = _member(meal, "recipe_id")
+                if day is None or slot is None or recipe_id is None:
+                    continue
+                key = (int(day), str(slot))
+                recipe_id = str(recipe_id)
+                if previous.get(key) == recipe_id:
+                    continue
+                recipe = recipes.get(recipe_id)
+                if recipe is None:
+                    continue
+
+                # Sanitize constraints to hide selected_offer (prevents "water -> sugar" leak)
+                sanitized_constraints = [
+                    c.model_copy(update={"selected_offer": None}) for c in recipe.constraints
+                ]
+                sanitized_recipe = recipe.model_copy(update={"constraints": sanitized_constraints})
+
+                yield serialize_event(PlanUpdatedEvent(
+                    event="plan_updated",
+                    delta=MealDelta(day=key[0], slot=key[1], recipe_id=recipe_id),
+                    explanation=MealScopedExplanation(
+                        recipe=sanitized_recipe,
+                        constraints=sanitized_constraints,
+                    ),
+                ))
+                await asyncio.sleep(0)  # Flush immediately
+
     # 4. Yield text progressively, line by line
     # (Because the LLM intro and meal list are combined in envelope.outcome.text)
     text = envelope.outcome.text or ""
+    if cost_lines:
+        text = text + "\n\n" + "\n".join(cost_lines)
     for line in text.split("\n"):
         if line.strip():
             yield serialize_event(TokenEvent(event="token", delta=line + "\n"))
-            await asyncio.sleep(0.05)  # Force socket flush
+            await asyncio.sleep(0.01)  # Force socket flush
 
     # 5. Finish
     yield serialize_event(DoneEvent(

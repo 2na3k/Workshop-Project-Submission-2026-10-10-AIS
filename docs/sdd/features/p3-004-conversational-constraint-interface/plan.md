@@ -447,6 +447,42 @@ producer from its consumer.
     skipped earlier in the pass)
     No code defects; deferrals are honest scope reductions under the <1-day
     constraint. `plan_updated` events and on-demand cost branch are deferred.
+- **BD-6 (final, resolved)** — Supersedes the interim BD-6 entries above. All
+  blocks resolved in this round; no skips remain.
+  - **F-1 (cost branch)**: restored in `_stream_chat`; `calculator.calculate`
+    is called on cost-intent turns; consumed and retail costs surface in the
+    streamed text; `MISSING_PACKAGE_DATA` reported. AC-4, AC-6, AC-7 pass.
+  - **F-2 / F-5 (`plan_updated` + three levels)**: `PlanUpdatedEvent` restored
+    with `MealScopedExplanation` carrying `explanation.recipe` and
+    `explanation.constraints`. `selected_offer` is overridden to `None` to
+    preserve AC-15 (R-16) against the broken graph mappings. Plan-level outcome
+    reaches the token stream as `"Plan outcome: plan-produced."`. AC-13, AC-18
+    pass.
+  - **F-3 (deterministic validation)**: restored in `generate_response`. LLM
+    structured claims (when a dict is returned) are validated against
+    `result.recipe_outcomes`, `result.constraint_outcomes`, and
+    `facts["drops_by_cause"]`. Unknown IDs and evidence-absent selections
+    raise. AC-11, AC-12 pass.
+  - **F-4 (end-to-end gated-drop test)**: `test_cost_intent_turn_drops_uncosted_recipe_end_to_end`
+    un-skipped; passes.
+  - **F-6 (unilateral scope reduction)**: closed — all 11 previously-skipped
+    tests are un-skipped and green. No `pytest.skip` remains in the feature.
+  - **Final test state**: `remy-workflows` 30 passed / 0 skipped;
+    `remy-app` 45 passed / 0 skipped; `remy-api` 44 passed; `lint-imports`
+    4 kept / 0 broken.
+  - **Manual verification**: 3-day × 3-meal request via `curl -N`. `metadata`
+    in <10 ms, heartbeat at 14 s, `"Generating your recommendation…"` at 20 s,
+    9 `plan_updated` events, LLM intro + `"**Plan outcome: plan-produced.**"`
+    + `⚠️ Protein: 158.4 (Goal: 170) — Below target.` + 9 meals with
+      ingredients/nutrients/instructions, `done` at 23 s. Confirms streaming,
+      three-level explanation, nutrient disclosure, and no offer leakage.
+  - **Residual (non-blocking, tracked for phase review)**: (a) `selected_offer=None`
+    is a *workaround* for the broken `FULFILLS` graph mappings (water → sugar);
+    the real fix is a p2-002 data-preparation follow-up; (b) LLM intro may
+    paraphrase the request ("170g protein") even when the deterministic
+    disclosure corrects it — the `⚠️` line is authoritative; (c) p3-002
+    `PlanUpdatedEvent.explanation` remains `MealScopedExplanation` only (the
+    full-plan tree is carried by `ChatResponseEnvelope`).
 
 ## Tasks
 

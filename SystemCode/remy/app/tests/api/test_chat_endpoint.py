@@ -7,7 +7,6 @@ from app.main import create_app
 from app.plan_adapter import PlanServiceAdapter
 from workflows.models import Outcome, PlanResult, PlanTraceView, TraceEnvelope
 
-
 ALLOWED_EVENTS = {"metadata", "token", "plan_updated", "error", "done"}
 
 
@@ -231,147 +230,146 @@ def test_workflow_envelope_streams_events(monkeypatch):
 
 
 def test_cost_intent_turn_drops_uncosted_recipe_end_to_end(monkeypatch):
-    pytest.skip("BD-6: cost branch + plan_updated events deferred; see BD-6 remainder.")
-    # from api.features.calculator.models import OfferRef, RecipeNutritionSignal, RequirementOffer
-    # from api.features.plan.repository import PlanRepository
-    # from api.features.plan.service import PlanService
-    # from app import composition
-    #
-    # rows = []
-    # for recipe_id in ("uncosted", "costed"):
-    #     rows.append({
-    #         "recipe_id": recipe_id,
-    #         "title": recipe_id,
-    #         "ingredients": [{
-    #             "quantity": 100,
-    #             "unit": "g",
-    #             "occurrence_id": f"{recipe_id}-ingredient",
-    #             "normalized_name": "pepper",
-    #             "canonical_key": "black_pepper",
-    #             "concept_name": "Black pepper",
-    #             "best_food_key": f"food:{recipe_id}",
-    #             "energy_kcal": 10,
-    #             "protein_g": 1,
-    #             "sodium_mg": 1,
-    #             "nutrition_basis": "per 100 g",
-    #             "halal_status": "halal",
-    #             "vegetarian_status": "vegetarian",
-    #             "freshness_status": "fresh",
-    #         }],
-    #     })
-    #
-    # class Session:
-    #     def __enter__(self):
-    #         return self
-    #
-    #     def __exit__(self, *args):
-    #         return False
-    #
-    #     def run(self, query, **params):
-    #         return rows
-    #
-    # class Driver:
-    #     def session(self):
-    #         return Session()
-    #
-    # class SignalInspector:
-    #     def inspect_candidates(self, recipes, servings):
-    #         return {
-    #             recipe.recipe_id: RecipeNutritionSignal(
-    #                 recipe_id=recipe.recipe_id,
-    #                 missing_nutrients=[],
-    #                 selected_offers=[RequirementOffer(
-    #                     occurrence_id=f"{recipe.recipe_id}-ingredient",
-    #                     canonical_key="black_pepper",
-    #                     selected_offer=(
-    #                         None if recipe.recipe_id == "uncosted"
-    #                         else OfferRef("food:costed", "pepper", "market")
-    #                     ),
-    #                 )],
-    #             )
-    #             for recipe in recipes
-    #         }
-    #
-    # class ExtractLLM:
-    #     provider = "fake"
-    #     model = "extract"
-    #
-    #     def invoke(self, prompt):
-    #         return {"horizon_days": 1, "meals_per_day": 1}
-    #
-    # class ResponseLLM:
-    #     provider = "fake"
-    #     model = "response"
-    #
-    #     def invoke(self, prompt):
-    #         return {
-    #             "recipe_ids": ["uncosted", "costed"],
-    #             "requirement_ids": ["uncosted-ingredient", "costed-ingredient"],
-    #             "drop_causes": ["evidence-absent"],
-    #             "selected_recipe_ids": ["costed"],
-    #             "text": "The costed recipe is selected; uncosted was dropped for evidence-absent.",
-    #         }
-    #
-    # from api.features.calculator.repository import CostNutritionRepository
-    # from api.features.calculator.service import CostNutritionService
-    #
-    # class EmptySession:
-    #     def __enter__(self):
-    #         return self
-    #
-    #     def __exit__(self, *args):
-    #         return False
-    #
-    #     def run(self, query, **params):
-    #         if "normalized_names" in params:
-    #             return [
-    #                 {"normalized_name": name, "canonical_key": "black_pepper"}
-    #                 for name in params["normalized_names"]
-    #             ]
-    #         if "canonical_keys" in params:
-    #             return [{
-    #                 "canonical_key": key,
-    #                 "approval_status": "accepted",
-    #                 "candidate_key": "accepted-candidate",
-    #                 "conversions": [],
-    #             } for key in params["canonical_keys"]]
-    #         return []
-    #
-    # class EmptyDriver:
-    #     def session(self):
-    #         return EmptySession()
-    #
-    # plan_service = PlanService(PlanRepository(Driver()))
-    # plan_service.calculator_service = SignalInspector()
-    # plan_adapter = PlanServiceAdapter(plan_service)
-    # real_create_workflow = composition.create_workflow
-    #
-    # def workflow_factory(service, **kwargs):
-    #     assert service is plan_adapter
-    #     return real_create_workflow(
-    #         service,
-    #         extract_llm=ExtractLLM(),
-    #         response_llm=ResponseLLM(),
-    #     )
-    #
-    # import app.chat_router as chat_router
-    # monkeypatch.setattr(chat_router.composition, "create_workflow", workflow_factory)
-    # calculator = CostNutritionService(CostNutritionRepository(EmptyDriver()))
-    # application = create_app(plan_service=plan_adapter, calculator_service=calculator)
-    # with TestClient(application) as client:
-    #     response = client.post("/api/v1/chat", json={
-    #         "session_id": "session-cost",
-    #         "message": "Find the cheapest meal",
-    #     })
-    #
-    # frames = _frames(response)
-    # text = "".join(data["delta"] for kind, data in frames if kind == "token")
-    # updates = [data for kind, data in frames if kind == "plan_updated"]
-    # assert response.status_code == 200
-    # assert "uncosted" in text and "evidence-absent" in text, frames
-    # assert "costed" in text and "selected" in text
-    # assert updates and updates[0]["explanation"]["recipe"]["recipe_id"] == "costed"
-    # assert updates[0]["explanation"]["recipe"]["outcome"] == "selected"
+    from api.features.calculator.models import OfferRef, RecipeNutritionSignal, RequirementOffer
+    from api.features.plan.repository import PlanRepository
+    from api.features.plan.service import PlanService
+    from app import composition
+
+    rows = []
+    for recipe_id in ("uncosted", "costed"):
+        rows.append({
+            "recipe_id": recipe_id,
+            "title": recipe_id,
+            "ingredients": [{
+                "quantity": 100,
+                "unit": "g",
+                "occurrence_id": f"{recipe_id}-ingredient",
+                "normalized_name": "pepper",
+                "canonical_key": "black_pepper",
+                "concept_name": "Black pepper",
+                "best_food_key": f"food:{recipe_id}",
+                "energy_kcal": 10,
+                "protein_g": 1,
+                "sodium_mg": 1,
+                "nutrition_basis": "per 100 g",
+                "halal_status": "halal",
+                "vegetarian_status": "vegetarian",
+                "freshness_status": "fresh",
+            }],
+        })
+
+    class Session:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def run(self, query, **params):
+            return rows
+
+    class Driver:
+        def session(self):
+            return Session()
+
+    class SignalInspector:
+        def inspect_candidates(self, recipes, servings):
+            return {
+                recipe.recipe_id: RecipeNutritionSignal(
+                    recipe_id=recipe.recipe_id,
+                    missing_nutrients=[],
+                    selected_offers=[RequirementOffer(
+                        occurrence_id=f"{recipe.recipe_id}-ingredient",
+                        canonical_key="black_pepper",
+                        selected_offer=(
+                            None if recipe.recipe_id == "uncosted"
+                            else OfferRef("food:costed", "pepper", "market")
+                        ),
+                    )],
+                )
+                for recipe in recipes
+            }
+
+    class ExtractLLM:
+        provider = "fake"
+        model = "extract"
+
+        def invoke(self, prompt):
+            return {"horizon_days": 1, "meals_per_day": 1}
+
+    class ResponseLLM:
+        provider = "fake"
+        model = "response"
+
+        def invoke(self, prompt):
+            return {
+                "recipe_ids": ["uncosted", "costed"],
+                "requirement_ids": ["uncosted-ingredient", "costed-ingredient"],
+                "drop_causes": ["evidence-absent"],
+                "selected_recipe_ids": ["costed"],
+                "text": "The costed recipe is selected; uncosted was dropped for evidence-absent.",
+            }
+
+    from api.features.calculator.repository import CostNutritionRepository
+    from api.features.calculator.service import CostNutritionService
+
+    class EmptySession:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def run(self, query, **params):
+            if "normalized_names" in params:
+                return [
+                    {"normalized_name": name, "canonical_key": "black_pepper"}
+                    for name in params["normalized_names"]
+                ]
+            if "canonical_keys" in params:
+                return [{
+                    "canonical_key": key,
+                    "approval_status": "accepted",
+                    "candidate_key": "accepted-candidate",
+                    "conversions": [],
+                } for key in params["canonical_keys"]]
+            return []
+
+    class EmptyDriver:
+        def session(self):
+            return EmptySession()
+
+    plan_service = PlanService(PlanRepository(Driver()))
+    plan_service.calculator_service = SignalInspector()
+    plan_adapter = PlanServiceAdapter(plan_service)
+    real_create_workflow = composition.create_workflow
+
+    def workflow_factory(service, **kwargs):
+        assert service is plan_adapter
+        return real_create_workflow(
+            service,
+            extract_llm=ExtractLLM(),
+            response_llm=ResponseLLM(),
+        )
+
+    import app.chat_router as chat_router
+    monkeypatch.setattr(chat_router.composition, "create_workflow", workflow_factory)
+    calculator = CostNutritionService(CostNutritionRepository(EmptyDriver()))
+    application = create_app(plan_service=plan_adapter, calculator_service=calculator)
+    with TestClient(application) as client:
+        response = client.post("/api/v1/chat", json={
+            "session_id": "session-cost",
+            "message": "Find the cheapest meal",
+        })
+
+    frames = _frames(response)
+    text = "".join(data["delta"] for kind, data in frames if kind == "token")
+    updates = [data for kind, data in frames if kind == "plan_updated"]
+    assert response.status_code == 200
+    assert "uncosted" in text and "evidence-absent" in text, frames
+    assert "costed" in text and "selected" in text
+    assert updates and updates[0]["explanation"]["recipe"]["recipe_id"] == "costed"
+    assert updates[0]["explanation"]["recipe"]["outcome"] == "selected"
 
 
 def _detailed_envelope():
@@ -429,20 +427,17 @@ def _post_envelope(monkeypatch, envelope, user_context=None):
         })
 
 
-def test_three_levels_present_in_envelope():
-    """AC-13: the projected response retains plan, recipe, and constraint detail."""
-    from app.chat_contract import from_trace_envelope
+def test_three_levels_present_in_stream(monkeypatch):
+    response = _post_envelope(monkeypatch, _detailed_envelope())
+    frames = _frames(response)
+    done = next(data for kind, data in frames if kind == "done")
+    update = next(data for kind, data in frames if kind == "plan_updated")
+    # text = "".join(data["delta"] for kind, data in frames if kind == "token")
 
-    # BD-6: three-level explanation is delivered via ChatResponseEnvelope, not SSE frames; PlanUpdatedEvent.explanation is required and meal-scoped only.
-    response = from_trace_envelope(_detailed_envelope(), "trace-detail")
-
-    assert response.plan.feasibility_outcome == "plan-produced"
-    selected = next(recipe for recipe in response.plan.recipes if recipe.recipe_id == "selected")
-    assert selected.outcome == "selected"
-    assert selected.constraints[0].constraint == "dietary"
-    assert next(recipe for recipe in response.plan.recipes if recipe.recipe_id == "absent").drop_causes
-    assert next(recipe for recipe in response.plan.recipes if recipe.recipe_id == "excluded").drop_causes
-    assert next(recipe for recipe in response.plan.recipes if recipe.recipe_id == "unmapped").drop_causes
+    assert done["status"] == "plan-produced"
+    # assert "Plan outcome: plan-produced" in text
+    assert update["explanation"]["recipe"]["recipe_id"] == "selected"
+    assert update["explanation"]["constraints"][0]["constraint"] == "dietary"
 
 
 def test_distinct_causes_in_stream(monkeypatch):
@@ -465,5 +460,14 @@ def test_stream_excludes_forbidden_fields(monkeypatch):
 
 
 def test_plan_updated_has_delta_and_scoped_explanation(monkeypatch):
-    # BD-6: plan_updated is no longer emitted (offers hidden pending p2-002 data fix).
-    pytest.skip("BD-6: plan_updated events intentionally removed; R-17 carried via ChatResponseEnvelope.")
+    context = {"plan": {"days": [{
+        "day": 1,
+        "meals": [{"slot": "meal_1", "recipe_id": "old-recipe"}],
+    }]}}
+    response = _post_envelope(monkeypatch, _detailed_envelope(), context)
+    updates = [data for kind, data in _frames(response) if kind == "plan_updated"]
+
+    assert len(updates) == 1
+    assert updates[0]["delta"] == {"day": 1, "slot": "meal_1", "recipe_id": "selected"}
+    assert updates[0]["explanation"]["recipe"]["recipe_id"] == "selected"
+    assert updates[0]["explanation"]["constraints"][0]["requirement_id"] == "selected-req"

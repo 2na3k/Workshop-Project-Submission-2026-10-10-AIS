@@ -1,6 +1,6 @@
 # CI results - p3-004-conversational-constraint-interface
 
-Run at: 2026-10-18T12:48:05+08:00
+Run at: 2026-10-18T23:29:20+08:00
 
 | Check | Command | Result |
 |---|---|---|
@@ -22,7 +22,7 @@ OVERALL: PASS
     _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-44 passed, 1 warning in 11.26s
+44 passed, 1 warning in 9.94s
 ..............................                                           [100%]
 =============================== warnings summary ===============================
 .venv/lib/python3.12/site-packages/langgraph/cache/base/__init__.py:8
@@ -30,7 +30,7 @@ OVERALL: PASS
     from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-30 passed, 1 warning in 3.19s
+30 passed, 1 warning in 2.88s
 .............................................                            [100%]
 =============================== warnings summary ===============================
 .venv/lib/python3.12/site-packages/starlette/testclient.py:53
@@ -42,7 +42,7 @@ OVERALL: PASS
     from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-45 passed, 2 warnings in 14.21s
+45 passed, 2 warnings in 12.32s
 ```
 
 ### lint
@@ -59,7 +59,9 @@ remy/api/src/api/features/plan/service.py:187: note: By default the bodies of un
 remy/api/src/api/features/plan/service.py:476: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
 remy/api/src/api/features/plan/service.py:477: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
 Success: no issues found in 14 source files
-Success: no issues found in 8 source files
+remy/workflows/src/workflows/nodes.py:519: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+remy/workflows/src/workflows/nodes.py:520: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+Success: no issues found in 9 source files
 Success: no issues found in 7 source files
 ```
 
@@ -80,7 +82,7 @@ Success: no issues found in 7 source files
 Contracts
 ---------
 
-Analyzed 65 files, 121 dependencies.
+Analyzed 66 files, 122 dependencies.
 ------------------------------------
 
 domain is a leaf KEPT
