@@ -1,7 +1,5 @@
 from dataclasses import asdict
 
-import pytest
-
 from app.chat_contract import CHAT_FORBIDDEN_FIELDS, from_trace_envelope
 from workflows.models import Outcome, PlanTraceView, RecipeOutcomeView, RequirementOutcomeView
 from workflows.trace import assemble_trace

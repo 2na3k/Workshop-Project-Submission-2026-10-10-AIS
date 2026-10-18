@@ -612,33 +612,6 @@ class PlanService:
                 ) for index, recipe in enumerate(meals, 1)
             ]))
 
-        response_recipes = [
-            RecipeOutcomeResponse(
-                recipe_id=record.recipe_id,
-                outcome=record.outcome,
-                cause=record.cause,
-                causes=list(record.causes),
-            )
-            for record in recipe_records
-        ]
-        response_constraints = [
-            ConstraintOutcomeResponse(
-                recipe_id=record.recipe_id,
-                requirement_id=record.requirement_id,
-                requirement_text=record.requirement_text,
-                constraint=record.constraint,
-                state=record.state,
-                resolved_concept=record.resolved_concept,
-                selected_offer=(
-                    SelectedOfferResponse(
-                        listing_name=record.selected_offer.listing_name,
-                        retailer=record.selected_offer.retailer,
-                    ) if record.selected_offer is not None else None
-                ),
-                warnings=list(record.warnings),
-            )
-            for record in constraint_records
-        ]
         return PlanResponse(
             plan_id="plan_" + secrets.token_hex(5),
             status="partial" if relaxations else "complete",
@@ -649,8 +622,6 @@ class PlanService:
             },
             relaxed=bool(relaxations),
             applied_tolerance_pct=applied_tolerance,
-            # recipe_outcomes=response_recipes,
-            # constraint_outcomes=response_constraints,
             relaxations=relaxations,
             horizon_totals=aggregate(days, request),
             days=response_days,

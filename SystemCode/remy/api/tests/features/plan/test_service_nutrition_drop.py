@@ -1,6 +1,4 @@
-import pytest
 from api.features.calculator.models import RecipeNutritionSignal
-from api.features.plan.exceptions import PlanInfeasible
 from api.features.plan.models import NamedConstraint
 from api.features.plan.repository import PlanRepository
 from api.features.plan.schemas import (Goal, NutrientLimit, NutrientRequest,

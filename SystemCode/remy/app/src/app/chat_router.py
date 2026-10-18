@@ -17,6 +17,8 @@ from app.chat_contract import (
     ChatRequest,
     DoneEvent,
     ErrorEvent,
+    MealDelta,
+    MealScopedExplanation,
     MetadataEvent,
     PlanUpdatedEvent,
     TokenEvent,
@@ -208,8 +210,11 @@ def _events(
                 continue
             events.append(PlanUpdatedEvent(
                 event="plan_updated",
-                delta={"day": key[0], "slot": key[1], "recipe_id": recipe_id},
-                explanation={"recipe": recipe, "constraints": recipe.constraints},
+                delta=MealDelta(day=key[0], slot=key[1], recipe_id=recipe_id),
+                explanation=MealScopedExplanation(
+                    recipe=recipe,
+                    constraints=recipe.constraints,
+                ),
             ))
 
     events.append(DoneEvent(

@@ -2,9 +2,7 @@ from api.features.plan.repository import QUERY_INGREDIENTS, QUERY_RECIPES, PlanR
 from api.features.plan.service import PlanService
 from api.features.plan.schemas import DietaryRequest, NutrientLimit, NutrientRequest, PlanRequest
 from api.features.calculator.models import (
-    OfferRef,
     RecipeNutritionSignal,
-    RequirementOffer,
 )
 
 

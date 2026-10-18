@@ -107,6 +107,17 @@ def test_only_five_event_types_emitted(workflow_factory):
     assert {kind for kind, _data in _frames(response)} <= ALLOWED_EVENTS
 
 
+def test_events_framed_as_sse(workflow_factory):
+    with TestClient(create_app(object())) as client:
+        response = client.post("/api/v1/chat", json={
+            "session_id": "session-1",
+            "message": "Plan a meal",
+        })
+
+    assert response.text.startswith("event: metadata\ndata: ")
+    assert response.text.endswith("\n\n")
+
+
 def test_trace_id_present_trace_not_embedded(workflow_factory):
     with TestClient(create_app(object())) as client:
         response = client.post("/api/v1/chat", json={
@@ -156,6 +167,66 @@ def test_two_independent_requests_no_shared_state(workflow_factory):
     assert first_frames[0][1]["session_id"] == "session-1"
     assert second_frames[0][1]["session_id"] == "session-2"
     assert first_frames[0][1]["trace_id"] != second_frames[0][1]["trace_id"]
+
+
+def test_workflow_envelope_streams_events(monkeypatch):
+    from workflows.graph import build
+    from workflows.models import PlanTraceView, RecipeOutcomeView, RequirementOutcomeView
+
+    class ExtractLLM:
+        provider = "fake"
+        model = "extract"
+
+        def invoke(self, prompt):
+            return {"horizon_days": 1, "meals_per_day": 1}
+
+    class PlanPort:
+        def generate(self, request):
+            recipe = RecipeOutcomeView("r1", "selected")
+            requirement = RequirementOutcomeView("r1", "q1", "dietary", "pass", "vegan")
+            result = PlanResult(
+                "p1", "complete", "ok", recipe_outcomes=(recipe,),
+                constraint_outcomes=(requirement,),
+            )
+            trace = PlanTraceView(
+                "plan-produced", None, recipes=(recipe,), requirements=(requirement,)
+            )
+            return result, trace
+
+    class ResponseLLM:
+        provider = "fake"
+        model = "response"
+
+        def invoke(self, prompt):
+            return {
+                "text": "Plan generated.",
+                "recipe_ids": ["r1"],
+                "requirement_ids": ["q1"],
+                "drop_causes": [],
+            }
+
+    import app.chat_router as chat_router
+    workflow = build(
+        extract_llm=ExtractLLM(), plan_port=PlanPort(), response_llm=ResponseLLM()
+    )
+    monkeypatch.setattr(
+        chat_router.composition,
+        "create_workflow",
+        lambda *args, **kwargs: workflow,
+    )
+    with TestClient(create_app(object())) as client:
+        response = client.post("/api/v1/chat", json={
+            "session_id": "session-workflow",
+            "message": "Plan a vegan meal",
+        })
+
+    frames = _frames(response)
+    kinds = [kind for kind, _data in frames]
+    assert kinds[0] == "metadata"
+    assert kinds[-1] == "done"
+    assert "token" in kinds
+    assert frames[0][1]["workflow_node"] == "Generate Response"
+    assert frames[-1][1]["status"] == "plan-produced"
 
 
 def test_cost_intent_turn_drops_uncosted_recipe_end_to_end(monkeypatch):

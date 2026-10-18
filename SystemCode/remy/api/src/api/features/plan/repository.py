@@ -310,10 +310,11 @@ def _recipe_nutrients_from_rows(
             if profile.get(field) is None:
                 missing.add(field)
 
-        profile = _normalise_profile_from_row(row, profile)
-        if profile is None:
+        normalized_profile = _normalise_profile_from_row(row, profile)
+        if normalized_profile is None:
             # Unrecognised nutrition_basis; skip.
             continue
+        profile = normalized_profile
 
         try:
             grams, _warnings = to_grams(qty, unit)
@@ -428,24 +429,12 @@ class PlanRepository:
         self.driver = driver
 
     def fetch_candidates(self, limit: int = 600) -> list[Recipe]:
-        t0 = time.perf_counter()
-
         with self.driver.session() as session:
             rows = list(session.run(QUERY, limit=limit))
-
-        t1 = time.perf_counter()
 
         result = [
             r for r in (_build_recipe(row) for row in rows) if r is not None
         ]
-
-        t2 = time.perf_counter()
-        # print(
-        #     f"fetch_candidates: neo4j={(t1 - t0) * 1000:.0f}ms "
-        #     f"python={(t2 - t1) * 1000:.0f}ms "
-        #     f"total={(t2 - t0) * 1000:.0f}ms "
-        #     f"recipes={len(result)}"
-        # )
         return result
 
     def fetch_candidates_v2(self, limit: int = 600) -> list[Recipe]:

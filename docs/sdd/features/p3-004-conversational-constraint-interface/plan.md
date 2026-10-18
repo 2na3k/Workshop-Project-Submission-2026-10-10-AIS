@@ -534,7 +534,7 @@ producer from its consumer.
 
 ### Group 8 — final conformance sweep
 
-- [ ] **T-20** Full-feature CI run and cross-check
+- [x] **T-20** Full-feature CI run and cross-check
   - Type: impl (CI gate)
   - Covers: all ACs; all six integration edges
   - Files: none

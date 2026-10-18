@@ -7,8 +7,6 @@ the path divergence is tracked for phase review in plan BD-2.
 
 from dataclasses import asdict
 
-import pytest
-
 from workflows.graph import build
 from workflows.models import PlanResult, PlanTraceView
 
