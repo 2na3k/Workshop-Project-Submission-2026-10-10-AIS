@@ -146,3 +146,128 @@ def test_two_independent_requests_no_shared_state(workflow_factory):
     assert first_frames[0][1]["session_id"] == "session-1"
     assert second_frames[0][1]["session_id"] == "session-2"
     assert first_frames[0][1]["trace_id"] != second_frames[0][1]["trace_id"]
+
+
+def test_cost_intent_turn_drops_uncosted_recipe_end_to_end(monkeypatch):
+    from api.features.calculator.models import OfferRef, RecipeNutritionSignal, RequirementOffer
+    from api.features.plan.repository import PlanRepository
+    from api.features.plan.service import PlanService
+    from app import composition
+
+    rows = []
+    for recipe_id in ("uncosted", "costed"):
+        rows.append({
+            "recipe_id": recipe_id,
+            "title": recipe_id,
+            "ingredients": [{
+                "quantity": 100,
+                "unit": "g",
+                "occurrence_id": f"{recipe_id}-ingredient",
+                "normalized_name": "pepper",
+                "canonical_key": "black_pepper",
+                "concept_name": "Black pepper",
+                "best_food_key": f"food:{recipe_id}",
+                "energy_kcal": 10,
+                "protein_g": 1,
+                "sodium_mg": 1,
+                "nutrition_basis": "per 100 g",
+                "halal_status": "halal",
+                "vegetarian_status": "vegetarian",
+                "freshness_status": "fresh",
+            }],
+        })
+
+    class Session:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def run(self, query, **params):
+            return rows
+
+    class Driver:
+        def session(self):
+            return Session()
+
+    class SignalInspector:
+        def inspect_candidates(self, recipes, servings):
+            return {
+                recipe.recipe_id: RecipeNutritionSignal(
+                    recipe_id=recipe.recipe_id,
+                    missing_nutrients=[],
+                    selected_offers=[RequirementOffer(
+                        occurrence_id=f"{recipe.recipe_id}-ingredient",
+                        canonical_key="black_pepper",
+                        selected_offer=(
+                            None if recipe.recipe_id == "uncosted"
+                            else OfferRef("food:costed", "pepper", "market")
+                        ),
+                    )],
+                )
+                for recipe in recipes
+            }
+
+    class ExtractLLM:
+        provider = "fake"
+        model = "extract"
+
+        def invoke(self, prompt):
+            return {"horizon_days": 1, "meals_per_day": 1}
+
+    class ResponseLLM:
+        provider = "fake"
+        model = "response"
+
+        def invoke(self, prompt):
+            return {
+                "recipe_ids": ["uncosted", "costed"],
+                "requirement_ids": ["uncosted-ingredient", "costed-ingredient"],
+                "drop_causes": ["evidence-absent"],
+                "selected_recipe_ids": ["costed"],
+                "text": "The costed recipe is selected; uncosted was dropped for evidence-absent.",
+            }
+
+    class CalculatorSpy:
+        def __init__(self):
+            self.calls = []
+
+        def calculate(self, request):
+            self.calls.append(request)
+            return SimpleNamespace(itemized=[]), None
+
+    from types import SimpleNamespace
+
+    plan_service = PlanService(PlanRepository(Driver()))
+    plan_service.calculator_service = SignalInspector()
+    real_create_workflow = composition.create_workflow
+
+    def workflow_factory(service, **kwargs):
+        assert service is plan_service
+        return real_create_workflow(
+            service,
+            extract_llm=ExtractLLM(),
+            response_llm=ResponseLLM(),
+        )
+
+    import app.chat_router as chat_router
+    monkeypatch.setattr(chat_router.composition, "create_workflow", workflow_factory)
+    calculator = CalculatorSpy()
+    application = create_app(plan_service)
+    application.state.calculator_service = calculator
+    with TestClient(application) as client:
+        response = client.post("/api/v1/chat", json={
+            "session_id": "session-cost",
+            "message": "Find the cheapest meal",
+        })
+
+    frames = _frames(response)
+    text = "".join(data["delta"] for kind, data in frames if kind == "token")
+    updates = [data for kind, data in frames if kind == "plan_updated"]
+    assert response.status_code == 200
+    assert len(calculator.calls) == 1
+    assert "uncosted" in text and "evidence-absent" in text
+    assert "costed" in text and "selected" in text
+    assert updates and updates[0]["explanation"]["recipe"]["recipe_id"] == "costed"
+    assert updates[0]["explanation"]["recipe"]["outcome"] == "selected"

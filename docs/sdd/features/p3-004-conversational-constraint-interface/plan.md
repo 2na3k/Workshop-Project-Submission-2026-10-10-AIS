@@ -483,7 +483,7 @@ producer from its consumer.
   - Files: `SystemCode/remy/app/src/app/chat_router.py` (edit — cost branch); `SystemCode/remy/app/src/app/composition.py` (extend — expose calculator wiring)
   - Done when: T-11 passes. When `cost_query` truthy: call `CostNutritionService.calculate(...)` for scoped names; fold consumed/retail cost + `MISSING_PACKAGE_DATA` warning into the existing event payloads; no new event type. When falsy: calculator not called. No scoped names → no calculator call, no error.
 
-- [ ] **T-13** Write failing endpoint test: **[F-2]** cost-intent turn drops uncosted recipe end-to-end (production wiring)
+- [x] **T-13** Write failing endpoint test: **[F-2]** cost-intent turn drops uncosted recipe end-to-end (production wiring)
   - Type: test
   - Covers: AC-8 end-to-end; risks #1 mitigation; T-8 production wiring
   - Files: `SystemCode/remy/app/tests/api/test_chat_endpoint.py` (append)
