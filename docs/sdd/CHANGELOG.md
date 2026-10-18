@@ -192,3 +192,42 @@
 - Acceptance criteria: AC-1 .. AC-14
 - Decisions: docs/sdd/features/p3-002-explainable-response-contract/decisions.md
 - Breaking: none
+
+### p3-004-conversational-constraint-interface - Conversational constraint interface (2026-10-18)
+
+- Added/Changed/Fixed:
+  - Implemented `POST /chat` as a Server-Sent Events (SSE) streaming endpoint mounted at `/api/v1/chat` in `SystemCode/remy/app/src/app/chat_router.py`, accepting `ChatRequest` (session_id + message, optional user_context) and returning `text/event-stream` (AC-1, AC-19).
+  - Emitted stream events strictly conforming to the p3-002 event vocabulary (`metadata`, `token`, `plan_updated`, `error`, `done`) with framing handled by pure SSE serializer `SystemCode/remy/app/src/app/sse.py` (AC-2, AC-16).
+  - Added composition root in `SystemCode/remy/app/src/app/main.py` assembling FastAPI application, wiring chat router with `PlanService` and `CostNutritionService`, preserving inward architecture contracts (`api` does not import `app`, R-2).
+  - Extended constraint extraction with additive `cost_query` field on `ConstraintSet` (`workflows/models.py`) and keyword regex fallback in `workflows/nodes.py` detecting affordability/budget intent from natural language (AC-3, AC-4, AC-5).
+  - Folded on-demand cost projection into the conversational turn: calls `CostNutritionService.calculate` for scoped ingredients on cost-intent turns, reporting consumed vs. retail cost separately (R-11) and surfacing `MISSING_PACKAGE_DATA` without fabricating prices, while omitting cost calculations on non-budget turns (AC-4, AC-5, AC-6, AC-7).
+  - Landed the inherited A-006 recipe-level cost drop in `PlanService.generate` (`api/features/plan/service.py`) gated by `drop_uncosted`: candidate recipes with uncosted requirements (`selected_offer is None`) drop with `evidence-absent` cause, satisfying R-8 and R-10 recipe-level fixtures (AC-8, AC-9, AC-10).
+  - Threaded budget signal from workflow `PlanInput.cost_query` to `PlanService.generate(drop_uncosted=...)` via `PlanServiceAdapter` (`app/plan_adapter.py`) (AC-8).
+  - Implemented deterministic output safety in `workflows/nodes.py` (`generate_response`), verifying that referenced recipe IDs, requirement IDs, and drop causes are subsets of plan outcomes, and strictly rejecting permissive restatements of evidence-absent candidates (AC-11, AC-12).
+  - Streamed three-level explanations (`plan`, `recipe`, `constraint`) with distinct drop causes (`evidence-absent`, `present-evidence-excludes`, `unmapped`), emitting `PlanUpdatedEvent` carrying `MealDelta` and `MealScopedExplanation` for updated meals (AC-13, AC-14, AC-18).
+  - Verified R-16 audit provenance exclusion floor (`CHAT_FORBIDDEN_FIELDS`) from user payloads and streamed frames, retaining correlation via out-of-band `trace_id` without embedding traces (AC-15, AC-16).
+  - Handled workflow exceptions via stable `ErrorEvent` closing the stream (AC-17).
+  - Maintained R-16 and R-17 conformance against the canonical Amendment A-007 check paths `test_response_schema.py` and `test_explanation_shape.py` in `remy-app` (AC-20).
+  - Updated API documentation `SystemCode/remy/api/docs/API_doc.md` §3 so the `plan_updated` example shows delta and meal-scoped three-level explanation (AC-21).
+  - Added comprehensive unit, integration, and endpoint test coverage across `remy-api`, `remy-workflows`, and `remy-app`.
+  - **Reopen (2026-10-18, post-review r1):** Review r1 returned REVISE with
+    findings F-1..F-6 (cost branch omitted, `plan_updated` disabled,
+    deterministic validation bypassed, end-to-end gated-drop test skipped,
+    three-level explanation missing from stream, and 11 tests skipped under
+    time pressure). All findings resolved in review r2: cost branch restored
+    in `_stream_chat`; `PlanUpdatedEvent` restored with `selected_offer=None`
+    sanitization (preserves AC-15 while satisfying AC-18); deterministic
+    structured-output validation restored in `generate_response`; all 11
+    previously-skipped tests un-skipped and green; plan-level outcome line
+    restored to the streamed text via `_fallback_from_facts`. Review r2:
+    APPROVE (119/119 tests, 0 skipped).
+  - Implemented hybrid generation in `workflows/nodes.py`: LLM intro
+    (2-sentence, fact-sheet-driven) followed by deterministic Markdown meal
+    list including ingredients, nutrients, instructions, plan-outcome line,
+    and the `⚠️` nutrient-status disclosure. Chosen over full-LLM generation
+    under CPU-only latency constraints; structured validation of LLM claims
+    retained when the LLM returns structured output (dict) rather than a
+    free-text `AIMessage`.
+- Acceptance criteria: AC-1 .. AC-21
+- Decisions: docs/sdd/features/p3-004-conversational-constraint-interface/decisions.md
+- Breaking: none
