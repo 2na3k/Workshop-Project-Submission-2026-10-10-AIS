@@ -8,7 +8,7 @@ from api.core.errors import ErrorDetail, error_envelope
 from api.core.exceptions import AppError
 from api.core.monitoring import update_observation
 from .narrative import plan_text
-from .state import decode_recipes
+from api.features.plan.graph.state import decode_recipes
 from .schemas import PlanResponse
 from .service import dump, trace_plan, complete_plan
 

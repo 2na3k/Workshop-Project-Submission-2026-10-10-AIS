@@ -11,7 +11,7 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from .jev_ranking import ranking_version
+from api.features.plan.jev_ranking import ranking_version
 
 
 @contextmanager

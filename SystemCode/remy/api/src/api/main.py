@@ -1,7 +1,7 @@
 from pathlib import Path
 from dotenv import load_dotenv
 
-SHARED_ENV_PATH = Path(__file__).resolve().parents[4] / ".env"
+SHARED_ENV_PATH = Path(__file__).resolve().parents[4] / ".env.nonprod"
 load_dotenv(SHARED_ENV_PATH)
 ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
 load_dotenv(ENV_PATH)
@@ -15,7 +15,7 @@ from .core.errors import ErrorDetail, error_envelope
 from .core.exceptions import AppError
 from .features.calculator.router import router as calculator_router
 from .features.plan.router import router as plan_router
-from .features.plan.evaluation import router as evaluation_router
+from api.features.plan.eval.evaluation import router as evaluation_router
 
 app = FastAPI(
     title="Remy API",

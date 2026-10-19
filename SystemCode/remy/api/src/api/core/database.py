@@ -9,7 +9,7 @@ from langgraph.checkpoint.postgres import PostgresSaver
 
 from .monitoring import get_client, shutdown_monitoring
 from api.features.plan.jev_ranking import validate_ranker_config
-from api.features.plan.judge import validate_judge_config
+from api.features.plan.judge.judge import validate_judge_config
 
 CHECKPOINT_SCHEMA = "langgraph"
 

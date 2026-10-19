@@ -15,10 +15,10 @@ from pathlib import Path
 
 from api.core.jev import JevClient, JevConfigError, JevError, require_jev_key
 from api.core.monitoring import enqueue_trace_scores
-from .evaluation import evaluation_db
-from .judge import JUDGE_VERSION, judge_grades, judge_one
-from .jev_ranking import ranking_version
-from .metrics import ranking_metrics
+from api.features.plan.eval.evaluation import evaluation_db
+from api.features.plan.judge.judge import JUDGE_VERSION, judge_grades, judge_one
+from api.features.plan.jev_ranking import ranking_version
+from api.features.plan.eval.metrics import ranking_metrics
 
 METRIC_KEYS = ("nDCG@3", "Precision@3", "pairwise_accuracy")
 

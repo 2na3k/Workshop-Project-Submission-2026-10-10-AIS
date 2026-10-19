@@ -21,9 +21,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 from api.core.jev import JevClient, JevConfigError, JevError, require_jev_key, score
 from api.core.monitoring import enqueue_trace_scores, observation, update_observation
-from .exceptions import PlanError
-from .jev_ranking import ranking_version, recipe_state, request_state
-from .metrics import ranking_metrics
+from api.features.plan.exceptions import PlanError
+from api.features.plan.jev_ranking import ranking_version, recipe_state, request_state
+from api.features.plan.eval.metrics import ranking_metrics
 
 logger = logging.getLogger(__name__)
 

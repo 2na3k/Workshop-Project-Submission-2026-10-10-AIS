@@ -6,7 +6,7 @@ keeps working with Recipe and Ingredient.
 """
 from dataclasses import fields
 
-from .models import Ingredient, Recipe
+from api.features.plan.models import Ingredient, Recipe
 
 _INGREDIENT_FIELDS = tuple(f.name for f in fields(Ingredient))
 

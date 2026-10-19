@@ -3,7 +3,7 @@ import secrets
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from .dependencies import get_plan_service
-from .graph import build_plan_graph
+from api.features.plan.graph.graph import build_plan_graph
 from .openapi import PLAN_DESCRIPTION, PLAN_RESPONSES
 from .schemas import PlanRequest
 from .service import PlanService

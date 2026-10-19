@@ -5,6 +5,8 @@
 services:
   postgres:
     image: postgres:17-alpine
+    ports:
+      - "127.0.0.1:5433:5432"
     environment:
       POSTGRES_USER: remy
       POSTGRES_PASSWORD: ${REMY_POSTGRES_PASSWORD:?Set it in .env.nonprod or .env.prod}

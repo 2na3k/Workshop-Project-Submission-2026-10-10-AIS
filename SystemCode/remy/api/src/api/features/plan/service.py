@@ -4,7 +4,7 @@ import secrets
 
 from workflows.rules.allergen import resolve_allergen_key
 from api.core.monitoring import observation, update_observation
-from .evaluation import save_evaluation
+from api.features.plan.eval.evaluation import save_evaluation
 from .filtering import filter_candidates, SUPPORTED_NUTRIENTS
 from .jev_ranking import rank_with_mode, ranking_version
 from .repository import PlanRepository
@@ -12,7 +12,7 @@ from .solver_v2 import solve_v2
 from .aggregation import aggregate
 from .schemas import PlanResponse, DayResponse, MealResponse, MealIngredientResponse
 from .exceptions import InvalidNutrientRange, UnknownAllergen, UnknownDietary, UnknownNutrient
-from .state import encode_days, encode_recipes
+from api.features.plan.graph.state import encode_days, encode_recipes
 
 logger = logging.getLogger(__name__)
 SUPPORTED_DIETARY = {"halal", "vegetarian"}
