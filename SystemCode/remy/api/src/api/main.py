@@ -95,7 +95,6 @@ def create_app() -> FastAPI:
         swagger_ui_parameters={"displayRequestDuration": True},
         lifespan=lifespan,
     )
-    validate_ranker_config()
     application.include_router(calculator_router, prefix="/api/v1/calculate", tags=["calculator"])
     application.include_router(plan_router, prefix="/api/v1/plan", tags=["plan"])
     application.include_router(evaluation_router, prefix="/api/v1/evaluations", tags=["evaluations"])

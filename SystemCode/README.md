@@ -104,15 +104,12 @@ remy/
 │       └── contracts/
 │           └── test_allergen_screening_contract.py
 │
-└── workflows/                              # recommendation workflows (LangGraph)
+└── workflows/                              # rule checks used by the plan filter
     ├── pyproject.toml
     ├── src/
     │   └── workflows/
     │       ├── __init__.py
     │       ├── state.py                    # re-exports CheckState from domain.types
-    │       ├── graph.py                    # LangGraph wiring (future)
-    │       ├── nodes/                      # LangGraph nodes (future)
-    │       │   └── ...
     │       └── rules/
     │           ├── __init__.py
     │           ├── allergen.py             # check_allergen*, resolve_allergen_key
@@ -136,7 +133,7 @@ remy/
 | Package             | Role                                                      | Depends on             |
 |---------------------|-----------------------------------------------------------|------------------------|
 | `domain`            | Shared Kernel: pure arithmetic + shared vocabulary        | (nothing)              |
-| `workflows`         | Rules + LangGraph agents; policy that returns `CheckState`| `domain`               |
+| `workflows`         | Rule checks (allergen, dietary, nutrition, budget) that return `CheckState` | `domain`               |
 | `api`               | FastAPI delivery layer; HTTP, orchestration, solver       | `domain`, `workflows`  |
 | `app`               | Frontend                                                  | `api` (over HTTP)      |
 | `data-crawler`      | Scheduled data collection                                 | `domain` (if needed)   |
@@ -178,6 +175,16 @@ Environment files are local and not committed:
 - `.env.prod` — production services
 
 Neo4j requires `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, and `NEO4J_DATABASE`.
+
+## Run the app with Docker
+
+```bash
+./remy/start-all.sh
+```
+
+Starts PostgreSQL, the auth backend, the Remy API and the frontend with Docker
+Compose. See [docs/docker_compose.md](docs/docker_compose.md) for setup,
+checks and troubleshooting.
 
 ## Common commands
 

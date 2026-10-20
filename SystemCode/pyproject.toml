@@ -20,6 +20,7 @@ members = [
     "remy/domain",
     "remy/api",
     "remy/app",
+    "remy/backend",
     "remy/workflows",
     "remy/data-crawler",
     "remy/data-preparation",

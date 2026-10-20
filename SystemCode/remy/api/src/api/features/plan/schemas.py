@@ -80,6 +80,9 @@ class PlanRequest(BaseModel):
     allergies: list[AllergyRequest] | None = None
     dietary: list[DietaryRequest] | None = None
     nutrients: list[NutrientRequest] | None = None
+    # Optional. A run keeps its checkpoints under this id: sending the same id again
+    # resumes an unfinished run, or returns the stored plan of a finished one.
+    run_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{8,64}$")
 
     @model_validator(mode="after")
     def unique_codes(self):

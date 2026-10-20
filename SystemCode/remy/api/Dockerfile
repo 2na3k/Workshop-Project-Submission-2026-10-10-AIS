@@ -8,6 +8,7 @@ ENV UV_COMPILE_BYTECODE=1 \
 # Copy dependency metadata first so Docker can cache dependency installation.
 COPY pyproject.toml uv.lock ./
 COPY remy/api/pyproject.toml remy/api/pyproject.toml
+COPY remy/backend/pyproject.toml remy/backend/pyproject.toml
 COPY remy/workflows/pyproject.toml remy/workflows/pyproject.toml
 COPY remy/domain/pyproject.toml remy/domain/pyproject.toml
 COPY remy/data-crawler/pyproject.toml remy/data-crawler/pyproject.toml

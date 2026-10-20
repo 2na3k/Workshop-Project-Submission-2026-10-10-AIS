@@ -5,12 +5,15 @@ description = "Remy API"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi>=0.115,<1",
+    "httpx==0.28.1",
     "inflect>=7.5.0",
-    #    "neo4j>=6,<7",
     "langchain-google-genai>=2.1.12",
+    "langfuse>=3,<4",
     "langgraph>=0.6.11",
+    "langgraph-checkpoint-postgres>=3,<4",
     "neo4j-rust-ext==6.3.1",
     "ortools>=9.10,<10",
+    "psycopg[binary,pool]>=3.2,<4",
     "python-dotenv>=1.2.3",
     "remy-domain",
     "remy-workflows",
