@@ -194,7 +194,10 @@ def _clean_extraction(parsed: dict, user_message: str) -> dict:
 def _invoke_extract(llm, raw_message: str):
     messages = [SystemMessage(content=EXTRACT_SYSTEM), HumanMessage(content=raw_message)]
     started = time.perf_counter()
-    response = llm.invoke(messages)
+    if getattr(llm, "provider", "") == "ollama":
+        response = llm.invoke(messages, format="json")
+    else:
+        response = llm.invoke(messages)
     latency = time.perf_counter() - started
     try:
         return response, _content(response), latency
@@ -323,11 +326,13 @@ def _fact_sheet(result, constraints) -> dict:
                 status = "over"
             elif goal is not None and lo is None and hi is None:
                 # goal-only: compare with tolerance applied
-                tol = result.applied_tolerance_pct or 0
+                tol = result.applied_tolerance_pct or 3
                 if actual < goal * (1 - tol / 100):
                     status = "below-goal"
+                elif actual > goal * (1 + tol / 100):
+                    status = "above-goal"
                 else:
-                    status = "at-or-above-goal"
+                    status = "at-goal"
             else:
                 status = "within"
         nutrient_status.append({
@@ -390,10 +395,13 @@ def _fallback_from_facts(facts) -> tuple[str, list[str], list[str]]:
         if ns["status"] == "below-goal":
             lines.append(
                 f"⚠️ **{ns['code'].title()}**: {ns['actual']:.1f} (Goal: {ns['goal']}) — Below target.")
+        elif ns["status"] == "above-goal":
+            lines.append(
+                f"⚠️ **{ns['code'].title()}**: {ns['actual']:.1f} (Goal: {ns['goal']}) — Above target.")
         elif ns["status"] == "over":
             lines.append(
                 f"⚠️ **{ns['code'].title()}**: {ns['actual']:.1f} (Max: {ns['max']}) — Over limit.")
-        elif ns["status"] in ("at-or-above-goal", "within"):
+        elif ns["status"] in ("at-goal", "within"):
             lines.append(f"✅ **{ns['code'].title()}**: {ns['actual']:.1f} (Goal met)")
 
     if lines:
@@ -428,11 +436,11 @@ def _fallback_from_facts(facts) -> tuple[str, list[str], list[str]]:
 
 
 def _enforce_nutrient_disclosure(text: str, facts) -> str:
-    """If any tracked nutrient is short/over/below-goal, ensure the text says
+    """If any tracked nutrient is short/over/below-goal/above-goal, ensure the text says
     so. MVP-safe version: prepend a single deterministic disclosure sentence
     the LLM cannot contradict."""
     bad = [n for n in facts["nutrient_status"]
-           if n["status"] in ("short", "over", "below-goal")]
+           if n["status"] in ("short", "over", "below-goal", "above-goal")]
     if not bad:
         return text
     lines = []

@@ -9,7 +9,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from workflows.models import NamedConstraintView, TraceEnvelope
 
-
 # The first four are R-16's named categories. The remaining four
 # (source_snapshot_id, source_id, mapping_version, food_key, fdc_id) are
 # additional chat payload exclusions; structural identifiers remain allowed.
@@ -55,11 +54,19 @@ class ConstraintExplanation(_StrictModel):
     warnings: list[str]
 
 
+class MealContent(_StrictModel):
+    title: str
+    nutrients: dict[str, float] = Field(default_factory=dict)
+    ingredients: list[dict] = Field(default_factory=list)
+    instructions: str | None = None
+
+
 class RecipeExplanation(_StrictModel):
     recipe_id: str
     outcome: str
     drop_causes: list[DropCause] = Field(default_factory=list)
     constraints: list[ConstraintExplanation] = Field(default_factory=list)
+    meal: MealContent | None = None
 
 
 class PlanExplanation(_StrictModel):
@@ -138,7 +145,8 @@ def _public_offer(value: object) -> OfferView | None:
         value = value.model_dump(mode="python")
     if isinstance(value, dict):
         return OfferView(listing_name=value["listing_name"], retailer=value["retailer"])
-    return OfferView(listing_name=value.listing_name, retailer=value.retailer)  # type: ignore[attr-defined]
+    return OfferView(listing_name=value.listing_name,
+                     retailer=value.retailer)  # type: ignore[attr-defined]
 
 
 def _constraint_explanation(value: object) -> ConstraintExplanation:
@@ -152,8 +160,10 @@ def _constraint_explanation(value: object) -> ConstraintExplanation:
     )
 
 
-def _recipe_explanation(value: object, requirements: list[ConstraintExplanation]) -> RecipeExplanation:
-    raw_causes = value.causes or ((value.cause,) if value.cause else ())  # type: ignore[attr-defined]
+def _recipe_explanation(value: object,
+                        requirements: list[ConstraintExplanation]) -> RecipeExplanation:
+    raw_causes = value.causes or (
+        (value.cause,) if value.cause else ())  # type: ignore[attr-defined]
     causes = sorted((DropCause(cause) for cause in raw_causes), key=_CAUSE_PRECEDENCE.__getitem__)
     return RecipeExplanation(
         recipe_id=value.recipe_id,  # type: ignore[attr-defined]
@@ -196,7 +206,8 @@ def from_trace_envelope(env: TraceEnvelope, trace_id: str) -> ChatResponseEnvelo
         binding_constraints=list(bindings),
         relaxed=bool(plan and plan.relaxed) or feasibility == "relaxed",
         applied_tolerance_pct=tolerance,
-        recipes=[_recipe_explanation(recipe, grouped.get(recipe.recipe_id, [])) for recipe in recipes],
+        recipes=[_recipe_explanation(recipe, grouped.get(recipe.recipe_id, [])) for recipe in
+                 recipes],
     )
     response = ChatResponseEnvelope(trace_id=trace_id, plan=explanation, error=None)
     serialized = response.model_dump(mode="python")

@@ -1,26 +1,31 @@
+import logging
+import os
 import secrets
 
+from api.core.monitoring import observation, update_observation
 from api.features.calculator import \
     CandidateRecipe as CalculatorCandidateRecipe
 from api.features.calculator import (CandidateRequirement,
                                      CostNutritionRepository,
                                      CostNutritionService)
 from api.features.calculator.models import RecipeNutritionSignal
+from api.features.plan.eval.evaluation import save_evaluation
 from domain.exceptions import DomainError
 from domain.types import REQUEST_TO_CANONICAL, NutrientProfile
 from domain.units import to_grams
-
 from .aggregation import aggregate
 from .exceptions import InvalidNutrientRange, PlanInfeasible, UnknownNutrient
 from .filtering import filter_candidates
+from .jev_ranking import rank_with_mode
 from .models import NamedConstraint, RecipeOutcome, RequirementOutcome
-from .ranking import rank_candidates
 from .schemas import (ConstraintOutcomeResponse, DayResponse,
                       MealIngredientResponse, MealResponse,
                       NamedConstraintResponse, PlanResponse,
                       RecipeOutcomeResponse, SelectedOfferResponse)
 from .solver_v2 import solve_v2
 from .trace import PlanTrace
+
+logger = logging.getLogger(__name__)
 
 CAUSE_PRECEDENCE = (
     "present-evidence-excludes",
@@ -29,17 +34,32 @@ CAUSE_PRECEDENCE = (
 )
 
 
-# NUTRIENT_CANONICAL_FIELDS = {
-#     "calories": "calories_kcal",
-#     "protein": "protein_g",
-#     "carbs": "carbs_g",
-#     "fat": "fat_g",
-#     "saturated_fat": "saturated_fat_g",
-#     "fiber": "fiber_g",
-#     "sugar": "sugar_g",
-#     "sodium": "sodium_mg",
-#     "cholesterol": "cholesterol_mg",
-# }
+def trace_plan(request):
+    return observation(
+        "meal-plan",
+        horizon_days=getattr(request, "horizon_days", None),
+        meals_per_day=getattr(request, "meals_per_day", None),
+        servings=getattr(request, "servings", None),
+        constraint_counts={name: len(getattr(request, name, None) or [])
+                           for name in ("allergies", "dietary", "nutrients")},
+        data_version=os.getenv("REMY_DATA_VERSION", "unspecified"),
+    )
+
+
+def complete_plan(response, request, recipes, days, span):
+    response.trace_id = span.trace_id if span is not None else None
+    try:
+        response.evaluation_id = save_evaluation(
+            response.trace_id, response.plan_id, request, recipes, days
+        )
+    except Exception:
+        logger.warning("Ranking snapshot storage failed; meal plan remains available")
+    update_observation(span, output=response.model_dump(mode="json"))
+    return response
+
+
+def dump(obj):
+    return obj.model_dump(mode="json") if hasattr(obj, "model_dump") else obj
 
 
 def resolve_recipe_causes(causes: list[str]) -> list[str]:
@@ -187,6 +207,11 @@ class PlanService:
         self.last_trace: PlanTrace | None = None
 
     def generate(self, request, *, drop_uncosted: bool = False) -> tuple[PlanResponse, PlanTrace]:
+        with trace_plan(request) as span:
+            update_observation(span, input=dump(request))
+            return self._generate_impl(request, drop_uncosted, span)
+
+    def _generate_impl(self, request, drop_uncosted, span) -> tuple[PlanResponse, PlanTrace]:
         for nutrient in request.nutrients or []:
             if nutrient.code not in REQUEST_TO_CANONICAL:
                 raise UnknownNutrient(f"Unknown nutrient: {nutrient.code}")
@@ -196,10 +221,10 @@ class PlanService:
                 raise InvalidNutrientRange("min cannot exceed max")
 
         candidates_per_slot = 75
-        pool_size = min(13000,
-                        request.meals_per_day *
-                        max(200, candidates_per_slot * request.horizon_days)
-                        )
+        pool_size = min(
+            13000,
+            request.meals_per_day * max(150, candidates_per_slot * request.horizon_days)
+        )
         candidates = self.repository.fetch_candidates(limit=pool_size)
         filtered = filter_candidates(candidates, request)
         self.last_filter_result = filtered
@@ -284,7 +309,7 @@ class PlanService:
                and recipe.recipe_id not in nutrition_dropped
                and recipe.recipe_id not in cost_dropped
         ]
-        ranked = rank_candidates(eligible, request)
+        ranked = rank_with_mode(eligible, request)
         try:
             days, relaxations = solve_v2(ranked, request)
         except PlanInfeasible as exc:
@@ -345,6 +370,7 @@ class PlanService:
                 horizon_totals={},
                 days=[],
             )
+            complete_plan(response, request, ranked, [], span)
             return response, trace
 
         selected = _selected_ids(days)
@@ -435,22 +461,22 @@ class PlanService:
             )
             for record in constraint_records
         ]
-        return PlanResponse(
+        response = PlanResponse(
             plan_id="plan_" + secrets.token_hex(5),
             status="partial" if relaxations else "complete",
             message=f"Successfully generated a {request.horizon_days}-day meal plan.",
             validation_summary={
                 "allergen_status": "passed" if request.allergies else "not_requested",
-                "dietary_status": "passed" if request.dietary else "not_requested",
-            },
+                "dietary_status": "passed" if request.dietary else "not_requested", },
             relaxed=bool(relaxations),
             applied_tolerance_pct=applied_tolerance,
             recipe_outcomes=response_recipes,
             constraint_outcomes=response_constraints,
             relaxations=relaxations,
-            horizon_totals=aggregate(days, request),
-            days=response_days,
-        ), trace
+            horizon_totals=aggregate(days, request), days=response_days,
+        )
+        complete_plan(response, request, ranked, days, span)
+        return response, trace
 
     def generate_v2(self, request):
         """Generate a plan from nutrient skeletons, fetching details post-solve."""

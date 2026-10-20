@@ -113,8 +113,7 @@ def _evaluate_nutrients(recipe, request, outcome):
             continue
         value = sum(values)
         limit = nutrient.limit
-        if limit and ((limit.min is not None and value < limit.min) or
-                      (limit.max is not None and value > limit.max)):
+        if limit and (limit.max is not None and value > limit.max):
             _add(outcome, nutrient.code, "present-evidence-excludes", "nutrient limit failed")
         else:
             _add(outcome, nutrient.code, "pass")

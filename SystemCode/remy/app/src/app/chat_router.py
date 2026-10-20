@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import secrets
 from collections.abc import Iterator
 from typing import Any
@@ -17,6 +18,7 @@ from app.chat_contract import (
     ChatRequest,
     DoneEvent,
     ErrorEvent,
+    MealContent,
     MetadataEvent,
     TokenEvent,
     from_trace_envelope, MealDelta, MealScopedExplanation, PlanUpdatedEvent,
@@ -45,6 +47,24 @@ def _member(value: Any, name: str, default: Any = None) -> Any:
     if isinstance(value, dict):
         return value.get(name, default)
     return getattr(value, name, default)
+
+
+def _find_meal(plan: Any, day: int, slot: str, recipe_id: str) -> dict | None:
+    """Locate a meal by (day, slot, recipe_id) in the PlanResult days."""
+    if plan is None:
+        return None
+    for day_value in _member(plan, "days", ()) or ():
+        if _member(day_value, "day") != day:
+            continue
+        for meal in _member(day_value, "meals", ()) or ():
+            if _member(meal, "slot") == slot and str(_member(meal, "recipe_id")) == recipe_id:
+                return {
+                    "title": _member(meal, "title", f"Recipe {recipe_id}"),
+                    "nutrients": dict(_member(meal, "nutrients", {}) or {}),
+                    "ingredients": list(_member(meal, "ingredients", ()) or ()),
+                    "instructions": _member(meal, "instructions"),
+                }
+    return None
 
 
 def _previous_meals(user_context: dict | None) -> dict[tuple[int, str], str]:
@@ -264,9 +284,28 @@ async def _stream_chat(payload: ChatRequest, request: Request):
         plan_service, calculator = _resolve_services(request)
         workflow = composition.create_workflow(plan_service)
 
+        # --- ADD LANGFUSE CALLBACK HERE ---
+        config = {}
+        if os.getenv("LANGFUSE_TRACING_ENABLED", "false").lower() == "true":
+            try:
+                from langfuse import Langfuse
+                from langfuse.langchain import CallbackHandler
+
+                # v3: the client is a singleton that holds credentials; the handler picks it up.
+                Langfuse(
+                    public_key=os.getenv("LANGFUSE_PUBLIC_KEY"),
+                    secret_key=os.getenv("LANGFUSE_SECRET_KEY"),
+                    host=os.getenv("LANGFUSE_HOST", "http://localhost:3031"),
+                )
+                config["callbacks"] = [CallbackHandler()]
+            except Exception as e:
+                logger.warning(f"Failed to init Langfuse LangGraph callback: {e}")
+        # ----------------------------------
+
         task = asyncio.create_task(asyncio.to_thread(
             workflow.invoke,
-            {"raw_message": payload.message, "user_context": payload.user_context}
+            {"raw_message": payload.message, "user_context": payload.user_context},
+            config=config,
         ))
 
         # 3. Heartbeat loop while the solver thinks
@@ -337,6 +376,19 @@ async def _stream_chat(payload: ChatRequest, request: Request):
                     c.model_copy(update={"selected_offer": None}) for c in recipe.constraints
                 ]
                 sanitized_recipe = recipe.model_copy(update={"constraints": sanitized_constraints})
+
+                # Enrich recipe explanation with meal content
+                meal_data = _find_meal(envelope.outcome.plan, key[0], key[1], recipe_id)
+                if meal_data is not None:
+                    sanitized_recipe = sanitized_recipe.model_copy(update={
+                        "meal": MealContent(
+                            title=meal_data["title"],
+                            nutrients={k: float(v) for k, v in
+                                       (meal_data["nutrients"] or {}).items() if v is not None},
+                            ingredients=meal_data["ingredients"],
+                            instructions=meal_data["instructions"],
+                        )
+                    })
 
                 yield serialize_event(PlanUpdatedEvent(
                     event="plan_updated",

@@ -13,6 +13,7 @@ from typing import Any
 
 from api.main import create_app as create_api_app
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.chat_router import router as chat_router
 
@@ -23,6 +24,13 @@ def create_app(
     calculator_service: Any | None = None,
 ) -> FastAPI:
     application = create_api_app()
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:3100", "http://127.0.0.1:3100"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     if plan_service is not None:
         application.state.plan_service = plan_service
     if calculator_service is not None:

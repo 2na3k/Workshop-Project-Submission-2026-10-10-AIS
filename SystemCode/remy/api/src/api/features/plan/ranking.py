@@ -92,5 +92,14 @@ def rank_candidates(recipes, request) -> list[Recipe]:
         r.score = score(r)
 
     return sorted(recipes, key=lambda r: (-r.score, r.recipe_id))[
-        : min(50 * request.meals_per_day, 300)
+        : pool_size(request)
     ]
+
+def pool_size(request) -> int:
+    """Bounded pool for the CP-SAT solver: min(50 * meals_per_day, 300)."""
+    return min(50 * request.meals_per_day, 300)
+#
+#
+# def rank_candidates(recipes, request) -> list[Recipe]:
+#     """Top-K of the nutrient ranking, the pool the solver sees."""
+#     return order_candidates(recipes, request)[: pool_size(request)]

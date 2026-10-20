@@ -16,10 +16,37 @@ _PROVIDER_DEFAULTS: dict[str, dict[str, Any]] = {
         "base_url": os.getenv("REMY_LLM_BASE_URL", "http://localhost:11434"),
         "keep_alive": "1h",
         "num_predict": 800,
-        "timeout": 10,  # HTTP timeout — fail fast if Ollama is down
-        "max_retries": 0,  # no retry backoff
+        "timeout": 10,
+        "max_retries": 0,
+    },
+    "google_genai": {
+        "timeout": 60,
+        "max_retries": 2,
     },
 }
+
+
+def _google_api_key() -> str | None:
+    """AI Studio key: GEMINI_API_KEY first, then LangChain's own GOOGLE_API_KEY."""
+    return os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or None
+
+
+def message_text(response: Any) -> str:
+    """Plain text of a chat response.
+
+    Gemini can return `content` as a list of parts (text plus thought
+    signatures) instead of a string, so join only the text parts.
+    """
+    content = getattr(response, "content", response)
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return "".join(
+            part if isinstance(part, str) else part.get("text", "")
+            for part in content
+            if isinstance(part, str) or (isinstance(part, dict) and part.get("type") == "text")
+        )
+    return str(content)
 
 
 class ChatLLM:
@@ -35,6 +62,12 @@ class ChatLLM:
 
         params: dict[str, Any] = {"temperature": 0}
         params.update(_PROVIDER_DEFAULTS.get(self.provider, {}))
+
+        if self.provider == "google_genai":
+            key = _google_api_key()
+            if key:
+                params["api_key"] = key
+
         params.update(kwargs)
         self._params = params
 
@@ -53,7 +86,19 @@ class ChatLLM:
         """Warn (never raise) if the provider looks unreachable. Returns True if OK."""
         if self.provider == "ollama":
             return self._check_ollama()
+        if self.provider == "google_genai":
+            return self._check_google()
         # Hosted providers have no cheap ping; failures are caught in invoke().
+        return True
+
+    def _check_google(self) -> bool:
+        key = self._params.get("api_key") or _google_api_key()
+        if not key:
+            logger.warning(
+                "No Google API key found. Set GEMINI_API_KEY (or GOOGLE_API_KEY) "
+                "in the environment or .env."
+            )
+            return False
         return True
 
     def _check_ollama(self) -> bool:
@@ -81,7 +126,12 @@ class ChatLLM:
 
     def invoke(self, prompt: str) -> Any:
         try:
-            return self._client.invoke(prompt)
+            response = self._client.invoke(prompt)
+            # Normalize: if the content is a list (Gemini), flatten it to a string
+            # so the JSON parser in workflows/nodes.py receives a string.
+            if isinstance(getattr(response, "content", None), list):
+                response.content = message_text(response)
+            return response
         except Exception as exc:
             logger.warning(
                 "LLM call failed (provider=%s, model=%s): %s: %s",
@@ -100,7 +150,7 @@ def main() -> None:
     print(f"[{llm.provider}:{llm.model}] > {prompt}")
 
     response = llm.invoke(prompt)
-    print(response.content)
+    print(message_text(response))
 
 
 if __name__ == "__main__":

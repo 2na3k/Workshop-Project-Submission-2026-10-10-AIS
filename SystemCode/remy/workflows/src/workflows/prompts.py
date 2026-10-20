@@ -41,19 +41,25 @@ EXTRACT_SYSTEM = (
     '  "meals_per_day": <int, default 3>,\n'
     '  "servings": <int, default 1>,\n'
     '  "nutrient_tolerance_pct": <int 0-25, default 0>,\n'
-    '  "nutrients": [{"code": "<calories|protein|carbs|fat|sodium>", "goal": <num>, "min": <num>, "max": <num>}],\n'
-    '  "allergies": [{"code": "<peanut|dairy|etc>", "severity": "mild|severe"}],\n'
-    '  "dietary": [{"code": "halal|vegetarian|vegan"}],\n'
+    '  "nutrients": [{'
+    '"code": "<calories|protein|carbs|fat|sodium>", '
+    '"unit": "<kcal|g|mg|ml>", '
+    '"goal": <num>, '
+    '"min": <num>, "max": <num>'
+    '},...],\n'
+    '  "allergies": [{"code": "<peanut|dairy|etc>", "severity": "mild|severe"},...],\n'
+    '  "dietary": [{"code": "halal|vegetarian|vegan"},...],\n'
     '  "cost_query": <bool>,\n'
     '  "unapplied": []\n'
     "}\n"
+    "If the user says '1 week', convert it to `horizon_days: 7`. If they say '2 weeks', use 14. Do not output words, only integers for horizon_days.\n"
     "If a field is not mentioned, omit it. First char '{', last char '}'."
     "\n\nExample:\n"
     f"User: {json.dumps(_EXAMPLE_USER)}\n"
     f"Output: {json.dumps(_EXAMPLE_JSON)}\n"
     "Note: calories has both a goal (2500) and a max (3000). 'Aim for' and "
     "'about' mean goal, never min. 'Never exceeding' means max. Protein has "
-    "only a goal, so min and max are left out completely.\n"
+    "only a goal, so min and max are left out completely."
     "\n\nCounter-examples (do NOT do these):\n"
     f'User: {json.dumps(_NEG_PROSE_USER)}\n'
     "WRONG: Here is a healthy dinner plan: grilled salmon with ...   "
