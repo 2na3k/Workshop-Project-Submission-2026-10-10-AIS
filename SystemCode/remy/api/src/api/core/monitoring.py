@@ -4,10 +4,18 @@ import logging
 import os
 from contextlib import ExitStack, contextmanager
 from functools import lru_cache
+from pathlib import Path
 from uuid import NAMESPACE_URL, uuid5
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
+
+SHARED_ENV_PATH = Path(__file__).resolve().parents[5] / ".env.nonprod"
+load_dotenv(SHARED_ENV_PATH)
+for _key, _val in list(os.environ.items()):
+    if _key.startswith("LANGFUSE_"):
+        os.environ[_key] = _val.strip().strip("'\"")
 
 @lru_cache(maxsize=1)
 def get_client():
@@ -58,7 +66,6 @@ def observation(name, **metadata):
 
 
 def enqueue_trace_scores(trace_id, metrics, *, source, comment, metadata=None):
-    """Attach numeric scores to a trace. Score ids are deterministic, so a re-push updates in place."""
     client = get_client()
     if client is None or trace_id is None:
         return False
@@ -66,15 +73,19 @@ def enqueue_trace_scores(trace_id, metrics, *, source, comment, metadata=None):
         for name, value in metrics.items():
             if value is not None:
                 client.create_score(
-                    trace_id=trace_id, name=name, value=float(value), data_type="NUMERIC",
+                    trace_id=trace_id,
+                    name=name,
+                    value=float(value),
+                    data_type="NUMERIC",
                     score_id=str(uuid5(NAMESPACE_URL, f"remy/{trace_id}/{source}/{name}")),
-                    comment=comment, metadata={"source": source, **(metadata or {})},
+                    comment=comment,
+                    metadata={"source": source, **(metadata or {})},
                 )
-        return True  # Queued, not confirmation of remote delivery.
-    except Exception:
-        logger.warning("Langfuse score enqueue failed")
+        client.flush()
+        return True
+    except Exception as e:
+        print(f"❌ Langfuse score push failed: {e}")
         return False
-
 
 def shutdown_monitoring():
     client = get_client()

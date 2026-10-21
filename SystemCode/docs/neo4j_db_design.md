@@ -9,7 +9,9 @@
 %%   :Recipe(recipe_id)
 %%   :FoodConcept(canonical_key)
 %%   :Food(food_key)
-%%   :FoodConcept(name) 
+%%   :FoodConcept(name)
+%%   :FULFILLS(approval_status, nutrition_rank, selection_priority)  -- speeds up BEST_FULFILLMENT rebuild
+%%   :BEST_FULFILLMENT(snapshot_id)                                  -- only if readers filter by snapshot
 
 %% ==========================================
 %% 1. RECIPE
@@ -140,26 +142,64 @@
         LIST potential_allergens "NOT NULL"
     }
 
+%% Derived edge. Rebuilt, not written by ingestion.
+%% Direction is OPPOSITE of FULFILLS: FoodConcept -> Food.
+    EDGE_BEST_FULFILLMENT["Best Fulfillment (Neo4j :BEST_FULFILLMENT)"] {
+        STRING snapshot_id "NOT NULL"
+        DATETIME selected_at "NOT NULL"
+        STRING food_key "NOT NULL"
+        
+        INTEGER nutrition_rank "NULLABLE"
+        INTEGER selection_priority "NULLABLE"
+        STRING vegetarian_status "NULLABLE"
+        STRING vegetarian_evidence_kind "NULLABLE"
+        LIST vegetarian_concerns "NULLABLE"
+        BOOLEAN may_non_vegetarian "NULLABLE"
+        STRING halal_status "NULLABLE"
+        STRING halal_evidence_kind "NULLABLE"
+        STRING halal_freshness_status "NULLABLE"
+        LIST allergen_evidence_kinds "NULLABLE"
+        LIST potential_allergens "NULLABLE"
+        BOOLEAN may_allergic "NULLABLE"
+        STRING allergen_screening_status "NULLABLE"
+    }
+
 %% ==========================================
 %% RELATIONSHIP FLOW (verified against deployed instance)
 %% ==========================================
 %% Stored direction:
 %%   (:Recipe)-[:REQUIRES]->(:FoodConcept)
 %%   (:Food)-[:FULFILLS]->(:FoodConcept)
+%%   (:FoodConcept)-[:BEST_FULFILLMENT]->(:Food)
+
 %% Verified empirically on recipe_id 87:
 %%   (r:Recipe {recipe_id: 87})-[:REQUIRES]->(fc:FoodConcept)
-%%     -[:FULFILLS]->(f:Food)   -> returns no rows
+%%     -[:FULFILLS]->(f:Food)        -> returns no rows
 %%   (r:Recipe {recipe_id: 87})-[:REQUIRES]->(fc:FoodConcept)
-%%     <-[:FULFILLS]-(f:Food)   -> returns the graph
-%% Do not "fix" this arrow back to FoodConcept -> Food.
+%%     <-[:FULFILLS]-(f:Food)        -> returns the graph
+
+%% Note: BEST_FULFILLMENT runs FoodConcept -> Food, which is the
+%% opposite of FULFILLS. This is intentional: it is a derived edge
+%% that points at the chosen Food, not a raw candidate edge.
+
+%% Do not "fix" the FULFILLS arrow back to FoodConcept -> Food.
+
     NODE_RECIPE ||--o{ EDGE_REQUIRES: "requires"
     EDGE_REQUIRES }o--|| NODE_FOOD_CONCEPT: "resolves_to"
     NODE_FOOD ||--o{ EDGE_FULFILLS: "fulfills"
     EDGE_FULFILLS }o--|| NODE_FOOD_CONCEPT: "resolves_to"
+    NODE_FOOD_CONCEPT ||--o{ EDGE_BEST_FULFILLMENT: "best_fulfillment"
+    EDGE_BEST_FULFILLMENT }o--|| NODE_FOOD: "selected_food"
+
 %% Note: :Component and HAS_COMPONENT intentionally excluded.
 %% Components only exist for 502/8966 foods (market_acquistion + foundation_food)
 %% and are not needed for dietary-app nutrient rollups.
 
+%% Note: BEST_FULFILLMENT is derived and currently unused by the plan
+%% endpoint. The plan endpoint re-runs the tie-break over FULFILLS at
+%% query time so the decision is transparent and testable within the
+%% request. BEST_FULFILLMENT is available as an optimization if the
+%% tie-break becomes a bottleneck.
 ```
 
 ## Sample Data
@@ -243,36 +283,106 @@ unit: "ounce"
 ### Sample Fulfills Edge
 
 ```
-<id>: 5:88c9edac-c0d2-495c-9955-fd5445d76ca7:1152924803141983565
-allergen_evidence_kinds: ["fdc_ingredient_text_proxy"]
+<id>: 5:c5235d30-7e71-40e9-9233-578743c63b3d:1155176602955660828
+allergen_evidence_kinds: []
 allergen_policy_version: "allergen_keyword_screen:v1"
-allergen_screening_status: "potential_contains"
+allergen_screening_status: "unknown"
 approval_status: "accepted"
-candidate_key: "candidate:6ad5ca7df5b426d091a192de8943a6a0a2c912b1f4adccb11eed1dc999ff928a"
-canonical_key: "parmigiano reggiano"
+candidate_key: "candidate:23f48e1121a579a2154cbebecfc66bc11c4d319a9d3048b9bde037d6d483ec58"
+canonical_key: "blackberry"
 confidence: 1.0
-cost_basis_compatible: FALSE
+cost_basis_compatible: TRUE
+currency: "SGD"
+currency_source: "fairprice_singapore_config:v1"
 factor_basis: "same_amount"
-food_key: "fdc:516627"
-freshness_status: "unknown"
+food_key: "fdc:372684"
+freshness_status: "fresh"
 halal_freshness_status: "unknown"
 halal_policy_version: "halal_screen_v1"
 halal_status: "unknown"
 kind: "direct"
-mapping_version: "recipe_food_to_dbt:v4"
+listing_key: "fairprice:provisional:da5b077522ba6d8010df486885b4b5ca"
+listing_name: "Driscoll's China Blackberries"
+mapping_version: "price_mapping:v1"
 match_method: "exact_normalized_description"
-may_allergic: TRUE
+may_allergic: FALSE
 may_non_vegetarian: FALSE
-nutrition_rank: 4
-potential_allergens: ["milk"]
-price_basis: "nutrition_only"
-price_match_status: "unmatched"
-price_status: "unavailable"
+nutrition_rank: 0
+package_mass_g: 125.0
+potential_allergens: []
+price_basis: "package_mass"
+price_match_status: "accepted"
+price_ref: "listing:fairprice:provisional:da5b077522ba6d8010df486885b4b5ca"
+price_status: "estimated"
 projection_owner: "remy_recipe_graph"
+reference_price_minor: 695
 replacement_factor: 1.0
-selection_priority: 2
-source: "fooddata_central"
+retailer: "fairprice"
+selection_priority: 1
+source: "fairprice"
+source_snapshot_id: "fairprice_aisle:sha256:635ac9b55c290e3e8f427ac49bd870325a5b045a21a74127a9e61d5d4da9d6b1"
 vegetarian_concerns: []
 vegetarian_policy_version: "vegetarian_screen:v1"
 vegetarian_status: "unknown"
+```
+
+### Sample Best_Fulfillment Edge
+
+```
+<id>: 5:c5235d30-7e71-40e9-9233-578743c63b3d:1159682401606254972
+allergen_evidence_kinds: []
+allergen_screening_status: "unknown"
+food_key: "fdc:365523"
+halal_freshness_status: "unknown"
+halal_status: "unknown"
+may_allergic: FALSE
+may_non_vegetarian: FALSE
+nutrition_rank: 0
+potential_allergens: []
+selected_at: 2026-09-24T14:43:21.443000000Z
+selection_priority: 1
+snapshot_id: "2026-09-24T14:43:21Z"
+vegetarian_concerns: []
+vegetarian_status: "unknown"
+```
+
+## Stats
+As of 2026-10-07, the deployed graph contains:
+
+### Halal
+```csv
+halal_status,n
+unknown,9540
+retailer_claim,143
+ingredient_screen_pass,17
+```
+
+### Vegetarian
+```csv
+vegetarian_status,n
+unknown,8459
+potential_not_vegetarian,1201
+ingredient_screen_pass,40
+```
+
+### Allergen
+```csv
+may_allergic,n
+FALSE,5408
+TRUE,4292
+
+allergen_screening_status,n
+unknown,5408
+potential_contains,4292
+```
+
+### Price
+```csv
+price_status,price_basis,price_match_status,freshness_status,retailer,cost_basis_compatible,n
+unavailable,nutrition_only,unmatched,unknown,null,FALSE,8463
+estimated,span_reference,estimated,fresh,fairprice,FALSE,604
+estimated,package_mass,accepted,fresh,fairprice,TRUE,473
+estimated,package_volume,accepted,fresh,fairprice,FALSE,71
+estimated,package_mass,accepted,fresh,fairprice,FALSE,63
+estimated,package_unresolved,accepted,fresh,fairprice,FALSE,26
 ```

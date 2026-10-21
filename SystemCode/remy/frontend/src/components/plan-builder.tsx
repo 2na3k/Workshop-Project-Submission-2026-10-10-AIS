@@ -16,7 +16,6 @@ import {
   type DietaryCode,
   type NutrientCode,
   type NutrientTarget,
-  type PlanProgress,
   type PlanRequest,
   type PlanResponse,
 } from "@/lib/plan-api";
@@ -57,9 +56,8 @@ export default function PlanBuilder() {
   const [dietary, setDietary] = useState<DietaryCode[]>([]);
   const [allergies, setAllergies] = useState<AllergenCode[]>([]);
   const [targets, setTargets] = useState<TargetRow[]>([]);
+  const [tolerance, setTolerance] = useState("3");
   const [pending, setPending] = useState(false);
-  const [progress, setProgress] = useState<PlanProgress | null>(null);
-  const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<{ response: PlanResponse; servings: number } | null>(null);
   const nextId = useRef(0);
@@ -114,6 +112,7 @@ export default function PlanBuilder() {
       horizon_days: Number(days),
       meals_per_day: Number(meals),
       servings: Number(servings),
+      nutrient_tolerance_pct: Number(tolerance),
       ...(allergies.length ? { allergies: allergies.map((code) => ({ code })) } : {}),
       ...(dietary.length ? { dietary: dietary.map((code) => ({ code })) } : {}),
       ...(targets.length ? { nutrients: targets.map(toTarget) } : {}),
@@ -121,14 +120,9 @@ export default function PlanBuilder() {
 
     setError(null);
     setPlan(null);
-    setProgress(null);
-    setText("");
     setPending(true);
     try {
-      const response = await generatePlan(request, {
-        onProgress: setProgress,
-        onText: (chunk) => setText((current) => current + chunk),
-      });
+      const response = await generatePlan(request);
       setPlan({ response, servings: request.servings });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not build a plan.");
@@ -264,6 +258,31 @@ export default function PlanBuilder() {
             </button>
           </fieldset>
 
+          <fieldset className={fieldsetClass}>
+            <legend className="float-left w-full text-sm font-bold">Tolerance</legend>
+            <p className="clear-both text-sm text-muted">
+              How strictly should the planner stick to your nutrient targets?
+            </p>
+            <div className="mt-4 flex items-center gap-4">
+              <input
+                  id="plan-tolerance"
+                  type="range"
+                  min="0"
+                  max="25"
+                  step="1"
+                  value={tolerance}
+                  onChange={(event) => setTolerance(event.target.value)}
+                  className="w-full accent-accent"
+              />
+              <span className="w-12 text-right text-sm font-bold tabular-nums">
+                {tolerance}%
+              </span>
+            </div>
+            <p className="mt-2 text-xs text-muted">
+              0% is strict. 25% lets the planner loosen bounds (e.g., ±25%) to find a plan.
+            </p>
+          </fieldset>
+
           <FormError message={error} />
 
           <button
@@ -275,20 +294,8 @@ export default function PlanBuilder() {
         </fieldset>
       </form>
 
-      {pending && (
-        <p role="status" className="mt-4 text-sm text-muted">
-          {progress ? `${progress.message}… (step ${progress.step} of ${progress.total})` : "Starting…"}
-        </p>
-      )}
-
-      {pending && text && (
-        <p aria-live="polite" className="mt-4 whitespace-pre-line rounded-2xl border border-subtle bg-surface p-4 text-sm leading-relaxed">
-          {text.trim()}
-        </p>
-      )}
-
       <div ref={resultRef} className="scroll-mt-6">
-        {plan && <PlanView plan={plan.response} servings={plan.servings} overview={text} />}
+        {plan && <PlanView plan={plan.response} servings={plan.servings} />}
       </div>
     </>
   );

@@ -13,16 +13,19 @@ def scale_nutrients(profile: NutrientProfile, grams: float) -> NutrientProfile:
 
 def sum_nutrients(items: list[NutrientProfile]) -> NutrientProfile:
     return NutrientProfile(**{
-        key: (sum(v for v in (getattr(item, key) for item in items) if v is not None)
-              if any(getattr(item, key) is not None for item in items) else None)
+        key: (
+            sum(v for v in (getattr(item, key) for item in items) if v is not None)
+            if any(getattr(item, key) is not None for item in items)
+            else None
+        )
         for key in NUTRIENT_FIELDS
     })
 
 
 def per_serving(profile: NutrientProfile, servings: int) -> NutrientProfile:
     return NutrientProfile(**{
-        key: (value / servings if value is not None else None)
-        for key, value in profile.__dict__.items()
+        key: (round((value / servings), 2) if value is not None else None)
+        for key, value in asdict(profile).items()
     })
 
 
@@ -42,20 +45,24 @@ def calculate_portion_nutrients(*, nutrition_per_100g: Nutrition | None,
             return None
     factor = grams / (100.0 * max(servings, 1))
 
-    def scale(value: float | None) -> float | None:
-        return round(value * factor, 4) if value is not None else None
-
-    return {key: scale(value) for key, value in nutrition_per_100g.items()
-            if value is not None}
+    out: Nutrition = {}
+    for key in NUTRIENT_FIELDS:
+        value = nutrition_per_100g.get(key)
+        if value is not None:
+            out[key] = round(value * factor, 4)
+    return out
 
 
 def sum_nutrition(servings: list[Nutrition]) -> Nutrition:
-    keys = ("calories", "protein_g", "fat_g", "saturated_fat_g", "carbs_g",
-            "fiber_g", "sugar_g", "sodium_mg", "cholesterol_mg")
-    result: Nutrition = {key: None for key in keys}
-    for serving in servings:
-        for key in keys:
+    result: Nutrition = {}
+    for key in NUTRIENT_FIELDS:
+        total: float | None = 0.0
+        missing = False
+        for serving in servings:
             value = serving.get(key)
-            if value is not None:
-                result[key] = value if result[key] is None else round(result[key] + value, 4)
+            if value is None:
+                missing = True
+                break
+            total += value
+        result[key] = None if missing else total
     return result

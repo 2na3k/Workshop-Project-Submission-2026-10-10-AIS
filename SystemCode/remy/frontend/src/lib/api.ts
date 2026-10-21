@@ -91,7 +91,7 @@ async function request<T>(
 export const signUp = (credentials: Credentials) =>
   request<SessionResponse>("POST", "/auth/signup", credentials);
 
-export const signIn = (credentials: Credentials) =>
+export const  signIn = (credentials: Credentials) =>
   request<SessionResponse>("POST", "/auth/signin", credentials);
 
 /** The demo account seeded by backend/db.sql. The password is in the bundle

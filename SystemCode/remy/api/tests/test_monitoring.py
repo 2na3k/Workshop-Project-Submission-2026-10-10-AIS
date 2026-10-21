@@ -11,8 +11,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from api.core import monitoring
-from api.features.plan.evaluation import evaluation_db
-from api.features.plan.metrics import ranking_metrics
+from api.features.plan.eval.metrics import ranking_metrics
 from api.features.plan.models import Ingredient, Recipe
 from api.features.plan.dependencies import get_plan_service
 from api.features.plan.schemas import PlanRequest

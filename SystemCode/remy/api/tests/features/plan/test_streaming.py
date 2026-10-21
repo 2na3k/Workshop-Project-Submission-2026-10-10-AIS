@@ -10,7 +10,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from api.core.exceptions import AppError
 from api.features.plan.dependencies import get_plan_service
 from api.features.plan.exceptions import PlanInfeasible
-from api.features.plan.graph import build_plan_graph
+from api.features.plan.graph.graph import build_plan_graph
 from api.features.plan.models import Recipe
 from api.features.plan.service import PlanService
 from api.features.plan.schemas import DayResponse, MealResponse, PlanResponse

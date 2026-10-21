@@ -31,18 +31,23 @@ scripts in this guide already do that.
 For local development, `.env.nonprod` needs:
 
 ```dotenv
-# Neo4j: the local container (make up / docker compose --profile neo4j)
+# Neo4j: the local container
 NEO4J_URI=bolt://localhost:7687
 NEO4J_USERNAME=neo4j
 NEO4J_PASSWORD=<choose one>
 NEO4J_DATABASE=neo4j
-# The API container reaches the host's Neo4j through this
-NEO4J_DOCKER_URI=bolt://host.docker.internal:7687
+# The API container reaches the Neo4j container via this Docker network name
+NEO4J_DOCKER_URI=bolt://neo4j:7687
 
 # Sign-in and database
 REMY_JWT_SECRET=<openssl rand -base64 48>
 REMY_POSTGRES_PASSWORD=<openssl rand -hex 24>
 POSTGRES_PASSWORD=<same value as REMY_POSTGRES_PASSWORD>
+
+# LLM (e.g., Gemini)
+REMY_LLM_PROVIDER=google_genai
+REMY_LLM_MODEL=gemini-3.5-flash
+GEMINI_API_KEY=<your_key>
 
 # Langfuse and evaluation (filled by init_langfuse.py)
 LANGFUSE_PORT=3031
@@ -68,7 +73,7 @@ Production uses Aura. Its `.env.prod` has the Aura `NEO4J_*` values and no
 | `neo4j`          | Local Neo4j (profile `neo4j` only)  | http://localhost:7474            |
 
 `api` waits for the Langfuse services, so starting the API starts all of them.
-`neo4j` is off by default: the API uses whatever `NEO4J_URI` points at.
+`neo4j` is started via the profile when running `nonprod`.
 
 ## Before you start
 
@@ -78,42 +83,25 @@ Production uses Aura. Its `.env.prod` has the Aura `NEO4J_*` values and no
 3. The ports 8010, 8000, 3100 and 3031 are free. Otherwise see
    [Change the ports](#change-the-ports).
 
-## Start it: two commands
+## Start it: one command
 
 ```bash
-make prepare-data   # once, or after the seed data changes: builds the graph
-make up             # starts the whole stack in Docker and waits until healthy
+./remy/start-all.sh
 ```
 
-`make prepare-data` installs the Python dependencies, checks that the seed files
-are present, rebuilds the dbt models (PASS=104), starts the local Neo4j
-container, loads the recipe graph into it, and rebuilds the `:BEST_FULFILLMENT`
-edges the planner needs. It only runs for `nonprod`, because it replaces the
-graph. It deletes the generated `remy/data-preparation/target/nonprod*` files
-and rebuilds them from the seeds.
+This script checks for a pre-built `neo4j.dump` file. If it's your first time running the stack, it will automatically load the 940MB recipe graph into the Neo4j container so you don't have to run the 10-minute data pipeline.
 
-`make up` creates the Langfuse keys if they are missing, starts every service
-(for `nonprod` also the local Neo4j), and prints the URLs when they are healthy.
-Use `DBT_TARGET=prod make up` for production (Aura, no local Neo4j).
+It then starts every service (including local Neo4j and Langfuse), waits until they are healthy, opens the browser, and prints the URLs.
 
-Both commands read `.env.nonprod`. The raw Compose commands are still there if
-you need them: `docker compose --env-file .env.nonprod up -d --wait`.
-
-The script alternative, `./remy/start-all.sh`, does the same start with a browser
-pop-up and a live log stream (Ctrl+C stops and removes the containers).
+If you prefer raw Compose commands:
+```bash
+docker compose --env-file .env.nonprod --profile neo4j up -d --build --wait
+```
 
 ## Check that it works
 
 Open http://localhost:3100, sign in with the demo account (`demo` /
 `remy-demo-account`, or **Try the demo**), and build a plan.
-
-Or run the project's end-to-end test (signup, preferences, a streamed plan, and
-the six Langfuse trace stages):
-
-```bash
-cd remy/frontend
-E2E_API_URL=http://localhost:8000 E2E_FRONTEND_URL=http://localhost:3100 npm run test:e2e
-```
 
 From the terminal:
 
@@ -131,7 +119,7 @@ curl http://localhost:8000/health    # Remy API
 | Restart one service               | `docker compose --env-file .env.nonprod restart api`                 |
 | Rebuild one service after changes | `docker compose --env-file .env.nonprod up -d --build api`           |
 | Stop, keep data                   | `docker compose --env-file .env.nonprod down`                        |
-| Stop and delete all data          | `docker compose --env-file .env.nonprod down -v`                     |
+| Stop and delete all data          | `docker compose --env-file .env.nonprod down -v --profile neo4j`     |
 
 Containers run the code from their images, so there is no hot reload. After a
 change, rebuild the service with `up -d --build <service>`.
@@ -161,10 +149,15 @@ need `down -v` (this deletes all accounts).
 `POSTGRES_PASSWORD` no longer matches the password the volume was created
 with. Put the old value back, or delete the volume with `down -v`.
 
-**`api` is unhealthy, or plans and the calculator fail.** Check the
-`NEO4J_*` values and `NEO4J_DOCKER_URI`, then `docker compose ... logs api`.
-If plans say "No recipes with complete nutrition data", the
-`rebuild_best_fulfillment.py` step has not been run (see above).
+**`api` is unhealthy, or plans fail with "No recipes with complete nutrition data".**
+The Neo4j dump failed to load. Check the logs of the `start-all.sh` script for the `neo4j-admin database load` error. You may need to delete the Neo4j volume and restart:
+```bash
+docker volume rm systemcode_remy_neo4j_data
+./remy/start-all.sh
+```
+
+**Neo4j exits with "Invalid memory configuration".**
+Your Docker Desktop doesn't have enough RAM. Open Docker Desktop Settings -> Resources and allocate at least 8GB.
 
 **Langfuse containers fail to pull.** The MinIO image is no longer pulled; the
 S3 service is SeaweedFS, which needs no login.
@@ -200,13 +193,11 @@ was resumed in a second process, which made no Neo4j fetch and returned the plan
   refuses to start. A failed Jev call fails the plan; it does not fall back to the rule ranking.
 - The snapshot records which ranker ran (`ranking_version`).
 
-Eval task: grade the human-graded plans with the Jev judge and report agreement:
+Eval task: grade the generated plans with the Jev judge and push the scores to Langfuse:
 
 ```bash
 make eval-jev   # needs JEV_API_KEY; writes target/eval/jev_report.json
 ```
+*(The `Makefile` uses the `judge_eval` script inside the container and copies the report out).*
 
-It reports agreement with the human grades (exact, within-one, quadratic kappa,
-Spearman, relevance precision and recall), and nDCG@3, Precision@3 and pairwise
-accuracy for the judge's ordering and the rule ordering. It needs at least 30
-human-graded plans (`--min-evaluations`). Judge results are cached, so reruns are cheap.
+It reports nDCG@3, Precision@3 and pairwise accuracy for the ranked pool, as well as the mean grade and repeat rate of the final generated plan. Judge results are cached in SQLite, so reruns are cheap.

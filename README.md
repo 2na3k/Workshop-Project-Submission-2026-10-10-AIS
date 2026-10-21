@@ -14,7 +14,7 @@ A typical user request may combine a carbohydrate range, an excluded allergen, a
 |:--------------------|:---------------:| :-----|:----------------------|
 | Le Chi Thanh        | A0352811L | Data preparation, modelling and system architecturing | thanhlc@u.nus.edu     |
 | Vuong Quang Viet Tung  | A0357416Y |Data preparation, front-end application | viettungvuong@u.nus.edu   |
-| Tran Dinh Gia Khanh | A0359890J | Workflow for the application (LangGraph), front end application | khanh.dg.tran@u.nus.edu |
+| Tran Dinh Gia Khanh | A0359890J | Workflow for the application (LangGraph), back end application | khanh.dg.tran@u.nus.edu |
 ---
 
 ## VIDEO OF SYSTEM MODELLING & USE CASE DEMO
@@ -33,7 +33,7 @@ the Remy API and the web app.
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/), open and running.
   On Windows, run the commands below in WSL.
 - Git.
-- The connection details for the Neo4j recipe database (ask the team).
+- A **Google Gemini API Key** (Free tier works) for the conversational AI.
 
 **1. Get the code**
 
@@ -49,25 +49,24 @@ cp .env.example .env.nonprod
 uv run --package remy-api python scripts/init_langfuse.py --path .env.nonprod
 ```
 
-Then fill in `NEO4J_*` (and `NEO4J_DOCKER_URI=bolt://host.docker.internal:7687` for a
-local Neo4j) and `REMY_JWT_SECRET` (`openssl rand -base64 48`). The
-`init_langfuse.py` step generates the Langfuse and database secrets. The file is
-git-ignored. `.env.prod` has the same keys for production. Full list:
+Then open `.env.nonprod` and fill in:
+- `GEMINI_API_KEY` (your Google AI Studio key)
+- `REMY_JWT_SECRET` (`openssl rand -base64 48`)
+
+The `init_langfuse.py` step generates the Langfuse, Neo4j, and database secrets automatically. The file is git-ignored. Full list:
 [SystemCode/docs/docker_compose.md](SystemCode/docs/docker_compose.md).
 
-**3. Build and start with Docker Compose**
+**3. Start the App**
 
-Run these from `SystemCode/`:
+Run this from `SystemCode/`:
 
 ```bash
-docker compose --env-file .env.nonprod build
-docker compose --env-file .env.nonprod up -d --wait   # start everything and wait until healthy
+./remy/start-all.sh
 ```
 
-`--wait` returns once every service passes its health check. Check them with
-`docker compose --env-file .env.nonprod ps`; each should show `(healthy)`.
+*Note: On the very first run, the script will detect that the Neo4j database is empty and automatically load a pre-built 940MB recipe snapshot. This takes about 15 seconds. You do not need to run the data pipeline manually.*
 
-Then open the web app:
+Once the terminal says "Remy is running", open the web app:
 
 | What                 | Address                    |
 |:---------------------|:---------------------------|
@@ -80,9 +79,6 @@ Then open the web app:
 docker compose --env-file .env.nonprod logs -f   # follow the logs of all services
 docker compose --env-file .env.nonprod down      # stop Remy; accounts are kept for the next start
 ```
-
-Shortcut: `./remy/start-all.sh` does the build and start, opens the browser when
-everything is ready, and shows the logs. Press Ctrl+C to stop it.
 
 The demo account is `demo` / `remy-demo-account`, or click **Try the demo**.
 
@@ -101,11 +97,12 @@ nutrition of an ingredient.
 **If something goes wrong**
 
 - *A port is already in use*: close whatever uses it, or pick other ports, for example
-  `FRONTEND_PORT=3101 docker compose --env-file .env.nonprod up -d --wait`.
-- *Plans or the calculator show an error*: check the `NEO4J_*` values in `.env.nonprod`,
-  then read `docker compose --env-file .env.nonprod logs api`. If plans say
-  "No recipes with complete nutrition data", run the fulfillment rebuild in the
-  guide above.
+  `FRONTEND_PORT=3101 ./remy/start-all.sh`.
+- *Plans or the calculator show an error*: check the logs with
+  `docker compose --env-file .env.nonprod logs api`. If plans say
+  "No recipes with complete nutrition data", the Neo4j snapshot failed to load. Run
+  `docker volume rm systemcode_remy_neo4j_data` and restart the script.
+- *Neo4j exits with "Invalid memory configuration"*: Allocate more RAM to Docker Desktop (Settings -> Resources).
 - *Docker is not running*: open Docker Desktop and run the command again.
 
 More detail, including everyday commands, settings and troubleshooting:

@@ -6,15 +6,12 @@ import LikeButtons from "@/components/like-buttons";
 import MealDialog from "@/components/meal-dialog";
 import { MealCard } from "@/components/plan-view";
 import { loadPreferences } from "@/lib/api";
-import { generatePlan, type PlanMeal } from "@/lib/plan-api";
+import { streamChat } from "@/lib/chat-api";
+import type { PlanMeal } from "@/lib/plan-api";
 import {
   NO_CONSTRAINTS,
   fromPreferences,
-  ideaRequest,
-  mergeConstraints,
-  readPrompt,
   replyFor,
-  uniqueIdeas,
   type Constraints,
 } from "@/lib/prompt-ideas";
 import { useRatings } from "@/lib/use-ratings";
@@ -41,10 +38,15 @@ export default function PromptConsole() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [pending, setPending] = useState(false);
   const [preferences, setPreferences] = useState<Constraints>(NO_CONSTRAINTS);
-  const [constraints, setConstraints] = useState<Constraints | null>(null);
+  // const [constraints, setConstraints] = useState<Constraints | null>(null);
   const [open, setOpen] = useState<{ meal: PlanMeal; label: string } | null>(null);
   const saved = useSavedMeals();
   const ratings = useRatings();
+  const topRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (messages.length > 0) topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [messages.length]);
 
   const likeButtons = (meal: PlanMeal) => (
     <LikeButtons
@@ -76,34 +78,82 @@ export default function PromptConsole() {
     );
   }
 
+  function cleanBubbleText(text: string): string {
+    return text
+        .replace(/\*\*(.*?)\*\*/g, "$1")
+        .replace(/^###+\s*/gm, "")
+        .replace(/^-\s+/gm, "• ")
+        .trim();
+  }
+
   async function send(text: string) {
     const value = text.trim();
     if (!value || pending) return;
 
-    const reading = readPrompt(value);
-    const next = mergeConstraints(reading.reset || !constraints ? preferences : constraints, reading.found);
     const askId = nextId.current++;
     const replyId = nextId.current++;
 
-    setConstraints(next);
     setMessages((current) => [
-      ...current,
       { id: askId, from: "you", text: value },
       { id: replyId, from: "remy", text: "Looking for ideas…", pending: true },
+      ...current,
     ]);
     setDraft("");
     setPending(true);
 
     try {
-      const plan = await generatePlan(ideaRequest(next), {
-        onProgress: (progress) => updateReply(replyId, { text: `${progress.message}…` }),
-      });
-      const ideas = uniqueIdeas(plan);
-      const unverified = Object.values(plan.validation_summary).includes("unverified");
-      updateReply(replyId, {
-        ...replyFor(ideas, next, reading), ideas, pending: false, unverified,
-        ...(unverified ? { text: "Here are screened ideas; your allergy/dietary restrictions are unverified." } : {}),
-      });
+      const sessionId = `chat-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      const ideas: PlanMeal[] = [];
+      let accumulated = "";
+      let sawError: string | null = null;
+
+      for await (const ev of streamChat(sessionId, value)) {
+        if (ev.type === "metadata") {
+          updateReply(replyId, { text: "Understanding your request…" });
+        } else if (ev.type === "token") {
+          accumulated += ev.text;
+          const dayIdx = accumulated.indexOf("### Day");
+          const intro = dayIdx >= 0 ? accumulated.slice(0, dayIdx).trim() : accumulated.trim();
+          if (intro) {
+            updateReply(replyId, { text: cleanBubbleText(intro) });
+          }
+        } else if (ev.type === "plan_updated") {
+          const recipe = ev.data.explanation.recipe;
+          if (recipe.outcome === "selected" && recipe.meal) {
+            ideas.push({
+              slot: ev.data.delta.slot,
+              recipe_id: ev.data.delta.recipe_id,
+              title: recipe.meal.title,
+              nutrients: recipe.meal.nutrients,
+              ingredients: recipe.meal.ingredients,
+              instructions: recipe.meal.instructions,
+            });
+            updateReply(replyId, { ideas: [...ideas] });
+          }
+        } else if (ev.type === "error") {
+          sawError = ev.message;
+          break;
+        } else if (ev.type === "done") {
+          break;
+        }
+      }
+
+      if (sawError) throw new Error(sawError);
+
+      if (ideas.length === 0) {
+        updateReply(replyId, {
+          ideas: undefined,
+          pending: false,
+          text: cleanBubbleText(accumulated) || "I couldn't find matching ideas.",
+          failed: true,
+        });
+      } else {
+        updateReply(replyId, {
+          ideas,
+          pending: false,
+          unverified: false,
+        });
+      }
     } catch (caught) {
       updateReply(replyId, {
         text: caught instanceof Error ? caught.message : "I couldn't fetch ideas just now. Please try again.",
@@ -181,6 +231,7 @@ export default function PromptConsole() {
         </div>
       </form>
 
+      <div ref={topRef} />
       {messages.length > 0 && (
         <>
           <div className="mt-8 space-y-3" aria-live="polite">
@@ -195,7 +246,7 @@ export default function PromptConsole() {
               ) : (
                 <div key={message.id} aria-busy={message.pending}>
                   <p
-                    className={`flex w-fit max-w-[85%] items-center gap-2.5 rounded-2xl border bg-surface px-4 py-2.5 text-sm ${
+                      className={`flex w-fit max-w-[85%] items-start gap-2.5 whitespace-pre-line rounded-2xl border bg-surface px-4 py-2.5 text-sm ${
                       message.failed ? "border-accent/40" : "border-subtle"
                     } ${message.pending ? "animate-pulse" : ""}`}
                   >

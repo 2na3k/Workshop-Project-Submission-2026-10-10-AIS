@@ -2,6 +2,8 @@ version: 2
 
 models:
   - name: node_recipe
+    meta:
+      reproducibility_content_columns: [recipe_id, title, instructions, image_name, source, source_license]
     columns:
       - name: recipe_id
         tests: [not_null, unique]
@@ -9,6 +11,8 @@ models:
         tests: [not_null]
 
   - name: node_food_concept
+    meta:
+      reproducibility_content_columns: [canonical_key, name, status, candidate_count, price_reference_count, cost_ready_count, normalization_version]
     columns:
       - name: canonical_key
         tests: [not_null, unique]
@@ -21,6 +25,8 @@ models:
         tests: [not_null]
 
   - name: node_food
+    meta:
+      reproducibility_content_columns: [fdc_id, food_key, description, data_type, brand_name, brand_owner, ingredients, serving_size, serving_size_unit, household_serving_fulltext, package_weight, energy_kcal, protein_g, fat_g, saturated_fat_g, carbohydrate_g, fiber_g, sugars_g, sodium_mg, cholesterol_mg, nutrition_source, nutrition_basis, nutrition_version, nutrition_status, source]
     columns:
       - name: food_key
         tests: [not_null, unique]
@@ -42,11 +48,15 @@ models:
         tests: [not_null]
 
   - name: node_component
+    meta:
+      reproducibility_content_columns: [component_id, name, source]
     columns:
       - name: component_id
         tests: [not_null, unique]
 
   - name: edge_requires
+    meta:
+      reproducibility_content_columns: [recipe_id, occurrence_id, position, raw_text, cleaned_text, normalized_name, quantity, unit, quantity_status, required_state, choice_group, optional, preparation, normalization_version, mapping_confidence, source]
     columns:
       - name: occurrence_id
         tests: [not_null, unique]
@@ -58,8 +68,22 @@ models:
         tests:
           - not_null
           - relationships: {to: ref('node_food_concept'), field: canonical_key}
+      # Canonical requirement-link provenance (R-4). The accepted source snapshot
+      # id, observation timestamp and freshness basis are the manifest's facts and
+      # are applied by the serving loader, so they are not mart columns; the
+      # evidence the mart itself produces is declared here and must be present.
+      - name: normalization_version
+        tests:
+          - not_null
+          - accepted_values: {values: ['recipe-food-v4']}
+      - name: mapping_confidence
+        tests: [not_null]
+      - name: source
+        tests: [not_null]
 
   - name: edge_fulfills
+    meta:
+      reproducibility_content_columns: [candidate_key, food_key, canonical_key, kind, approval_status, mapping_confidence, mapping_version, price_ref, price_match_status, price_basis, reference_price_minor, currency, currency_source, package_mass_g, package_volume_ml, package_count, cost_basis_compatible, retailer, listing_name, listing_key, source_snapshot_id, price_status, observed_at, freshness_status, halal_status, halal_evidence_kind, halal_evidence_ref, halal_policy_version, halal_valid_until, halal_freshness_status, selection_priority, nutrition_rank, may_allergic, potential_allergens, allergen_evidence_kinds, allergen_screening_status, allergen_policy_version, may_non_vegetarian, vegetarian_concerns, vegetarian_status, vegetarian_evidence_kind, vegetarian_policy_version, source]
     columns:
       - name: candidate_key
         tests: [not_null, unique]
@@ -77,24 +101,20 @@ models:
       - name: approval_status
         tests:
           - accepted_values: {values: ['accepted']}
-      - name: price_match_status
-        tests:
-          - accepted_values: {values: ['unmatched', 'estimated', 'accepted']}
-      - name: halal_status
-        tests:
-          - accepted_values: {values: ['certified', 'retailer_claim', 'ingredient_screen_pass', 'not_halal', 'conflict', 'unknown']}
-      - name: may_allergic
+      # Canonical fulfillment-link provenance (R-4): one spelling, the legacy
+      # ``confidence`` alias is not carried as a second name for this fact.
+      - name: mapping_confidence
         tests: [not_null]
-      - name: allergen_screening_status
-        tests:
-          - accepted_values: {values: ['potential_contains', 'unknown']}
-      - name: may_non_vegetarian
+      - name: mapping_version
         tests: [not_null]
-      - name: vegetarian_status
-        tests:
-          - accepted_values: {values: ['retailer_claim', 'ingredient_screen_pass', 'potential_not_vegetarian', 'unknown']}
+      - name: freshness_status
+        tests: [not_null]
+      - name: source
+        tests: [not_null]
 
   - name: edge_has_component
+    meta:
+      reproducibility_content_columns: [id, food_key, component_id, pct_weight, is_refuse, gram_weight, data_points, min_year_acquired, source]
     columns:
       - name: id
         tests: [not_null, unique]
@@ -108,6 +128,8 @@ models:
           - relationships: {to: ref('node_component'), field: component_id}
 
   - name: graph_quality_manifest
+    meta:
+      reproducibility_content_columns: [entity_type, entity, row_count, allocation, within_allocation, strict_planning_ready, capability_reason]
     columns:
       - name: entity
         tests: [not_null, unique]
@@ -116,3 +138,36 @@ models:
       - name: within_allocation
         tests:
           - accepted_values: {values: [true]}
+
+  - name: coverage_quality_report
+    description: >
+      Deterministic, build-associated completeness measures. This is quality
+      metadata for operators and CI, not a user constraint decision.
+    meta:
+      reproducibility_content_columns: [dimension, covered_count, denominator, percentage, population_status, source_snapshot_id, mart_content_checksum, build_id]
+    columns:
+      - name: dimension
+        tests:
+          - not_null
+          - unique
+          - accepted_values:
+              values:
+                - nutrition_coverage
+                - price_availability
+                - package_unit_conversion_coverage
+                - dietary_evidence_coverage
+                - whole_recipe_completeness
+      - name: covered_count
+        tests: [not_null]
+      - name: denominator
+        tests: [not_null]
+      - name: percentage
+        description: Null only when population_status is no_population.
+      - name: population_status
+        tests:
+          - accepted_values: {values: [computed, no_population]}
+      - name: source_snapshot_id
+      - name: mart_content_checksum
+      - name: build_id
+      - name: observed_at
+        tests: [not_null]

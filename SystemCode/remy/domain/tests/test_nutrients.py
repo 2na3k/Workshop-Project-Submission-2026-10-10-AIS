@@ -1,3 +1,14 @@
+"""Pure-domain nutrient arithmetic.
+
+Only `test_workflow_arithmetic` needed repair: it used the pre-rename request
+code `carbs_g`, whereas the maintained vocabulary is canonical
+(`NUTRIENT_FIELDS`, e.g. `carbohydrate_g`).
+
+`domain.nutrients.sum_nutrients` keeps "sum the present values, null only when
+every contributor is null" semantics. The stricter R-9 rule (null when ANY
+contributor is missing) lives in the calculator's own
+`api.features.calculator.domain.nutrition.sum_nutrients`.
+"""
 from domain.nutrients import (calculate_portion_nutrients, per_serving,
                                scale_nutrients, sum_nutrients, sum_nutrition)
 from domain.types import NutrientProfile
@@ -14,6 +25,6 @@ def test_profile_arithmetic_preserves_none():
 
 def test_workflow_arithmetic():
     portion = calculate_portion_nutrients(
-        nutrition_per_100g={"carbs_g": 20}, quantity_g=200, unit="g", servings=2)
-    assert portion["carbs_g"] == 20
-    assert sum_nutrition([portion, {"carbs_g": 3}])["carbs_g"] == 23
+        nutrition_per_100g={"carbohydrate_g": 20}, quantity_g=200, unit="g", servings=2)
+    assert portion["carbohydrate_g"] == 20
+    assert sum_nutrition([portion, {"carbohydrate_g": 3}])["carbohydrate_g"] == 23

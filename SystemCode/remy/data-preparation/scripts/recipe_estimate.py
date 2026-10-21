@@ -29,7 +29,7 @@ with ranked as (
             partition by r.occurrence_id
             order by (e.price_basis = 'package_mass' and e.cost_basis_compatible) desc,
                      e.price_basis <> 'nutrition_only' desc,
-                     e.selection_priority, e.nutrition_rank, e.confidence desc, e.candidate_key
+                     e.selection_priority, e.nutrition_rank, e.mapping_confidence desc, e.candidate_key
         ) as candidate_rank
     from lake.main_mart.edge_requires r
     left join lake.main_mart.edge_fulfills e on e.canonical_key = r.normalized_name

@@ -13,10 +13,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 from api.core.jev import JevClient, JevConfigError, JevError, noul, require_jev_key
 from .exceptions import PlanError
-from .ranking import order_candidates, pool_size, rank_candidates
+from .ranking import pool_size, rank_candidates
 
 RANKER_MODES = ("rule", "jev")
-JEV_CONCURRENCY = 8
+JEV_CONCURRENCY = 2
 RULE_VERSION = "nutrient-deviation-v1"
 JEV_VERSION = "jev-good-fit-noul-v1"
 
@@ -82,8 +82,8 @@ def good_fit_probability(client: JevClient, recipe, request) -> float:
 
 def jev_rerank(recipes, request, client: JevClient) -> list:
     k = pool_size(request)
-    ordered = order_candidates(recipes, request)
-    pool = ordered[: 2 * k]
+    ranked = rank_candidates(recipes, request)
+    pool = ranked[: 2 * k]
     with ThreadPoolExecutor(max_workers=JEV_CONCURRENCY) as executor:
         probabilities = list(executor.map(lambda r: good_fit_probability(client, r, request), pool))
     position = {recipe.recipe_id: index for index, recipe in enumerate(pool)}

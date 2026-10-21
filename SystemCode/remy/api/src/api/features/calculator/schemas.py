@@ -2,12 +2,16 @@ import math
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, field_validator
 
+from domain import NutrientProfile
+
+MAX_REQUEST_INGREDIENTS = 100
+
 
 class IngredientRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    name: str = Field(min_length=1, max_length=200, description="Ingredient name to match to food facts.", examples=["Chicken Breast"])
-    quantity: PositiveFloat = Field(description="Finite quantity greater than zero.", examples=[300])
-    unit: Literal["g", "kg", "ml", "tbsp", "pc"] = Field(description="Grams, kilograms, millilitres, tablespoons, or pieces.")
+    name: str = Field(min_length=1, max_length=200)
+    quantity: PositiveFloat
+    unit: Literal["g", "kg", "ml", "tbsp", "pcs"]
 
     @field_validator("name")
     @classmethod
@@ -26,63 +30,68 @@ class IngredientRequest(BaseModel):
 
 
 class CostNutritionRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid", json_schema_extra={"examples": [{
-        "servings": 2,
-        "ingredients": [
-            {"name": "Chicken Breast", "quantity": 300, "unit": "g"},
-            {"name": "Rolled Oats", "quantity": 100, "unit": "g"},
-        ],
-    }]})
-    servings: int = Field(ge=1, le=1000, description="Number of target servings.")
-    ingredients: list[IngredientRequest] = Field(min_length=1, max_length=100, description="Ingredients to analyze, in the desired result order.")
+    model_config = ConfigDict(extra="forbid")
+    servings: int = Field(ge=1, le=1000)
+    budget: float | None = None
+    ingredients: list[IngredientRequest] = Field(
+        min_length=1, max_length=MAX_REQUEST_INGREDIENTS
+    )
 
 
 class Nutrients(BaseModel):
-    """Nutrient amounts; individual values are null when data is unavailable."""
+    """Public API response DTO. Field names are the API contract; do not
+    change them without a spec-level API revision."""
 
-    calories_kcal: float | None = Field(default=None, description="Energy in kilocalories.")
-    protein_g: float | None = Field(default=None, description="Protein in grams.")
-    carbs_g: float | None = Field(default=None, description="Carbohydrates in grams.")
-    fat_g: float | None = Field(default=None, description="Fat in grams.")
-    fiber_g: float | None = Field(default=None, description="Fiber in grams.")
-    sugar_g: float | None = Field(default=None, description="Sugar in grams.")
-    sodium_mg: float | None = Field(default=None, description="Sodium in milligrams.")
+    calories_kcal: float | None = None
+    protein_g: float | None = None
+    carbs_g: float | None = None
+    fat_g: float | None = None
+    fiber_g: float | None = None
+    sugar_g: float | None = None
+    sodium_mg: float | None = None
+    calcium_mg: float | None = None
+    iron_mg: float | None = None
 
-
-class MatchedPackage(BaseModel):
-    retailer: str | None = Field(default=None, description="Retailer identifier, such as fairprice.")
-    package_title: str | None = Field(default=None, description="Matched grocery product title.")
-    package_price_sgd: float | None = Field(default=None, description="Price of one package in SGD.")
-    package_amount_g: float | None = Field(default=None, description="Weight of one package in grams.")
-    package_count: int | None = Field(default=None, description="Whole packages needed for the requested amount.")
+    @classmethod
+    def from_profile(cls, profile: NutrientProfile) -> "Nutrients":
+        """Boundary translation: canonical internal names → API contract names."""
+        return cls(
+            calories_kcal=profile.energy_kcal,
+            protein_g=profile.protein_g,
+            carbs_g=profile.carbohydrate_g,
+            fat_g=profile.fat_g,
+            fiber_g=profile.fiber_g,
+            sugar_g=profile.sugars_g,
+            sodium_mg=profile.sodium_mg,
+        )
 
 
 class ItemWarning(BaseModel):
-    code: str = Field(description="Warning code: PARTIAL_NUTRITION_DATA, MISSING_PACKAGE_DATA, or ML_ASSUMED_GRAMS.")
-    message: str = Field(description="Human-readable explanation of the non-fatal warning.")
+    code: str
+    message: str
 
 
 class ItemizedCalculation(BaseModel):
-    ingredient: str = Field(description="Ingredient name from the request, with surrounding whitespace removed.")
-    canonical_name: str = Field(description="Standardized ingredient name matched in the database.")
-    fdc_id: str | None = Field(description="FoodData Central identifier, if available.")
-    consumed_amount_g: float | None = Field(description="Requested quantity converted to grams.")
-    consumed_cost_sgd: float | None = Field(description="Cost of the consumed portion in SGD; null if pricing is unavailable.")
-    retail_package_cost_sgd: float | None = Field(description="Cost of all whole packages needed in SGD; null if pricing is unavailable.")
-    matched_package: MatchedPackage | None = Field(description="Selected grocery package, or null when no usable package is found.")
-    nutrients: Nutrients = Field(description="Nutrition for the consumed amount of this ingredient.")
-    warnings: list[ItemWarning] = Field(default_factory=list, description="Non-fatal data or conversion warnings; may be empty.")
+    ingredient: str
+    canonical_key: str
+    listing_name: str | None = None
+    retailer: str | None = None
+    consumed_amount_g: float | None
+    consumed_cost_sgd: float | None
+    retail_package_cost_sgd: float | None
+    nutrients: Nutrients
+    warnings: list[ItemWarning] = Field(default_factory=list)
 
 
 class CalculationSummary(BaseModel):
-    total_consumed_cost_sgd: float | None = Field(description="Total consumed cost in SGD; null if any ingredient lacks pricing.")
-    total_retail_package_cost_sgd: float | None = Field(description="Total whole-package cost in SGD; null if any ingredient lacks pricing.")
-    nutrients: Nutrients = Field(description="Total nutrition for all ingredients.")
-    nutrients_per_serving: Nutrients = Field(description="Total nutrition divided by the requested servings.")
+    total_consumed_cost_sgd: float | None
+    total_retail_package_cost_sgd: float | None
+    nutrients: Nutrients
+    nutrients_per_serving: Nutrients
 
 
 class CostNutritionResponse(BaseModel):
-    status: Literal["success"] = Field(default="success", description="Always success for a completed calculation.")
-    servings: int = Field(description="Number of servings echoed from the request.")
-    summary: CalculationSummary = Field(description="Aggregated costs and nutrition for the whole recipe.")
-    itemized: list[ItemizedCalculation] = Field(description="Per-ingredient breakdown in request order.")
+    status: Literal["success"] = "success"
+    servings: int
+    summary: CalculationSummary
+    itemized: list[ItemizedCalculation]

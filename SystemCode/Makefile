@@ -14,7 +14,7 @@ export NEO4J_URI NEO4J_USERNAME NEO4J_PASSWORD NEO4J_DATABASE NEO4J_HTTP NEO4J_U
 
 .PHONY: help eval-jev prepare-data up install sync lock check build build-all up-prod up-all down logs langfuse langfuse-init \
         api crawler dbt dbt-all serve-neo4j serve-neo4j-replace fulfillment frontend-install clean _neo4j-creds \
-        _seeds-check _nonprod-only
+        _seeds-check _nonprod-only reproducible-manifest reproducibility-check reproducible-build coverage-report ci
 
 help:
 	@printf '%s\n' \
@@ -24,11 +24,12 @@ help:
 		'make fulfillment      Rebuild :BEST_FULFILLMENT edges in Neo4j (run after serve-neo4j)' \
 		'make install          Install all Python workspace dependencies' \
 		'make lock             Resolve and update uv.lock' \
-		'make check            Verify uv.lock is current' \
+		'make check            Verify uv.lock is current (runs CI)' \
 		'make api              Run the API locally with reload' \
 		'make crawler          Run the crawler module' \
 		'make dbt              Build dbt models except the Neo4j serving model' \
 		'make dbt-all          Build dbt models, then load them into Neo4j' \
+		'make coverage-report  Generate a coverage and quality report' \
 		'make serve-neo4j      Load built marts into Neo4j' \
 		'make serve-neo4j-replace  Replace the existing Neo4j recipe graph' \
 		'make build            Build the API image' \
@@ -48,7 +49,12 @@ sync:
 lock:
 	$(UV) lock
 
-check:
+check: reproducibility-check uv-check
+
+uv-check:
+	cd remy/data-preparation && uv run --package remy-data-preparation pytest -q tests
+	cd remy/data-preparation && uv run --package remy-data-preparation ruff check . --select F,E9
+	cd remy/data-preparation && uv run --package remy-data-preparation mypy . --ignore-missing-imports
 	$(UV) lock --check
 
 api:
@@ -59,7 +65,30 @@ crawler:
 
 dbt:
 	cd remy/data-preparation && mkdir -p target/$(DBT_TARGET)/staging target/$(DBT_TARGET)/ducklake/data && \
-		DBT_TARGET=$(DBT_TARGET) $(UV) run --package $(DBT_PACKAGE) dbt build --profiles-dir . --exclude tag:serving
+		DBT_TARGET=$(DBT_TARGET) $(UV) run --package $(DBT_PACKAGE) dbt build --profiles-dir . --exclude tag:serving --exclude coverage_quality_report && \
+		$(MAKE) reproducible-manifest DBT_TARGET=$(DBT_TARGET)
+
+reproducible-manifest:
+	cd remy/data-preparation && DBT_TARGET=$(DBT_TARGET) $(UV) run --package $(DBT_PACKAGE) \
+		python scripts/reproducibility_manifest.py \
+		--registry reproducibility/source_registry.json \
+		--database target/$(DBT_TARGET).duckdb \
+		--output target/$(DBT_TARGET)/source_snapshot_manifest.json
+
+coverage-report: dbt
+	cd remy/data-preparation && \
+	  REMY_SOURCE_SNAPSHOT_ID=$$($(UV) run --package $(DBT_PACKAGE) python -c "import json; print(json.load(open('target/$(DBT_TARGET)/source_snapshot_manifest.json'))['association']['source_snapshot_id'])") \
+	  REMY_MART_CONTENT_CHECKSUM=$$($(UV) run --package $(DBT_PACKAGE) python -c "import json; print(json.load(open('target/$(DBT_TARGET)/source_snapshot_manifest.json'))['association']['mart_content_checksum'])") \
+	  REMY_BUILD_ID=$$($(UV) run --package $(DBT_PACKAGE) python -c "import json; print(json.load(open('target/$(DBT_TARGET)/source_snapshot_manifest.json'))['association']['build_id'])") \
+	  DBT_TARGET=$(DBT_TARGET) $(UV) run --package $(DBT_PACKAGE) dbt run --profiles-dir . --select coverage_quality_report
+
+reproducibility-check:
+	cd remy/data-preparation && $(UV) run --package $(DBT_PACKAGE) \
+		python scripts/check_reproducibility.py \
+		--manifest target/$(DBT_TARGET)/source_snapshot_manifest.json \
+		--expected reproducibility/expected_checksums.json
+
+reproducible-build: dbt reproducibility-check coverage-report
 
 _neo4j-creds:
 	@test -n "$$NEO4J_PASSWORD" || { echo "Set NEO4J_PASSWORD or add it to .env.$(DBT_TARGET)"; exit 1; }
@@ -74,12 +103,9 @@ _seeds-check:
 	  test -f "$(SEEDS)/$$f" || { echo "Missing seed file: $(SEEDS)/$$f"; exit 1; }; \
 	done
 
-# prepare-data replaces the Neo4j graph, so it only runs against the local nonprod setup.
 _nonprod-only:
 	@test "$(DBT_TARGET)" = "nonprod" || { echo "prepare-data only runs with DBT_TARGET=nonprod (it replaces the graph)"; exit 1; }
 
-# One command for the whole data pipeline. Rebuilds the nonprod DuckDB and DuckLake
-# state from the seeds, so a previous partial run cannot leave broken files behind.
 prepare-data: _nonprod-only _neo4j-creds install _seeds-check
 	rm -rf remy/data-preparation/target/$(DBT_TARGET) remy/data-preparation/target/$(DBT_TARGET).duckdb
 	$(MAKE) dbt DBT_TARGET=$(DBT_TARGET)
@@ -88,10 +114,11 @@ prepare-data: _nonprod-only _neo4j-creds install _seeds-check
 	$(MAKE) fulfillment DBT_TARGET=$(DBT_TARGET)
 	@echo "Data ready: local Neo4j loaded and :BEST_FULFILLMENT rebuilt. Run 'make up' next."
 
-# Runs inside the API container, where the evaluation database lives, then copies the report out.
+LIMIT ?= 5
+
 eval-jev:
 	@test -n "$$JEV_API_KEY" || { echo 'Set JEV_API_KEY in .env.$(DBT_TARGET) first'; exit 1; }
-	$(COMPOSE) exec -T api /workspace/.venv/bin/python -m api.features.plan.judge_eval --out /workspace/target/eval/jev_report.json
+	$(COMPOSE) exec -T api uv run --package remy-api python -m api.features.plan.eval.judge_eval --limit $(LIMIT) --out /workspace/target/eval/jev_report.json
 	$(COMPOSE) cp api:/workspace/target/eval/jev_report.json target/eval/jev_report.json
 	@echo 'Report: target/eval/jev_report.json'
 
@@ -103,7 +130,7 @@ dbt-all: _neo4j-creds
 	$(MAKE) serve-neo4j DBT_TARGET=$(DBT_TARGET)
 
 serve-neo4j: _neo4j-creds
-	cd remy/data-preparation && DBT_TARGET=$(DBT_TARGET) NEO4J_REPLACE=true $(UV) run --package $(DBT_PACKAGE) dbt run --profiles-dir . --select recipe_graph_to_neo4j
+	cd remy/data-preparation && DBT_TARGET=$(DBT_TARGET) NEO4J_REPLACE=true NEO4J_SOURCE_MANIFEST=target/$(DBT_TARGET)/source_snapshot_manifest.json $(UV) run --package $(DBT_PACKAGE) dbt run --profiles-dir . --select recipe_graph_to_neo4j
 
 serve-neo4j-replace: serve-neo4j
 
@@ -123,9 +150,8 @@ build:
 	$(COMPOSE) build api
 
 build-all:
-	$(COMPOSE) --profile neo4j --profile jobs build
+	$(COMPOSE) --profile neo4j --profile frontend --profile jobs build
 
-# One command for the app. Nonprod also starts the local Neo4j the API uses.
 NEO4J_PROFILE := $(if $(filter nonprod,$(DBT_TARGET)),--profile neo4j,)
 
 up: langfuse-init
@@ -138,7 +164,7 @@ up: langfuse-init
 	@echo "  Demo login demo / remy-demo-account"
 
 up-all:
-	$(COMPOSE) --profile neo4j --profile jobs up --build
+	$(COMPOSE) --profile neo4j --profile jobs --profile frontend up --build
 
 down:
 	$(COMPOSE) down
@@ -151,3 +177,5 @@ frontend-install:
 
 clean:
 	rm -rf .venv
+
+ci: reproducible-build check

@@ -19,3 +19,4 @@ On local machine, project runs on WSL interpreter with Ubuntu.
 ## `remy/data-preparation` — dbt transformations and Neo4j loader
 
 ## `remy/workflows` — recommendation workflows
+- LangGraph

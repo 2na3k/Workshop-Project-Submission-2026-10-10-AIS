@@ -33,7 +33,7 @@ CALL (req, concept) {
   ORDER BY candidate.selection_priority,
            candidate.nutrition_rank,
            CASE WHEN food.nutrition_status = 'validated' THEN 0 ELSE 1 END,
-           candidate.confidence DESC,
+           candidate.mapping_confidence DESC,
            food.food_key,
            candidate.candidate_key
   LIMIT 1

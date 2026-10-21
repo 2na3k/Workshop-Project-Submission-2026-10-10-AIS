@@ -2,9 +2,9 @@ import json
 
 import pytest
 
-from api.features.plan import judge_eval
-from api.features.plan.evaluation import evaluation_db
-from api.features.plan.judge_eval import ensure_judge_table, judge_snapshot
+from api.features.plan.eval import judge_eval
+from api.features.plan.eval.evaluation import evaluation_db
+from api.features.plan.eval.judge_eval import ensure_judge_table, judge_snapshot
 
 
 class CountingJudge:

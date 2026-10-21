@@ -45,6 +45,7 @@ export type PlanRequest = {
   horizon_days: number;
   meals_per_day: number;
   servings: number;
+  nutrient_tolerance_pct?: number;
   allergies?: { code: AllergenCode; severity?: "mild" | "severe" }[];
   dietary?: { code: DietaryCode }[];
   nutrients?: NutrientTarget[];
@@ -96,7 +97,7 @@ const FRIENDLY_ERRORS: Record<string, string> = {
 };
 
 const isWhole = (value: number, min: number, max = Number.POSITIVE_INFINITY) =>
-  Number.isInteger(value) && value >= min && value <= max;
+    Number.isInteger(value) && value >= min && value <= max;
 
 function validate(request: PlanRequest) {
   if (!isWhole(request.horizon_days, 1, 14)) {
@@ -118,7 +119,7 @@ function validate(request: PlanRequest) {
     seen.add(nutrient.code);
 
     const values = [nutrient.goal?.value, nutrient.limit?.min, nutrient.limit?.max]
-      .filter((value) => value !== undefined);
+        .filter((value) => value !== undefined);
     if (!values.length) {
       throw new Error(`Give ${label} a target, a minimum, or a maximum.`);
     }
@@ -132,81 +133,27 @@ function validate(request: PlanRequest) {
   }
 }
 
-export type PlanProgress = { stage: string; message: string; step: number; total: number };
-
-export type ServerSentEvent = { event: string; data: string };
-
-export function createSseParser(onEvent: (event: ServerSentEvent) => void) {
-  let buffer = "";
-  return (chunk: string) => {
-    buffer = (buffer + chunk).replace(/\r\n/g, "\n");
-    let boundary = buffer.indexOf("\n\n");
-    while (boundary !== -1) {
-      const block = buffer.slice(0, boundary);
-      buffer = buffer.slice(boundary + 2);
-      let event = "message";
-      const data: string[] = [];
-      for (const line of block.split("\n")) {
-        if (!line || line.startsWith(":")) continue;
-        const colon = line.indexOf(":");
-        const field = colon === -1 ? line : line.slice(0, colon);
-        const value = colon === -1 ? "" : line.slice(colon + 1).replace(/^ /, "");
-        if (field === "event") event = value;
-        if (field === "data") data.push(value);
-      }
-      if (data.length) onEvent({ event, data: data.join("\n") });
-      boundary = buffer.indexOf("\n\n");
-    }
-  };
+function isPlan(payload: unknown): payload is PlanResponse {
+  const plan = payload as Partial<PlanResponse> | null;
+  return !!plan && typeof plan.plan_id === "string" && Array.isArray(plan.days) &&
+      Array.isArray(plan.relaxations) && typeof plan.horizon_totals === "object";
 }
 
 function errorMessage(payload: unknown, fallback: string) {
   const error = (payload as { error?: { code?: unknown; message?: unknown; details?: unknown } } | null)?.error;
   const issues = Array.isArray(error?.details)
-    ? error.details.flatMap((detail) => typeof detail?.issue === "string" ? [detail.issue] : [])
-    : [];
+      ? error.details.flatMap((detail) => typeof detail?.issue === "string" ? [detail.issue] : [])
+      : [];
   return [
     (typeof error?.code === "string" && FRIENDLY_ERRORS[error.code]) ||
-      (typeof error?.message === "string" ? error.message : fallback),
+    (typeof error?.message === "string" ? error.message : fallback),
     ...issues,
   ].join(" ");
 }
 
-function isPlan(payload: unknown): payload is PlanResponse {
-  const plan = payload as Partial<PlanResponse> | null;
-  return !!plan && typeof plan.plan_id === "string" && Array.isArray(plan.days) &&
-    Array.isArray(plan.relaxations) && typeof plan.horizon_totals === "object";
-}
-
-function isProgress(payload: unknown): payload is PlanProgress {
-  const progress = payload as Partial<PlanProgress> | null;
-  return !!progress && typeof progress.message === "string" &&
-    typeof progress.step === "number" && typeof progress.total === "number";
-}
-
-const textOf = (payload: unknown) => {
-  const text = (payload as { text?: unknown } | null)?.text;
-  return typeof text === "string" ? text : null;
-};
-
-const parseJson = (text: string): unknown => {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
-};
-
 const UNEXPECTED = "The meal planner returned an unexpected response. Please try again.";
 
-export async function generatePlan(
-  request: PlanRequest,
-  { onProgress, onText }: {
-    onProgress?: (progress: PlanProgress) => void;
-    /** Called with each text chunk (about 100 words) as the server flushes it. */
-    onText?: (chunk: string) => void;
-  } = {},
-): Promise<PlanResponse> {
+export async function generatePlan(request: PlanRequest): Promise<PlanResponse> {
   validate(request);
 
   let response: Response;
@@ -214,7 +161,7 @@ export async function generatePlan(
     response = await fetch("/api/v1/plan", {
       method: "POST",
       credentials: "omit",
-      headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
       signal: AbortSignal.timeout(90_000),
     });
@@ -229,45 +176,12 @@ export async function generatePlan(
     const payload = await response.json().catch(() => null);
     throw new Error(errorMessage(payload, "The meal planner is unavailable. Please try again."));
   }
-  if (!response.body || !response.headers.get("content-type")?.includes("text/event-stream")) {
+
+  const payload = await response.json();
+  if (!isPlan(payload)) {
     throw new Error(UNEXPECTED);
   }
-
-  const outcome: { plan?: PlanResponse; error?: string } = {};
-  const feed = createSseParser(({ event, data }) => {
-    const payload = parseJson(data);
-    if (event === "progress" && isProgress(payload)) onProgress?.(payload);
-    if (event === "text") {
-      const text = textOf(payload);
-      if (text !== null) onText?.(text);
-    }
-    if (event === "plan") {
-      if (isPlan(payload)) outcome.plan = payload;
-      else outcome.error = UNEXPECTED;
-    }
-    if (event === "error") outcome.error = errorMessage(payload, "The meal planner ran into a problem. Please try again.");
-  });
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  try {
-    while (!outcome.plan && !outcome.error) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      feed(decoder.decode(value, { stream: true }));
-    }
-  } catch (error) {
-    if (error instanceof Error && error.name === "TimeoutError") {
-      throw new Error("Building the plan took too long. Please try again.");
-    }
-    throw new Error("The connection to the meal planner was lost. Please try again.");
-  } finally {
-    reader.cancel().catch(() => {});
-  }
-
-  if (outcome.error) throw new Error(outcome.error);
-  if (!outcome.plan) throw new Error("The meal planner stopped before the plan was ready. Please try again.");
-  return outcome.plan;
+  return payload;
 }
 
 const AMOUNT = new Intl.NumberFormat("en-SG", { maximumFractionDigits: 1 });
@@ -289,7 +203,7 @@ export function formatNutrient(key: string, value: number) {
 
 export function sortedNutrients(values: Record<string, number>) {
   return Object.entries(values).sort(
-    ([a], [b]) => nutrientInfo(a).order - nutrientInfo(b).order || a.localeCompare(b),
+      ([a], [b]) => nutrientInfo(a).order - nutrientInfo(b).order || a.localeCompare(b),
   );
 }
 

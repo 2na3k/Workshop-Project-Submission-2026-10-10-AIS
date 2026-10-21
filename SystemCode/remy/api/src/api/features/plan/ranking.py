@@ -1,13 +1,21 @@
 from api.features.plan.models import Recipe
+from domain.types import REQUEST_TO_CANONICAL
 
 
-def order_candidates(recipes, request) -> list[Recipe]:
+def rank_candidates(recipes, request) -> list[Recipe]:
     """Rank recipes by how well they fit the request's nutrient targets.
 
     Each recipe is scored against a per-meal target derived from the request's
     nutrient goals (or limit midpoints when no goal is given). The score is a
     negative sum of normalised deviations, so higher is better. The list is
-    returned sorted by descending score, then ascending ``recipe_id``.
+    returned sorted by descending score, then ascending ``recipe_id``, and
+    truncated to a bounded pool size suitable for the CP-SAT solver.
+
+    Returns
+    -------
+    list
+        Up to ``min(50 * meals_per_day, 300)`` recipes with a ``.score``
+        attribute attached.
     """
 
     # ------------------------------------------------------------------
@@ -63,12 +71,7 @@ def order_candidates(recipes, request) -> list[Recipe]:
                 r.nutrients.get(k)
                 if k in r.nutrients
                 else r.nutrients.get(
-                    {
-                        "calories": "calories",
-                        "protein": "protein_g",
-                        "carbs": "carbs_g",
-                        "fat": "fat_g",
-                    }.get(k, k)
+                    REQUEST_TO_CANONICAL.get(k, k)
                 )
             )
             if value is not None:
@@ -88,14 +91,10 @@ def order_candidates(recipes, request) -> list[Recipe]:
     for r in recipes:
         r.score = score(r)
 
-    return sorted(recipes, key=lambda r: (-r.score, r.recipe_id))
-
+    return sorted(recipes, key=lambda r: (-r.score, r.recipe_id))[
+        : pool_size(request)
+    ]
 
 def pool_size(request) -> int:
     """Bounded pool for the CP-SAT solver: min(50 * meals_per_day, 300)."""
     return min(50 * request.meals_per_day, 300)
-
-
-def rank_candidates(recipes, request) -> list[Recipe]:
-    """Top-K of the nutrient ranking, the pool the solver sees."""
-    return order_candidates(recipes, request)[: pool_size(request)]

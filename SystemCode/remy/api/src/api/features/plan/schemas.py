@@ -1,6 +1,8 @@
 import math
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from pydantic import (BaseModel, ConfigDict, Field, field_validator,
+                      model_validator)
 
 
 def _code(value: str) -> str:
@@ -74,6 +76,7 @@ class PlanRequest(BaseModel):
     horizon_days: int = Field(ge=1, le=14)
     meals_per_day: int = Field(ge=1, le=6)
     servings: int = Field(default=1, ge=1)
+    nutrient_tolerance_pct: int = Field(default=0, ge=0, le=25, strict=True)
     allergies: list[AllergyRequest] | None = None
     dietary: list[DietaryRequest] | None = None
     nutrients: list[NutrientRequest] | None = None
@@ -121,6 +124,41 @@ class RelaxationRecord(BaseModel):
     detail: dict = Field(default_factory=dict)
 
 
+class NamedConstraintResponse(BaseModel):
+    scope: Literal["plan", "recipe", "requirement"]
+    code: str
+    kind: Literal[
+        "present-evidence-excludes",
+        "evidence-absent",
+        "unmapped",
+        "nutrient-bound",
+        "horizon",
+    ]
+
+
+class RecipeOutcomeResponse(BaseModel):
+    recipe_id: str
+    outcome: Literal["selected", "retained-unselected", "dropped"]
+    cause: str | None = None
+    causes: list[str] = Field(default_factory=list)
+
+
+class SelectedOfferResponse(BaseModel):
+    listing_name: str
+    retailer: str
+
+
+class ConstraintOutcomeResponse(BaseModel):
+    recipe_id: str
+    requirement_id: str | None = Field(default=None, exclude=True)
+    requirement_text: str | None = None
+    constraint: str
+    state: str
+    resolved_concept: str | None = None
+    selected_offer: SelectedOfferResponse | None = None
+    warnings: list[str] = Field(default_factory=list)
+
+
 class PlanResponse(BaseModel):
     plan_id: str
     trace_id: str | None = None
@@ -128,6 +166,12 @@ class PlanResponse(BaseModel):
     status: Literal["complete", "partial"]
     message: str
     validation_summary: dict
+    feasibility_outcome: Literal["plan-produced", "infeasible"] = "plan-produced"
+    relaxed: bool = False
+    applied_tolerance_pct: int = 0
+    binding_constraints: list[NamedConstraintResponse] | None = None
+    recipe_outcomes: list[RecipeOutcomeResponse] = Field(default_factory=list)
+    constraint_outcomes: list[ConstraintOutcomeResponse] = Field(default_factory=list)
     relaxations: list[RelaxationRecord] = Field(default_factory=list)
     horizon_totals: dict[str, float]
     days: list[DayResponse]

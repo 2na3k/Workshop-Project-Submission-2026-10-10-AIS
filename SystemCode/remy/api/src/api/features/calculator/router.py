@@ -25,4 +25,5 @@ router = APIRouter()
 )
 def calculate_cost_and_nutrition(request: CostNutritionRequest,
                                  service: CostNutritionService = Depends(get_calculator_service)):
-    return service.calculate(request)
+    response, _trace = service.calculate(request)
+    return response

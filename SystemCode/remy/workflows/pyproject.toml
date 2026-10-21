@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "LangGraph workflows for Remy"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "langchain>=0.3,<1",
+    "langchain-ollama>=0.3,<1",
     "langgraph>=0.2,<1",
     "remy-domain",
 ]

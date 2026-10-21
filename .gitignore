@@ -63,7 +63,6 @@ lerna-debug.log*
 .next/
 out/
 coverage/
-.env.nonprod
 
 # IDEs and editors
 .idea/
@@ -90,3 +89,12 @@ logs/
 *.log
 *.pid
 docs/drafts/
+
+.kiro/settings
+
+.sdd/
+.agents/
+.prompts/
+.kiro/
+.gemini/
+.codex/

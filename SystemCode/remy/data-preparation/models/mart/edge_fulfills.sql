@@ -129,7 +129,12 @@ with concept_usage as (
            ('banana'), ('potato'), ('carrot'), ('onion')
 )
 select
-    candidate_key, food_key, canonical_key, kind, confidence, match_method, context,
+    candidate_key, food_key, canonical_key, kind,
+    -- Canonical fulfillment-link provenance (constitution R-4): the mapping
+    -- confidence the candidate evidence produced, spelled the one canonical way
+    -- with no legacy ``confidence`` alias carried into the mart contract.
+    confidence as mapping_confidence,
+    match_method, context,
     replacement_factor, factor_basis, required_state, rule_id, approval_status,
     case when price_basis = 'nutrition_only' then 'fooddata_central' else 'fairprice' end as source,
     mapping_version, price_ref, price_match_status, price_basis, reference_price_minor,

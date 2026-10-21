@@ -1,14 +1,21 @@
+"""DEPRECATED: Legacy SSE endpoint for /plan.
+
+This module is superseded by the /chat SSE pipeline (p3-004) and the
+standard HTTP JSON /plan endpoint. It is kept only for historical reference.
+"""
+
 import asyncio
 import json
 import logging
 import re
 from collections.abc import Iterable, Iterator
+from typing_extensions import deprecated
 
 from api.core.errors import ErrorDetail, error_envelope
 from api.core.exceptions import AppError
 from api.core.monitoring import update_observation
 from .narrative import plan_text
-from .state import decode_recipes
+from api.features.plan.graph.state import decode_recipes
 from .schemas import PlanResponse
 from .service import dump, trace_plan, complete_plan
 
@@ -70,6 +77,7 @@ def word_chunks(pieces: Iterable[str], size: int = FLUSH_WORDS) -> Iterator[str]
         yield buffer
 
 
+@deprecated("Use the /chat SSE pipeline or the HTTP /plan endpoint instead.")
 async def stream_plan(request, service, graph, run_id: str, keep_alive_seconds: float = KEEP_ALIVE_SECONDS):
     config = {"configurable": {"thread_id": run_id}}
     with trace_plan(request) as span:

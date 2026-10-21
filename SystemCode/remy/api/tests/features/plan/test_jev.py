@@ -143,8 +143,8 @@ def test_jev_mode_versions_the_snapshot(monkeypatch):
 from langgraph.checkpoint.memory import MemorySaver
 
 from api.features.plan import judge as judge_module
-from api.features.plan.graph import build_plan_graph
-from api.features.plan.judge import (
+from api.features.plan.graph.graph import build_plan_graph
+from api.features.plan.judge.judge import (
     JUDGE_VERSION, JudgeUnavailable, judge_candidates, judge_grades, judge_metrics, validate_judge_config,
 )
 
@@ -165,7 +165,7 @@ class FakeJudgeClient:
 
 
 def test_judge_is_on_by_default(monkeypatch):
-    from api.features.plan.judge import judge_mode
+    from api.features.plan.judge.judge import judge_mode
     monkeypatch.delenv("JUDGE_MODE", raising=False)
     assert judge_mode() == "jev"
 

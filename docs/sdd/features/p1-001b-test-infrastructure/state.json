@@ -1,0 +1,43 @@
+{
+  "feature": "p1-001b-test-infrastructure",
+  "stage": "closed",
+  "loops": 0,
+  "created": "2026-10-04T10:24:07+08:00",
+  "spec_hash": "sha256:3ffac32be5297dc1",
+  "plan_hash": "sha256:f14ed11b5a44021f",
+  "tasks_hash": "sha256:597fa05982396a2e",
+  "plan_review_verdict": "APPROVE",
+  "review_verdict": "APPROVE",
+  "updated_at": "2026-10-04T17:30:01+08:00",
+  "history": [
+    {
+      "at": "2026-10-04T10:24:07+08:00",
+      "event": "proposed -> specified"
+    },
+    {
+      "at": "2026-10-04T10:24:07+08:00",
+      "event": "specified -> planned"
+    },
+    {
+      "at": "2026-10-04T12:47:22+08:00",
+      "event": "reconciled hashes: recorded spec_hash/plan_hash/tasks_hash for the plan-review-approved artifacts; prior values were inherited from another feature (state.json feature field said p1-002-provenance-graph-model)"
+    },
+    {
+      "at": "2026-10-04T14:05:42+08:00",
+      "event": "ci PASS"
+    },
+    {
+      "at": "2026-10-04T16:37:19+08:00",
+      "event": "ci PASS"
+    },
+    {
+      "at": "2026-10-04T16:39:46+08:00",
+      "event": "ci-passed -> implemented"
+    },
+    {
+      "at": "2026-10-04T17:30:01+08:00",
+      "event": "reviewed -> closed"
+    }
+  ],
+  "ci_overall": "PASS"
+}

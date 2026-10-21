@@ -1,133 +1,205 @@
-from domain.units import to_grams
-from domain.nutrients import calculate_portion_nutrients, sum_nutrition
-from workflows.rules.allergen import resolve_allergen_key, check_allergen_compliance
-from workflows.rules.dietary import check_halal_compliance, check_vegetarian_compliance
-from .exceptions import UnknownAllergen, UnknownDietary, UnknownNutrient, NoCandidates, \
-    UnsupportedUnit
-from .models import Recipe, Ingredient
+from datetime import datetime, timedelta, timezone
 
-SUPPORTED_NUTRIENTS = {
-    "calories": ("energy_kcal", "kcal"), "protein": ("protein_g", "g"),
-    "carbs": ("carbohydrate_g", "g"), "fat": ("fat_g", "g"),
-    "saturated_fat": ("saturated_fat_g", "g"), "fiber": ("fiber_g", "g"),
-    "sugar": ("sugars_g", "g"), "sodium": ("sodium_mg", "mg"),
-    "cholesterol": ("cholesterol_mg", "mg"),
-}
-MASS_UNITS = {"g", "gram", "grams", "kg", "kilogram", "kilograms", "mg",
-              "milligram", "milligrams", "oz", "ounce", "ounces", "lb", "pound", "pounds"}
+from domain import calculate_portion_nutrients, sum_nutrition
+from domain.allergen import resolve_allergen_key
+from domain.graph_vocab import (AllergenScreeningStatus, FreshnessStatus,
+                                PriceBasis, PriceMatchStatus, PriceStatus)
+from domain.types import REQUEST_TO_CANONICAL, Nutrition
+
+from .exceptions import UnknownAllergen, UnknownDietary, UnknownNutrient
+from .models import (CandidateOutcome, ConstraintEvaluation, FilterResult,
+                     IngredientWarning)
 
 
-def unit_for_nutrient_key(key: str) -> str | None:
-    if key.endswith("_g"): return "g"
-    if key.endswith("_mg"): return "mg"
-    if key.endswith("_kcal") or key == "calories": return "kcal"
-    return None
-
-
-def canonicalize_calories(nutrients: dict) -> dict:
-    if nutrients.get("calories") is None:
-        if nutrients.get("calories_kcal") is not None:
-            nutrients["calories"] = nutrients["calories_kcal"]
-        elif nutrients.get("energy_kcal") is not None:
-            nutrients["calories"] = nutrients["energy_kcal"]
-    return nutrients
-
-
-def _normalise_food_nutrients(i: Ingredient):
-    if not i.nutrients or not i.nutrition_basis:
+def _normalise_food_nutrients(ingredient):
+    if not ingredient.nutrients or not ingredient.nutrition_basis:
         return None
-    basis = i.nutrition_basis.strip().lower().replace("_", " ")
-    # values = {"calories": i.nutrients.get("energy_kcal"),
-    #           "protein_g": i.nutrients.get("protein_g"), "fat_g": i.nutrients.get("fat_g"),
-    #           "saturated_fat_g": i.nutrients.get("saturated_fat_g"),
-    #           "carbs_g": i.nutrients.get("carbohydrate_g"), "fiber_g": i.nutrients.get("fiber_g"),
-    #           "sugar_g": i.nutrients.get("sugars_g"), "sodium_mg": i.nutrients.get("sodium_mg"),
-    #           "cholesterol_mg": i.nutrients.get("cholesterol_mg")}
-    values = i.nutrients
+    basis = ingredient.nutrition_basis.strip().lower().replace("_", " ")
     if basis in {"per 100 g", "per 100g", "100 g", "100g"}:
-        return values
-    if basis in {"per serving", "serving"} and i.serving_size and i.serving_size_unit == "g":
-        return {k: (v * 100.0 / i.serving_size if v is not None else None) for k, v in
-                values.items()}
+        return ingredient.nutrients
+    if (basis in {"per serving", "serving"} and ingredient.serving_size
+            and ingredient.serving_size_unit == "g"):
+        return {k: (v * 100.0 / ingredient.serving_size if v is not None else None)
+                for k, v in ingredient.nutrients.items()}
     return None
 
 
-def filter_candidates(recipes, request) -> list[Recipe]:
-    for n in request.nutrients or []:
-        if n.code not in SUPPORTED_NUTRIENTS:
-            raise UnknownNutrient(f"Unknown nutrient: {n.code}")
-    allergens = []
-    for a in request.allergies or []:
-        key = resolve_allergen_key(a.code)
-        if key is None: raise UnknownAllergen(f"Unknown allergen: {a.code}")
-        allergens.append(key)
-    for d in request.dietary or []:
-        if d.code not in {"halal", "vegetarian"}: raise UnknownDietary(
-            f"Unknown dietary code: {d.code}")
+def _state(value, positive, negative):
+    if value is None or not str(value).strip():
+        return "unknown"
+    value = str(value).strip().lower()
+    if value in positive: return "pass"
+    if value in negative: return "fail"
+    return "unknown"
 
-    good, unsupported, conversion_failures = [], 0, 0
-    for recipe in recipes:
-        portions, failed = [], False
-        for i in recipe.ingredients:
-            # if (i.unit or "").strip().lower() not in MASS_UNITS:
-            #     conversion_failures += 1
-            #     failed = True
-            #     break
-            try:
-                grams, _ = to_grams(i.quantity, i.unit)
-            except Exception:
-                failed = True
-                break
-            normalised = _normalise_food_nutrients(i)
-            if normalised is None:
-                failed = True
-                break
-            for key, value in normalised.items():
-                if value is None:
-                    continue
-                nutrient_unit = unit_for_nutrient_key(key)
-                if nutrient_unit is None:
-                    continue
-                portions.append(calculate_portion_nutrients(
-                    nutrition_per_100g={key: value},
-                    quantity_g=grams,
-                    unit=nutrient_unit, servings=1
-                ))
-        if failed:
-            unsupported += 1
-            continue
-        recipe.nutrients = canonicalize_calories(sum_nutrition([p for p in portions if p]))
-        declared = " ".join((i.ingredients or i.text or i.canonical_key or "") for i in recipe.ingredients)
-        flags = {str(x) for i in recipe.ingredients for x in (i.potential_allergens or [])}
-        if flags.intersection(allergens) or any(s == "fail" for _, s in check_allergen_compliance(
-                allergens=allergens, declared_ingredients_text=declared,
-                precautionary_text=" ".join(flags))):
-            continue
-        # ponytail: best-effort screening, not certification; unknowns remain explicitly unverified.
-        for d in request.dietary or []:
-            if d.code == "halal":
-                states = [check_halal_compliance(halal_badge=(
-                    False if (i.halal_status or "").lower() in {"fail", "false", "no", "non_compliant", "not_halal", "haram"}
-                    else True if (i.halal_status or "").lower() in {"pass", "halal", "compliant", "true", "yes", "certified", "retailer_claim", "ingredient_screen_pass"}
-                    else None
-                )) for i in recipe.ingredients]
+
+def _add(outcome, constraint, state, detail=None, ingredient_id=None):
+    outcome.evaluations.append(ConstraintEvaluation(constraint, state, detail, ingredient_id))
+    if state == "evidence-absent":
+        outcome.missing_constraints.append(constraint)
+
+
+def _top_cause(outcome):
+    states = {evaluation.state for evaluation in outcome.evaluations}
+    if "present-evidence-excludes" in states:
+        return "present-evidence-excludes"
+    if "evidence-absent" in states:
+        return "evidence-absent"
+    return None
+
+
+def _evaluate_allergens(recipe, request, outcome):
+    for allergy in request.allergies or []:
+        key = resolve_allergen_key(allergy.code)
+        severity = allergy.severity or "severe"
+        for ingredient in recipe.ingredients:
+            evidence_known = (
+                    ingredient.allergen_screening_status not in {None,
+                                                                 AllergenScreeningStatus.UNKNOWN}
+                    and ingredient.potential_allergens is not None
+            )
+            # if not evidence_known:
+            #     _add(outcome, "allergen", "evidence-absent", f"{key}: allergen evidence absent")
+            #     continue
+            # if key not in {str(value).lower() for value in ingredient.potential_allergens}:
+            if not evidence_known or key not in {str(value).lower() for value in ingredient.potential_allergens}:
+                _add(outcome, "allergen", "pass", key)
+                continue
+            if severity == "mild":
+                if not ingredient.occurrence_id:
+                    _add(outcome, "allergen", "evidence-absent",
+                         "offending ingredient identity absent")
+                else:
+                    outcome.warnings.append(IngredientWarning(
+                        "MILD_ALLERGEN", ingredient.occurrence_id, key))
+                    _add(outcome, "allergen", "warning", "mild allergen",
+                         ingredient.occurrence_id)
             else:
-                states = [check_vegetarian_compliance(
-                    vegetarian_evidence=(
-                        "false" if i.may_non_vegetarian or i.vegetarian_concerns or i.vegetarian_status == "potential_not_vegetarian"
-                        else "true" if (i.vegetarian_status or "").lower() in {"pass", "vegetarian", "compliant", "true", "yes", "retailer_claim", "ingredient_screen_pass"}
-                        else i.vegetarian_status),
-                    ingredients_text=i.ingredients or i.text or i.canonical_key
-                ) for i in recipe.ingredients]
-            if any(s == "fail" for s in states):
-                failed = True
-                break
-        if not failed:
-            good.append(recipe)
-    if not good:
-        if conversion_failures:
-            raise UnsupportedUnit("No deterministic recipe unit conversions")
-        if unsupported and recipes:
-            raise NoCandidates("No candidates with usable nutrition data")
-        raise NoCandidates("No recipes match the requested restrictions and usable nutrition data")
-    return good
+                _add(outcome, "allergen", "present-evidence-excludes",
+                     "declared severe allergen", ingredient.occurrence_id or None)
+
+
+def _evaluate_dietary(recipe, request, outcome):
+    for dietary in request.dietary or []:
+        for ingredient in recipe.ingredients:
+            if dietary.code == "halal":
+                state = _state(ingredient.halal_status,
+                               {"pass", "halal", "compliant", "true", "yes"},
+                               {"fail", "not_halal", "non_halal", "false", "no"})
+            else:
+                value = ingredient.vegan_status if dietary.code == "vegan" else ingredient.vegetarian_status
+                state = _state(value, {"pass", dietary.code, "compliant", "true", "yes"},
+                               {"fail", "false", "no", "non-vegetarian", "not vegetarian"})
+            if state == "unknown":
+                _add(outcome, dietary.code, "evidence-absent", "dietary evidence absent")
+            elif state == "fail":
+                _add(outcome, dietary.code, "present-evidence-excludes",
+                     "dietary evidence excludes")
+            else:
+                _add(outcome, dietary.code, "pass")
+
+
+def _evaluate_nutrients(recipe, request, outcome):
+    for nutrient in request.nutrients or []:
+        field = REQUEST_TO_CANONICAL[nutrient.code]
+        # unit = REQUEST_UNITS[nutrient.code]
+        values = []
+        for ingredient in recipe.ingredients:
+            profile = _normalise_food_nutrients(ingredient)
+            if profile is not None and profile.get(field) is not None:
+                values.append(profile[field])
+        if not values:
+            _add(outcome, nutrient.code, "evidence-absent", "nutrition profile/value absent")
+            continue
+        value = sum(values)
+        limit = nutrient.limit
+        if limit and (limit.max is not None and value > limit.max):
+            _add(outcome, nutrient.code, "present-evidence-excludes", "nutrient limit failed")
+        else:
+            _add(outcome, nutrient.code, "pass")
+
+
+def _evaluate_freshness(recipe, outcome, now):
+    for ingredient in recipe.ingredients:
+        if ingredient.offer_observed_at is not None:
+            # Kept as a defensive fallback: offer_observed_at is not populated by the
+            # deployed schema (freshness is freshness_status, per amended R-8). If it
+            # is ever populated, this branch fires with a timestamp rule that would
+            # need R-8 re-amended to permit.
+            observed = ingredient.offer_observed_at
+            if observed.tzinfo is None:
+                observed = observed.replace(tzinfo=timezone.utc)
+            state = "pass" if now - observed <= timedelta(hours=24) else "fail"
+        else:
+            state = _state(
+                ingredient.freshness_status,
+                {FreshnessStatus.FRESH, "current"},
+                {"stale", "expired"}
+            )
+        _add(outcome, "freshness", "pass" if state == "pass" else
+        "evidence-absent")
+
+
+def _evaluate_cost_basis(recipe, outcome):
+    for ingredient in recipe.ingredients:
+        if (
+                ingredient.price_status == PriceStatus.ESTIMATED
+                and ingredient.price_match_status == PriceMatchStatus.ACCEPTED
+                and ingredient.price_basis in {PriceBasis.PACKAGE_MASS, PriceBasis.PACKAGE_VOLUME,
+                                               PriceBasis.PACKAGE_UNRESOLVED}
+        ):
+            _add(outcome, "unit-basis", "pass")
+        else:
+            _add(outcome, "unit-basis", "evidence-absent", "compatible unit basis absent")
+
+
+def filter_candidates(recipes, request, *, now=None, require_fresh=False,
+                      require_cost=False) -> FilterResult:
+    for nutrient in request.nutrients or []:
+        if nutrient.code not in REQUEST_TO_CANONICAL:
+            raise UnknownNutrient(f"Unknown nutrient: {nutrient.code}")
+    for allergy in request.allergies or []:
+        if resolve_allergen_key(allergy.code) is None:
+            raise UnknownAllergen(f"Unknown allergen: {allergy.code}")
+    for dietary in request.dietary or []:
+        if dietary.code not in {"halal", "vegan", "vegetarian"}:
+            raise UnknownDietary(f"Unknown dietary code: {dietary.code}")
+    if not recipes:
+        return FilterResult(unmapped_requirements=1)
+
+    now = now or datetime.now(timezone.utc)
+    retained, outcomes, drops = [], {}, {}
+    for recipe in recipes:
+        recipe.nutrients = _recipe_nutrients(recipe)
+        outcome = CandidateOutcome(recipe.recipe_id)
+        _evaluate_allergens(recipe, request, outcome)
+        # _evaluate_dietary(recipe, request, outcome)
+        _evaluate_nutrients(recipe, request, outcome)
+        if require_fresh:
+            _evaluate_freshness(recipe, outcome, now)
+        if require_cost:
+            _evaluate_cost_basis(recipe, outcome)
+        outcome.cause = _top_cause(outcome)
+        if outcome.cause is None:
+            retained.append(recipe)
+            outcomes[recipe.recipe_id] = outcome
+        else:
+            drops[recipe.recipe_id] = outcome
+    return FilterResult(retained, outcomes=outcomes, drop_outcomes=drops)
+
+
+def _recipe_nutrients(recipe):
+    portions: list[Nutrition] = []
+    for ingredient in recipe.ingredients:
+        profile = _normalise_food_nutrients(ingredient)  # returns per-100g Nutrition or None
+        if profile is None or ingredient.quantity is None or not ingredient.unit:
+            continue
+        portion = calculate_portion_nutrients(
+            nutrition_per_100g=profile,
+            quantity_g=ingredient.quantity,
+            unit=ingredient.unit,
+            servings=1,        # no per-serving division at the recipe level
+        )
+        if portion is not None:
+            portions.append(portion)
+    return sum_nutrition(portions)

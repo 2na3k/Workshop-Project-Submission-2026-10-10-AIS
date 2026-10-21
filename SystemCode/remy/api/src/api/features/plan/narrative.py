@@ -1,4 +1,9 @@
+"""DEPRECATED: Legacy text narrative for the /plan endpoint.
+
+This is superseded by the hybrid generation in the /chat pipeline.
+"""
 from collections.abc import Iterator
+from typing_extensions import deprecated
 
 from .schemas import MealResponse, PlanResponse
 
@@ -12,6 +17,7 @@ def _meal(meal: MealResponse) -> str:
     return meal.title if calories is None else f"{meal.title} ({calories:,.0f} kcal)"
 
 
+@deprecated("Use the hybrid generation in remy/workflows/nodes.py instead.")
 def plan_text(plan: PlanResponse) -> Iterator[str]:
     """Describe the plan one day at a time, as plain text."""
     for day in plan.days:

@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {"source_identity": "FoodData Central", "snapshot_id": "fooddata_central:landed", "paths": ["../../data-crawler/src/data_crawler/data/input/food_nutrients.csv"], "metadata_path": "metadata/fooddata_central.json"},
+    {"source_identity": "recipe dataset", "snapshot_id": "recipe_dataset:landed", "paths": ["../seeds/13k-recipe/13k-recipes.csv"], "metadata_path": "metadata/recipe_dataset.json"},
+    {"source_identity": "FairPrice listings", "snapshot_id": "fairprice_listings:landed", "paths": ["../../data-crawler/src/data_crawler/data/output_final/price_mapped_nutrients.csv"], "metadata_path": "metadata/fairprice_listings.json"}
+  ]
+}
