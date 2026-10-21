@@ -39,7 +39,7 @@ export async function* streamChat(
     message: string,
     userContext?: unknown,
 ): AsyncGenerator<ChatEvent> {
-  const REMY_API_URL = process.env.NEXT_PUBLIC_REMY_API_URL ?? "http://localhost:8081";
+  const REMY_API_URL = process.env.REMY_API_URL ?? "http://localhost:8000";
 
   let response: Response;
   try {

@@ -114,9 +114,11 @@ prepare-data: _nonprod-only _neo4j-creds install _seeds-check
 	$(MAKE) fulfillment DBT_TARGET=$(DBT_TARGET)
 	@echo "Data ready: local Neo4j loaded and :BEST_FULFILLMENT rebuilt. Run 'make up' next."
 
+LIMIT ?= 5
+
 eval-jev:
 	@test -n "$$JEV_API_KEY" || { echo 'Set JEV_API_KEY in .env.$(DBT_TARGET) first'; exit 1; }
-	$(COMPOSE) exec -T api /workspace/.venv/bin/python -m api.features.plan.judge_eval --out /workspace/target/eval/jev_report.json
+	$(COMPOSE) exec -T api uv run --package remy-api python -m api.features.plan.eval.judge_eval --limit $(LIMIT) --out /workspace/target/eval/jev_report.json
 	$(COMPOSE) cp api:/workspace/target/eval/jev_report.json target/eval/jev_report.json
 	@echo 'Report: target/eval/jev_report.json'
 

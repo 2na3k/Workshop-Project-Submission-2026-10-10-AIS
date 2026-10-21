@@ -67,6 +67,7 @@ class ChatLLM:
             key = _google_api_key()
             if key:
                 params["api_key"] = key
+            params["transport"] = "rest"
 
         params.update(kwargs)
         self._params = params

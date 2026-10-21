@@ -145,6 +145,37 @@ trap 'interrupted=1' INT TERM
 info "Starting Remy in Docker (auth backend :$BACKEND_PORT, API :$API_PORT, frontend :$FRONTEND_PORT)"
 info "The first run builds the images and takes a few minutes."
 
+# --- NEO4J DATA LOADING ---
+DUMP_FILE="$SYSTEM_ROOT/remy/data-preparation/neo4j.dump"
+info "Checking for Neo4j dump file at $DUMP_FILE..."
+if [ -f "$DUMP_FILE" ]; then
+  # Check if the Neo4j data volume exists. If not, it's a fresh install.
+  if ! docker volume inspect systemcode_remy_neo4j_data >/dev/null 2>&1; then
+    info "Neo4j data volume is empty. Loading snapshot from neo4j.dump..."
+
+    # Start just the neo4j container to initialize the volume
+    compose --profile neo4j up -d neo4j
+
+    # Wait for it to boot up
+    sleep 10
+
+    # Stop it so we can load the dump
+    compose stop neo4j >/dev/null 2>&1
+
+    # Load the dump
+    if compose --profile neo4j run --rm neo4j neo4j-admin database load neo4j --from-path=/var/lib/neo4j/import --overwrite-destination=true; then
+      ok "Neo4j snapshot loaded successfully."
+    else
+      warn "Failed to load Neo4j snapshot. The database will be empty."
+    fi
+  else
+    info "Neo4j data volume already exists. Skipping snapshot load."
+  fi
+else
+  info "No Neo4j dump file found at $DUMP_FILE. The database will be empty."
+fi
+# --------------------------
+
 if ! compose up --build --detach --wait --wait-timeout 900 --remove-orphans; then
   if [ "$interrupted" -eq 0 ]; then
     echo
