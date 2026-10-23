@@ -1,7 +1,7 @@
 ﻿# Remy: An Intelligent Knowledge Base for Meal Planning Application
 
-
 ## EXECUTIVE SUMMARY / PAPER ABSTRACT
+
 Remy is a weekly meal-planning recommendation application that helps users choose recipes while considering nutrition, ingredient availability, approximate grocery cost, and dietary evidence. The project treats meal planning as a data-integration and reasoning problem. A recipe is represented through its ingredient requirements; each requirement is linked to a normalized food concept; candidate nutrition profiles are used to estimate nutrients and FairPrice evidence is attached to the product or offer that can satisfy the requirement. A generic food profile, a branded product, and a dated retail offer therefore remain separate records.
 
 A typical user request may combine a carbohydrate range, an excluded allergen, a halal or vegetarian preference, and a daily food budget. Remy models these as explicit constraints. Its reasoning flow is to identify the ingredient occurrences required by a recipe, find compatible food candidates, verify nutrition and dietary evidence, calculate the portion-level contribution, and estimate cost when package and price information are sufficient.
@@ -10,14 +10,16 @@ A typical user request may combine a carbohydrate range, an excluded allergen, a
 
 ## CREDITS / PROJECT CONTRIBUTION
 
-| Official Full Name  | Student ID (MTech Applicable)  | Work Items (Who Did What) | Email (Optional)      |
-|:--------------------|:---------------:| :-----|:----------------------|
-| Le Chi Thanh        | A0352811L | Data preparation, modelling and system architecturing | thanhlc@u.nus.edu     |
-| Vuong Quang Viet Tung  | A0357416Y |Data preparation, front-end application | viettungvuong@u.nus.edu   |
-| Tran Dinh Gia Khanh | A0359890J | Workflow for the application (LangGraph), back end application | khanh.dg.tran@u.nus.edu |
+| Official Full Name    | Student ID (MTech Applicable) | Work Items (Who Did What)                                      | Email (Optional)        |
+| :-------------------- | :---------------------------: | :------------------------------------------------------------- | :---------------------- |
+| Le Chi Thanh          |           A0352811L           | Data preparation, modelling and system architecturing          | thanhlc@u.nus.edu       |
+| Vuong Quang Viet Tung |           A0357416Y           | Data preparation, front-end application                        | viettungvuong@u.nus.edu |
+| Tran Dinh Gia Khanh   |           A0359890J           | Workflow for the application (LangGraph), back end application | khanh.dg.tran@u.nus.edu |
+
 ---
 
 ## VIDEO OF SYSTEM MODELLING & USE CASE DEMO
+
 TBU
 ---
 
@@ -50,6 +52,7 @@ uv run --package remy-api python scripts/init_langfuse.py --path .env.nonprod
 ```
 
 Then open `.env.nonprod` and fill in:
+
 - `GEMINI_API_KEY` (your Google AI Studio key)
 - `REMY_JWT_SECRET` (`openssl rand -base64 48`)
 
@@ -64,12 +67,12 @@ Run this from `SystemCode/`:
 ./remy/start-all.sh
 ```
 
-*Note: On the very first run, the script will detect that the Neo4j database is empty and automatically load a pre-built 940MB recipe snapshot. This takes about 15 seconds. You do not need to run the data pipeline manually.*
+_Note: On the very first run, the script will detect that the Neo4j database is empty and automatically load a pre-built 940MB recipe snapshot. This takes about 15 seconds. You do not need to run the data pipeline manually._
 
 Once the terminal says "Remy is running", open the web app:
 
 | What                 | Address                    |
-|:---------------------|:---------------------------|
+| :------------------- | :------------------------- |
 | Web app              | http://localhost:3100      |
 | Remy API docs        | http://localhost:8000/docs |
 | Sign-in service docs | http://localhost:8010/docs |
@@ -96,28 +99,32 @@ nutrition of an ingredient.
 
 **If something goes wrong**
 
-- *A port is already in use*: close whatever uses it, or pick other ports, for example
+- _A port is already in use_: close whatever uses it, or pick other ports, for example
   `FRONTEND_PORT=3101 ./remy/start-all.sh`.
-- *Plans or the calculator show an error*: check the logs with
+- _Plans or the calculator show an error_: check the logs with
   `docker compose --env-file .env.nonprod logs api`. If plans say
   "No recipes with complete nutrition data", the Neo4j snapshot failed to load. Run
   `docker volume rm systemcode_remy_neo4j_data` and restart the script.
-- *Neo4j exits with "Invalid memory configuration"*: Allocate more RAM to Docker Desktop (Settings -> Resources).
-- *Docker is not running*: open Docker Desktop and run the command again.
+- _Neo4j exits with "Invalid memory configuration"_: Allocate more RAM to Docker Desktop (Settings -> Resources).
+- _Docker is not running_: open Docker Desktop and run the command again.
 
 More detail, including everyday commands, settings and troubleshooting:
 [SystemCode/docs/docker_compose.md](SystemCode/docs/docker_compose.md).
 
 ---
+
 ## PROJECT REPORT / PAPER
 
-`Refer to project report at Github Folder: ProjectReport`
-TBU
+All of the documents are published here
+
+- 2 video presentations: [Google Drive](https://drive.google.com/drive/u/1/folders/1fl9UMKZI6dDgRCqXvL5dvR-TUpYF5k-l)
+- Final report: TBU
 
 ---
+
 ## MISCELLANEOUS
 
 `Refer to Github Folder: Miscellaneous`
-TBU
 
+Contains all of the initialize prompts for each of the component we made in this project, please check
 ---
