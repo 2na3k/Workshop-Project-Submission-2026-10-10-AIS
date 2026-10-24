@@ -165,6 +165,21 @@ if [ -f "$DUMP_FILE" ]; then
     # Load the dump
     if compose --profile neo4j run --rm neo4j neo4j-admin database load neo4j --from-path=/var/lib/neo4j/import --overwrite-destination=true; then
       ok "Neo4j snapshot loaded successfully."
+
+      # --- PATCH FRESHNESS ---
+      info "Patching FULFILLS edges to mark estimated prices as fresh..."
+
+      # Start Neo4j in the background so we can connect via localhost
+      compose --profile neo4j up -d neo4j
+
+      # Run the Python script from the host, pointing to the exposed Docker port
+      uv run --package remy-api python remy/data-preparation/scripts/patch_freshness.py
+
+      # Stop Neo4j so the main stack can start it fresh
+      compose stop neo4j >/dev/null 2>&1
+      ok "Freshness patch applied."
+      # -----------------------
+
     else
       warn "Failed to load Neo4j snapshot. The database will be empty."
     fi
