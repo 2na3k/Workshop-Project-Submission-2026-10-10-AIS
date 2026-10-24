@@ -118,7 +118,9 @@ More detail, including everyday commands, settings and troubleshooting:
 All of the documents are published here
 
 - 2 video presentations: [Google Drive](https://drive.google.com/drive/u/1/folders/1fl9UMKZI6dDgRCqXvL5dvR-TUpYF5k-l)
-- Final report: TBU
+- Final report: [here, Google Drive](ProjectReport/IRS-PM-2026-10-25-AIS-Remy-Food-Recommender-Group-Report.pdf)
+- Data for init: [here, Google Drive](https://drive.google.com/drive/folders/1Gvgsyn0SwnXeCXB457-B1KTeu11VjmrI)
+- Repo link: [Github](https://github.com/2na3k/Workshop-Project-Submission-2026-10-10-AIS)
 
 ---
 
